@@ -1,0 +1,40 @@
+This is smallwm, which is my personal, refactored version of tinywm that I've hacked a little bit to add some basic features.
+
+Improvements over TinyWM
+========================
+
+o Maxmizing function - Alt+m
+o Window Lowering function - Alt+Page_Down
+o Closing Function? - Alt+c
+o WM Quit Function? - Alt+Escape
+
+o Better hackabiltiy - SmallWM is refactored, so it's easier to add
+stuff to it than it would be to TinyWM
+
+Install
+======================
+Run `installpkg smallwm*` if you run Slack.
+
+If you don't, do:
+
+`
+ mv smallwm* /
+ tar xvvfz smallwm*
+ rm -r install
+`
+
+or use a TGZ to DEB/RPM converter.
+
+Credits
+=======================
+Nick Welch <mack@incise.org>, the original TinyWM author.
+
+Myself (Adam Marchetti <adamnew123456@gmail.com>).
+
+License
+======================
+In the spirit of the original TinyWM, SmallWM is public domain
+as well. Simply keep this README file with any distribution you make.
+
+Contrary to popular belief, I DO know where you live. And I've got
+a couple knives to sharpen on the way, if need be ;)
