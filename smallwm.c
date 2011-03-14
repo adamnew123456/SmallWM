@@ -17,6 +17,11 @@ int main()
     if(!(dpy = XOpenDisplay(NULL))) return 1;
 
     root = DefaultRootWindow(dpy);
+    XSelectInput(dpy, root, KeyPressMask |
+		    	    ButtonPressMask |
+			    ButtonReleaseMask |
+			    PointerMotionMask |
+			    SubstructureNotifyMask);
 
     int i;
     for (i = 0; i < NSHORTCUTS; i++){
@@ -30,8 +35,7 @@ int main()
     if (!fork()){
 	execlp(SHELL, SHELL, NULL);
 	exit(0);
-    }
-       
+    }  
 
     for(;;)
     {

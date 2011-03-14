@@ -62,5 +62,6 @@ void eMotionNotify(Display *dpy, XEvent ev){
 }
 
 void eMapNotify(Display *dpy, XEvent ev){
+	if (ev.xmap.override_redirect) return;
 	XSetWindowBorderWidth(dpy, ev.xmap.window , 3);
 }
