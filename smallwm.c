@@ -1,14 +1,8 @@
 /* TinyWM is written by Nick Welch <mack@incise.org>, 2005.
+ * SmallWM was hacked out of TinyWM by Adam Marchetti <adamnew123456@gmail.com>, 2010.
  *
  * This software is in the public domain
  * and is provided AS IS, with NO WARRANTY. */
-
-/*
-#include <stdlib.h>
-#include <unistd.h>
-#include <X11/Xlib.h>
-#include <X11/keysym.h>
-*/
 
 #include "smallwm.h"
 
@@ -55,6 +49,9 @@ int main()
 			break;
 		case MotionNotify:
 			eMotionNotify(dpy, ev);
+			break;
+		case MapNotify:
+			eMapNotify(dpy, ev);
 			break;
 	}
 			

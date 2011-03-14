@@ -60,3 +60,7 @@ void eMotionNotify(Display *dpy, XEvent ev){
 			MAX(1, attr.height + (mouse.button==3 ? ydiff : 0))
 	);
 }
+
+void eMapNotify(Display *dpy, XEvent ev){
+	XSetWindowBorderWidth(dpy, ev.xmap.window , 3);
+}

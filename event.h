@@ -44,5 +44,6 @@ CALLBACK(eKeyPress);
 CALLBACK(eButtonPress);
 CALLBACK(eButtonRelease);
 CALLBACK(eMotionNotify);
+CALLBACK(eMapNotify);
 
 #endif
