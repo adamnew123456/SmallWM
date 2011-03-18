@@ -6,8 +6,6 @@
 
 #include "smallwm.h"
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
 int main()
 {
     Display * dpy;
@@ -24,12 +22,15 @@ int main()
 			    LeaveWindowMask |
 			    SubstructureNotifyMask);
 
+    // Loops through all the key shortcuts in event.h and grabs them
     int i;
     for (i = 0; i < NSHORTCUTS; i++){
 	    XGrabKey(dpy, XKeysymToKeycode(dpy, SHORTCUTS[i].ksym), MASK, root, True, GrabModeAsync, GrabModeAsync);
    }
+    // Exit key combo
     XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Escape), MASK, root, True, GrabModeAsync, GrabModeAsync);
 
+    // The move and resize buttons (also used for other stuff)
     XGrabButton(dpy, 1, MASK, root, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, None, None);
     XGrabButton(dpy, 3, MASK, root, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, None, None);
 
@@ -38,12 +39,7 @@ int main()
 	exit(0);
     }  
 
-    Window focus = None;
-    Window dump, child;
-    int rx, ry, cx, cy;
-    unsigned int mask;
-
-    for(;;)
+    while (1)
     {
 	XNextEvent(dpy, &ev);
 	
@@ -65,9 +61,19 @@ int main()
 			break;
 	}
         
+	// Sets the focus to wherever the pointer 
+	// is (avoids focus stealing and other nastiness).
+	//
+	// Should be rather slow, seems to work with few
+	// resource consumption here.
+	Window dump, child;
+	int rx, ry, cx, cy;
+	unsigned int mask;
+	
 	XQueryPointer(dpy, root, &dump, &child, 
 			&rx, &ry, &cx, &cy,
 			&mask);
+
 	XSetInputFocus(dpy, dump, RevertToNone, CurrentTime); 
     }
 }

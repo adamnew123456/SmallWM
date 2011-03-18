@@ -27,12 +27,9 @@ help(){
 	echo "     clean - Remove all build and temporary files"
 }
 
-if [ "$1" = "event" ]; then
-	event
-elif [ "$1" = "smallwm" ]; then
-	smallwm
-elif [ "$1" = "clean" ]; then
-	clean
-else
-	help
-fi
+case "$1" in 
+	"event") event ;;
+	"smallwm") smallwm ;;
+	"clean") clean ;;
+	*) help ;;
+esac

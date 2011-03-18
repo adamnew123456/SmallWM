@@ -1,5 +1,6 @@
 #!/bin/bash
-
+#
+# Installs smallwm in $1
 BASE="/usr/local"
 TEST="no"
 
@@ -27,6 +28,7 @@ cp event.c event.h smallwm.c smallwm.h global.h smallwm.sh build.sh install.sh "
 mkdir "$BASE/doc/smallwm-0.1" &> /dev/null || noop
 cp README "$BASE/doc/smallwm-0.1"
 
+# Ignore slackpkg.sh installs
 if [ "$TEST" = "no" ]; then
 echo "
 [Desktop Entry]

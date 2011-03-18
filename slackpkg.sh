@@ -1,5 +1,9 @@
 #!/bin/bash
-VERSION="0.1.1"
+#
+# Builds a Slackware compatable package to either install or
+# convert
+
+VERSION="0.1.2"
 
 if [ -e "working" ]; then
 	rm -r working
