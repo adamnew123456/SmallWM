@@ -21,21 +21,27 @@ int main()
 		    	    ButtonPressMask |
 			    ButtonReleaseMask |
 			    PointerMotionMask |
+			    LeaveWindowMask |
 			    SubstructureNotifyMask);
 
     int i;
     for (i = 0; i < NSHORTCUTS; i++){
-	    XGrabKey(dpy, XKeysymToKeycode(dpy, SHORTCUTS[i].ksym), SMASK, root, True, GrabModeAsync, GrabModeAsync);
+	    XGrabKey(dpy, XKeysymToKeycode(dpy, SHORTCUTS[i].ksym), MASK, root, True, GrabModeAsync, GrabModeAsync);
    }
-    XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Escape), SMASK, root, True, GrabModeAsync, GrabModeAsync);
+    XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Escape), MASK, root, True, GrabModeAsync, GrabModeAsync);
 
-    XGrabButton(dpy, 1, SMASK, root, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, None, None);
-    XGrabButton(dpy, 3, SMASK, root, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, None, None);
+    XGrabButton(dpy, 1, MASK, root, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, None, None);
+    XGrabButton(dpy, 3, MASK, root, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, None, None);
 
     if (!fork()){
 	execlp(SHELL, SHELL, NULL);
 	exit(0);
     }  
+
+    Window focus = None;
+    Window dump, child;
+    int rx, ry, cx, cy;
+    unsigned int mask;
 
     for(;;)
     {
@@ -58,6 +64,10 @@ int main()
 			eMapNotify(dpy, ev);
 			break;
 	}
-			
+        
+	XQueryPointer(dpy, root, &dump, &child, 
+			&rx, &ry, &cx, &cy,
+			&mask);
+	XSetInputFocus(dpy, dump, RevertToNone, CurrentTime); 
     }
 }

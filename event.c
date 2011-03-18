@@ -44,7 +44,6 @@ void eButtonPress(Display *dpy, XEvent ev){
 
 void eButtonRelease(Display *dpy, XEvent ev){
 	XUngrabPointer(dpy, CurrentTime);
-	XSetInputFocus(dpy, ev.xbutton.subwindow, RevertToPointerRoot, CurrentTime);
 }
 
 void eMotionNotify(Display *dpy, XEvent ev){
@@ -63,6 +62,6 @@ void eMotionNotify(Display *dpy, XEvent ev){
 }
 
 void eMapNotify(Display *dpy, XEvent ev){
-	if (ev.xmap.override_redirect) return;
-	XSetWindowBorderWidth(dpy, ev.xmap.window , 3);
+	if (!ev.xmap.override_redirect)
+		XSetWindowBorderWidth(dpy, ev.xmap.window , 3);
 }
