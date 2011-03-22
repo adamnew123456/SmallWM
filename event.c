@@ -40,8 +40,8 @@ void eButtonPress(Display *dpy, XEvent ev){
 			exit(1);
 		}
 	}
-	else if (ev.xbutton.subwindow == None)
-		return;
+	else if (ev.xbutton.subwindow == None && ev.xbutton.button == 3) // Show the hidden window menu
+		showMenu(dpy);
 	else {  // Start move/resize
 		XGrabPointer(dpy, ev.xbutton.subwindow, True,
 				PointerMotionMask | ButtonReleaseMask,
@@ -66,7 +66,7 @@ void eMotionNotify(Display *dpy, XEvent ev){
 	ydiff = ev.xbutton.y_root - mouse.y_root;
 
 	if (mouse.button == 1) XMoveWindow(dpy, ev.xmotion.window, attr.x + xdiff, attr.y + ydiff);
-	if (mouse.button == 3) XMoveWindow(dpy, ev.xmotion.window, MAX(1, attr.width + xdiff), MAX(1, attr.height + ydiff));
+	if (mouse.button == 3) XResizeWindow(dpy, ev.xmotion.window, MAX(1, attr.width + xdiff), MAX(1, attr.height + ydiff));
 }
 
 void eMapNotify(Display *dpy, XEvent ev){

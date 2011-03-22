@@ -2,6 +2,7 @@
 #define __EVENT__
 
 #include "global.h"
+#include "icons.h"
 
 typedef struct {
 	KeySym ksym;
@@ -37,15 +38,20 @@ UCALLBACK(Close){
 	XDestroyWindow(dpy, ev.xkey.subwindow);
 }
 
+UCALLBACK(Hide){
+	hideWindow(dpy, ev.xkey.subwindow);
+}
+
 ////////////////////////////////////////////////
 // Remember to update NSHORTCUTS when you add any
 // new keyboard functions
-#define NSHORTCUTS 4
+#define NSHORTCUTS 5
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
 	{ XK_Page_Up, RaiseWindow },
 	{ XK_Page_Down, LowerWindow },
 	{ XK_m, Maximize },
 	{ XK_c, Close },
+	{ XK_h, Hide},
 };
 
 // Used for event loop callback (ie from X)
