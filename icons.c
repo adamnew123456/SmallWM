@@ -14,6 +14,14 @@ void initList(){
 	head->next = NULL;
 }
 
+void dumpList(){
+	wlist_t *tmp = head;
+	while (tmp){
+		printf("Window title: %s, Window ID: %x, Next Node: %x\n", tmp->title, tmp->win, tmp->next);
+		tmp = tmp->next;
+	}
+}
+
 wlist_t* tailList(){
 	wlist_t *tmp = head;
 	while (tmp->next) tmp = tmp->next;
@@ -49,6 +57,8 @@ void hideWindow(Display *dpy, Window win){
 	wlist_t *prev = tailList();
 	prev->next = node;
 	XUnmapWindow(dpy, win);
+
+	dumpList();
 }
 
 void unHideWindow(Display *dpy, Window win){
@@ -68,6 +78,8 @@ void unHideWindow(Display *dpy, Window win){
 	prev->next = tmp->next;
 	XMapWindow(dpy, tmp->win);
 	free(tmp);
+
+	dumpList();
 }
 
 int find(Window *array, int len, Window data){
@@ -79,70 +91,4 @@ int find(Window *array, int len, Window data){
 }
 
 void showMenu(Display *dpy){
-	if (!lenList()) return;
-
-	Window dump, crap;
-	int x,y;
-	int rx,ry;
-	unsigned int mask;
-	XQueryPointer(dpy, DefaultRootWindow(dpy), &dump, &crap, &rx, &ry, &x, &y, &mask);
-
-	Window menu = XCreateSimpleWindow(dpy, DefaultRootWindow(dpy), MAX(MWIDTH, x), MAX(MHEIGHT, y), MWIDTH, MHEIGHT * lenList(), 2, 
-			BlackPixel(dpy, DefaultScreen(dpy)), WhitePixel(dpy, DefaultScreen(dpy)));
-
-	GC gc = XCreateGC(dpy, menu, 0, NULL);
-	XSetForeground(dpy, gc, BlackPixel(dpy, DefaultScreen(dpy)));
-	XSetBackground(dpy, gc, WhitePixel(dpy, DefaultScreen(dpy)));
-
-	Window buttons[25]; // Rough max, based upon nothing in particular
-	memset(buttons, None, 25 * sizeof(Window));
-	wlist_t *tmp = head->next;
-
-	int i = 0;
-	while (tmp){
-		buttons[i++] = XCreateSimpleWindow(dpy, menu, 0, MWIDTH * i, MWIDTH, MHEIGHT, 2, BlackPixel(dpy, DefaultScreen(dpy)), WhitePixel(dpy, DefaultScreen(dpy)));
-		XSelectInput(dpy, buttons[i-1], ButtonPressMask | ButtonReleaseMask | ExposureMask);
-		tmp = tmp->next;
-	}
-
-	XMapSubwindows(dpy, menu);
-	XMapWindow(dpy, menu);
-
-	XGrabPointer(dpy, menu, True, ButtonPressMask|ButtonReleaseMask, GrabModeAsync, GrabModeAsync, menu, None, CurrentTime);
-
-	tmp = head->next;
-	i = 0;
-	while (tmp){
-		XDrawString(dpy, buttons[i++], gc, 0, MHEIGHT,
-				tmp->title, strlen(tmp->title));
-		tmp = tmp->next;
-	}
-
-	Window w;
-	XEvent ev;
-	while (1){
-		XNextEvent(dpy, &ev);
-
-		switch (ev.type){
-			case ButtonPress:
-				NOOP(1);
-				int ind = find(buttons, 25, ev.xbutton.subwindow);
-				wlist_t *ent = indList(ind);
-	
-				if (ev.xbutton.button == 1){
-					w = ent->win;
-					goto unhide;
-				}
-				else goto cleanup;
-				break;
-		}
-	}
-
-unhide:
-	unHideWindow(dpy, w);
-
-cleanup:
-	XUngrabPointer(dpy, CurrentTime);
-	XDestroySubwindows(dpy, menu);
-	XDestroyWindow(dpy, menu);
 }
