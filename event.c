@@ -9,6 +9,8 @@
 static XButtonEvent mouse;
 static XWindowAttributes attr;
 
+static int inmove = 0;
+
 void eKeyPress(Display *dpy, XEvent ev){
 	KeySym *ksym = NULL;
 	int nkeys;
@@ -34,15 +36,17 @@ void eKeyPress(Display *dpy, XEvent ev){
 
 void eButtonPress(Display *dpy, XEvent ev){
 	// Root window - run xterm
-	if (ev.xbutton.subwindow == None && ev.xbutton.button == 1){
+	if (ev.xbutton.subwindow == None && 
+			ev.xbutton.button == 1 && 
+			!findList(ev.xbutton.window)){
 		if (!fork()){
 			execlp(SHELL, SHELL, NULL);
 			exit(1);
 		}
 	}
-	else if (ev.xbutton.subwindow == None && ev.xbutton.button == 3) // Show the hidden window menu
-		showMenu(dpy);
-	else {  // Start move/resize
+	if (ev.xbutton.subwindow) {  
+		// Start move/resize
+		inmove = 1;
 		XGrabPointer(dpy, ev.xbutton.subwindow, True,
 				PointerMotionMask | ButtonReleaseMask,
 				GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
@@ -54,7 +58,11 @@ void eButtonPress(Display *dpy, XEvent ev){
 
 void eButtonRelease(Display *dpy, XEvent ev){
 	// Stop move/resize
-	XUngrabPointer(dpy, CurrentTime);
+	if (inmove){
+		XUngrabPointer(dpy, CurrentTime);
+		inmove = 0;
+	}
+	else  unHideWindow(dpy, ev.xbutton.window);
 }
 
 void eMotionNotify(Display *dpy, XEvent ev){

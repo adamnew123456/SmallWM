@@ -8,8 +8,6 @@
 
 int main()
 {
-    Display * dpy;
-    Window root;
     XEvent ev;
 
     if(!(dpy = XOpenDisplay(NULL))) return 1;
@@ -61,12 +59,15 @@ int main()
 		case MapNotify:
 			eMapNotify(dpy, ev);
 			break;
+		case Expose:
+			paintIcon(dpy, ev.xexpose.window);
+			break;
 	}
         
 	// Sets the focus to wherever the pointer 
 	// is (avoids focus stealing and other nastiness)
 	//
-	// Should be rather slow, seems to work with few
+	// Should be rather slow, but seems to work with few
 	// resource consumption here.
 	Window dump, child;
 	int rx, ry, cx, cy;

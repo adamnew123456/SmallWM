@@ -5,17 +5,18 @@
 
 #define wlist_t struct wlist_s
 struct wlist_s {
-	Window win;
 	char *title;
+	GC gc;
+	Window icon;
+	Window win;
 	wlist_t *next;
 };
 
-#define MWIDTH 75
-#define MHEIGHT 20
-
 void initList();
+wlist_t* findList(Window);
 void hideWindow(Display*, Window);
 void unHideWindow(Display*, Window);
-void showMenu(Display*);
+void paintIcons(Display *);
+void paintIcon(Display *, Window);
 
 #endif

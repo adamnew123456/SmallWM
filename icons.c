@@ -11,15 +11,8 @@ void initList(){
 	head = malloc(sizeof(wlist_t));
 	head->title = NULL;
 	head->win = None;
+	head->icon = None;
 	head->next = NULL;
-}
-
-void dumpList(){
-	wlist_t *tmp = head;
-	while (tmp){
-		printf("Window title: %s, Window ID: %x, Next Node: %x\n", tmp->title, tmp->win, tmp->next);
-		tmp = tmp->next;
-	}
 }
 
 wlist_t* tailList(){
@@ -28,21 +21,13 @@ wlist_t* tailList(){
 	return tmp;
 }
 
-int lenList(){
-	wlist_t *tmp = head->next;
-	int i = 0;
-
-	while (tmp){
-		i++;
-		tmp = tmp->next;
-	}
-	return i;
-}
-
-wlist_t* indList(int index){
+wlist_t* findList(Window icon){
 	wlist_t *tmp = head;
-	while (index--) tmp = tmp->next;
-	return tmp;
+	while (tmp){
+		if (tmp->icon == icon) return tmp;
+		else tmp = tmp->next;
+	}
+	return NULL;
 }
 
 void hideWindow(Display *dpy, Window win){
@@ -52,22 +37,36 @@ void hideWindow(Display *dpy, Window win){
 	wlist_t *node = malloc(sizeof(wlist_t));
 	node->title = title;
 	node->win = win;
+
+	// Don't do much with the window - It'll be taken care of later
+	node->icon = XCreateSimpleWindow(dpy, 
+			RootWindow(dpy, DefaultScreen(dpy)),
+		       	-200, -200, 
+			IWIDTH, IHEIGHT, 1, BLACK, WHITE);
+
+	XSelectInput(dpy, node->icon, ButtonPressMask|
+				      ButtonReleaseMask|
+				      ExposureMask);
+	XMapWindow(dpy, node->icon);
+
+	node->gc = XCreateGC(dpy, node->icon, 0, NULL);
+
 	node->next = NULL;
 
 	wlist_t *prev = tailList();
 	prev->next = node;
 	XUnmapWindow(dpy, win);
 
-	dumpList();
+	paintIcons(dpy);
 }
 
-void unHideWindow(Display *dpy, Window win){
+void unHideWindow(Display *dpy, Window icon){
 	wlist_t *tmp, *prev;
 
 	tmp = head;
 	prev = NULL;
 	while (tmp){
-		if (tmp->win == win) break;
+		if (tmp->icon == icon) break;
 		wlist_t *x = tmp;
 		tmp = tmp->next;
 		prev = x;
@@ -77,18 +76,40 @@ void unHideWindow(Display *dpy, Window win){
 	
 	prev->next = tmp->next;
 	XMapWindow(dpy, tmp->win);
+
+	XDestroyWindow(dpy, tmp->icon);
+	XFreeGC(dpy, tmp->gc);
 	free(tmp);
 
-	dumpList();
+	paintIcons(dpy);
 }
 
-int find(Window *array, int len, Window data){
-	int i;
-	for (i = 0; i < len; i++){
-		if (array[i] == data) return i;
+void paintIcons(Display *dpy){
+	wlist_t *tmp = head->next;
+	int x = 0;
+	int y = 0;
+
+	while (tmp){
+		if (x + IWIDTH > SWIDTH){
+			x = 0;
+			y += IHEIGHT;
+		}
+
+		printf("Drawing %x at %d, %d\n", tmp->icon, x, y);
+		XMoveWindow(dpy, tmp->icon, x, y);
+
+		XClearWindow(dpy, tmp->icon);
+		XDrawString(dpy, tmp->icon, tmp->gc, 0, IHEIGHT, 
+				tmp->title, MIN(strlen(tmp->title), 25));
+
+		tmp = tmp->next;
+		x += IWIDTH;
 	}
-	return -1;
 }
 
-void showMenu(Display *dpy){
+void paintIcon(Display *dpy, Window icon){
+	wlist_t *tmp = findList(icon);
+
+	XClearWindow(dpy, tmp->icon);
+	XDrawString(dpy, tmp->icon, tmp->gc, 0, IHEIGHT, tmp->title, MIN(strlen(tmp->title), 25));
 }
