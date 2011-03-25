@@ -43,6 +43,7 @@ int main()
     {
 	XNextEvent(dpy, &ev);
 	
+	wlist_t *tmp = NULL;
 	switch (ev.type){
 		case KeyPress:
 			eKeyPress(dpy, ev);
@@ -62,6 +63,9 @@ int main()
 		case Expose:
 			paintIcon(dpy, ev.xexpose.window);
 			break;
+		case DestroyNotify:
+			tmp = revList(ev.xdestroywindow.window);
+			if (tmp) unHideWindow(dpy, tmp->icon, 1);
 	}
         
 	// Sets the focus to wherever the pointer 
