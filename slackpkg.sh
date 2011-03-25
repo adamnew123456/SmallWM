@@ -3,7 +3,7 @@
 # Builds a Slackware compatable package to either install or
 # convert
 
-VERSION="0.1.2"
+VERSION="0.1.3"
 
 if [ -e "working" ]; then
 	rm -r working

@@ -12,6 +12,9 @@ static XWindowAttributes attr;
 static int inmove = 0;
 
 void eKeyPress(Display *dpy, XEvent ev){
+	// The shortcuts DO NOT apply to icons!
+	if (findList(ev.xkey.subwindow)) return;
+
 	KeySym *ksym = NULL;
 	int nkeys;
 
