@@ -9,6 +9,8 @@
 static XButtonEvent mouse;
 static XWindowAttributes attr;
 
+static int inmove = 0;
+
 void eKeyPress(Display *dpy, XEvent ev){
 	KeySym *ksym = NULL;
 	int nkeys;
@@ -19,6 +21,8 @@ void eKeyPress(Display *dpy, XEvent ev){
 
 	// Exit - ALT-Escape
 	if (*ksym == XK_Escape) exit(0);
+
+	if (findList(ev.xkey.subwindow)) return;
 
 	// All of these are window operations
 	if (ev.xkey.subwindow == None) return;
@@ -34,15 +38,17 @@ void eKeyPress(Display *dpy, XEvent ev){
 
 void eButtonPress(Display *dpy, XEvent ev){
 	// Root window - run xterm
-	if (ev.xbutton.subwindow == None && ev.xbutton.button == 1){
+	if (ev.xbutton.subwindow == None && 
+			ev.xbutton.button == 1 && 
+			!findList(ev.xbutton.window)){
 		if (!fork()){
 			execlp(SHELL, SHELL, NULL);
 			exit(1);
 		}
 	}
-	else if (ev.xbutton.subwindow == None)
-		return;
-	else {  // Start move/resize
+	if (ev.xbutton.subwindow) {  
+		// Start move/resize
+		inmove = 1;
 		XGrabPointer(dpy, ev.xbutton.subwindow, True,
 				PointerMotionMask | ButtonReleaseMask,
 				GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
@@ -54,7 +60,11 @@ void eButtonPress(Display *dpy, XEvent ev){
 
 void eButtonRelease(Display *dpy, XEvent ev){
 	// Stop move/resize
-	XUngrabPointer(dpy, CurrentTime);
+	if (inmove){
+		XUngrabPointer(dpy, CurrentTime);
+		inmove = 0;
+	}
+	else  unHideWindow(dpy, ev.xbutton.window, 0);
 }
 
 void eMotionNotify(Display *dpy, XEvent ev){
@@ -66,7 +76,7 @@ void eMotionNotify(Display *dpy, XEvent ev){
 	ydiff = ev.xbutton.y_root - mouse.y_root;
 
 	if (mouse.button == 1) XMoveWindow(dpy, ev.xmotion.window, attr.x + xdiff, attr.y + ydiff);
-	if (mouse.button == 3) XMoveWindow(dpy, ev.xmotion.window, MAX(1, attr.width + xdiff), MAX(1, attr.height + ydiff));
+	if (mouse.button == 3) XResizeWindow(dpy, ev.xmotion.window, MAX(1, attr.width + xdiff), MAX(1, attr.height + ydiff));
 }
 
 void eMapNotify(Display *dpy, XEvent ev){

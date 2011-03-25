@@ -23,7 +23,7 @@ cp smallwm "$BASE/bin"
 cp smallwm.sh "$BASE/bin"
 
 mkdir "$BASE/src/smallwm-0.1" &> /dev/null || noop
-cp event.c event.h smallwm.c smallwm.h global.h smallwm.sh build.sh install.sh "$BASE/src/smallwm-0.1"
+cp icons.c icons.h event.c event.h smallwm.c smallwm.h global.h smallwm.sh build.sh install.sh "$BASE/src/smallwm-0.1"
 
 mkdir "$BASE/doc/smallwm-0.1" &> /dev/null || noop
 cp README "$BASE/doc/smallwm-0.1"
