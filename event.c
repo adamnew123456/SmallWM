@@ -65,7 +65,7 @@ void eButtonRelease(Display *dpy, XEvent ev){
 		XUngrabPointer(dpy, CurrentTime);
 		inmove = 0;
 	}
-	else  unHideWindow(dpy, ev.xbutton.window);
+	else  unHideWindow(dpy, ev.xbutton.window, 0);
 }
 
 void eMotionNotify(Display *dpy, XEvent ev){

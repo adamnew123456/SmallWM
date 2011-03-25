@@ -21,10 +21,22 @@ wlist_t* tailList(){
 	return tmp;
 }
 
+// Used for painting an icon window - the event
+// loop knows nothing about the iconification system,
+// so there has to be a way to map icon window to structure
 wlist_t* findList(Window icon){
 	wlist_t *tmp = head;
 	while (tmp){
 		if (tmp->icon == icon) return tmp;
+		else tmp = tmp->next;
+	}
+	return NULL;
+}
+
+wlist_t* revList(Window win){
+	wlist_t *tmp = head;
+	while (tmp){
+		if (tmp->win == win) return tmp;
 		else tmp = tmp->next;
 	}
 	return NULL;
@@ -49,6 +61,7 @@ void hideWindow(Display *dpy, Window win){
 				      ExposureMask);
 	XMapWindow(dpy, node->icon);
 
+	// For drawing the title text
 	node->gc = XCreateGC(dpy, node->icon, 0, NULL);
 
 	node->next = NULL;
@@ -60,13 +73,14 @@ void hideWindow(Display *dpy, Window win){
 	paintIcons(dpy);
 }
 
-void unHideWindow(Display *dpy, Window icon){
+void unHideWindow(Display *dpy, Window icon, int careful){
 	wlist_t *tmp, *prev;
-
 	tmp = head;
 	prev = NULL;
+
 	while (tmp){
 		if (tmp->icon == icon) break;
+
 		wlist_t *x = tmp;
 		tmp = tmp->next;
 		prev = x;
@@ -75,7 +89,9 @@ void unHideWindow(Display *dpy, Window icon){
 	if (!tmp) return;
 	
 	prev->next = tmp->next;
-	XMapWindow(dpy, tmp->win);
+
+	// Careful flag is set if the window has been destroyed
+	if (!careful) XMapWindow(dpy, tmp->win);
 
 	XDestroyWindow(dpy, tmp->icon);
 	XFreeGC(dpy, tmp->gc);
@@ -95,12 +111,11 @@ void paintIcons(Display *dpy){
 			y += IHEIGHT;
 		}
 
-		printf("Drawing %x at %d, %d\n", tmp->icon, x, y);
 		XMoveWindow(dpy, tmp->icon, x, y);
 
 		XClearWindow(dpy, tmp->icon);
 		XDrawString(dpy, tmp->icon, tmp->gc, 0, IHEIGHT, 
-				tmp->title, MIN(strlen(tmp->title), 25));
+				tmp->title, MIN(strlen(tmp->title), 10));
 
 		tmp = tmp->next;
 		x += IWIDTH;

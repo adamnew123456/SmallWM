@@ -14,8 +14,9 @@ struct wlist_s {
 
 void initList();
 wlist_t* findList(Window);
+wlist_t* revList(Window);
 void hideWindow(Display*, Window);
-void unHideWindow(Display*, Window);
+void unHideWindow(Display*, Window, int);
 void paintIcons(Display *);
 void paintIcon(Display *, Window);
 
