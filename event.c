@@ -12,9 +12,6 @@ static XWindowAttributes attr;
 static int inmove = 0;
 
 void eKeyPress(Display *dpy, XEvent ev){
-	// The shortcuts DO NOT apply to icons!
-	if (findList(ev.xkey.subwindow)) return;
-
 	KeySym *ksym = NULL;
 	int nkeys;
 
@@ -24,6 +21,8 @@ void eKeyPress(Display *dpy, XEvent ev){
 
 	// Exit - ALT-Escape
 	if (*ksym == XK_Escape) exit(0);
+
+	if (findList(ev.xkey.subwindow)) return;
 
 	// All of these are window operations
 	if (ev.xkey.subwindow == None) return;
