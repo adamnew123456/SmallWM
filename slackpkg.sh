@@ -45,3 +45,5 @@ done
 
 cd working
 su -c "makepkg --linkadd y --chown y  ../smallwm-$VERSION.tgz &> /dev/null"
+
+chown -R adamnew123456 .

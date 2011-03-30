@@ -28,9 +28,9 @@ UCALLBACK(LowerWindow){
 }
 
 UCALLBACK(Maximize){
-	XMoveResizeWindow(dpy, ev.xkey.subwindow, 0, 0,
-			XDisplayWidth(dpy, DefaultScreen(dpy)),
-			XDisplayHeight(dpy, DefaultScreen(dpy))
+	XMoveResizeWindow(dpy, ev.xkey.subwindow, 0, IHEIGHT,
+			SWIDTH,
+			SHEIGHT - IHEIGHT // Leave room for a row of icons
 	);
 }
 
