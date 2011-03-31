@@ -1,30 +1,38 @@
-This is smallwm, which is my personal, refactored version of tinywm that I've hacked a little bit to add some basic features.
+What is SmallWM?
+================
+SmallWM is an extended version of TinyWM, made for actual desktop use.
 
 Improvements over TinyWM
 ========================
+o Window Iconification - Windows can be hidden with Alt+h, when they are hidden and placed
+in little rectangles at the top of the screen.
 
-o Ability to move windows up or down (via Alt+PgUp/Alt+PgDn)
-o Run xterm by Alt+Button1 on the root window
-o Window borders
-o Pointer-follows-Focus (active, as opposed TinyWM passive)
+o Window ``Layering`` - Windows can be layered, but little policy is actually enforced. 
+Works at a basic level. Raise with Alt+PgUp, lower with Alt+PgDn.
 
-o Better hackabiltiy - SmallWM is refactored, so it's easier to add
-stuff to it than it would be to TinyWM
+o Focus-Follows-Pointer - The focus follows the pointer, which prevents focus stealing by
+applications.
+
+o Window Borders - Just a simple border to see the extent of a window.
+
+o Startup File - The startup file is named by user "$USER.sh" in /etc/user.d
 
 Install
-======================
-Run `install.sh`
+=======
+Run `install.sh` as root. This will put all the files in /usr/local and an xsession file
+in the /usr/share/xsessions directory.
+
+Todo
+====
+o Unmap windows and add a placeholder while moving and resizing.
 
 Credits
-=======================
+=======
 Nick Welch <mack@incise.org>, the original TinyWM author.
 
 Myself (Adam Marchetti <adamnew123456@gmail.com>).
 
 License
-======================
+=======
 In the spirit of the original TinyWM, SmallWM is public domain
 as well. Simply keep this README file (or credit me and the original author) with any distribution you make.
-
-Contrary to popular belief, I DO know where you live. And I've got
-a couple knives to sharpen on the way, if need be ;)
