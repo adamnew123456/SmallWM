@@ -8,6 +8,7 @@
 // Used for when the mouse is being used to resize/move
 static XButtonEvent mouse;
 static XWindowAttributes attr;
+Window placeholder;
 
 static int inmove = 0;
 
@@ -49,11 +50,18 @@ void eButtonPress(Display *dpy, XEvent ev){
 	if (ev.xbutton.subwindow) {  
 		// Start move/resize
 		inmove = 1;
-		XGrabPointer(dpy, ev.xbutton.subwindow, True,
+		XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
+		XUnmapWindow(dpy, ev.xbutton.subwindow);
+
+		placeholder = XCreateSimpleWindow(dpy, RootWindow(dpy, DefaultScreen(dpy)),
+				attr.x, attr.y, attr.width, attr.height, 1, BLACK, WHITE);
+		XMapWindow(dpy, placeholder);
+
+		XGrabPointer(dpy, placeholder, True,
 				PointerMotionMask | ButtonReleaseMask,
 				GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
-		XGetWindowAttributes(dpy, ev.xbutton.subwindow, &attr);
-		XRaiseWindow(dpy, ev.xbutton.subwindow);
+
+		XRaiseWindow(dpy, placeholder);
 		mouse = ev.xbutton;
 	}
 }
@@ -62,12 +70,20 @@ void eButtonRelease(Display *dpy, XEvent ev){
 	// Stop move/resize
 	if (inmove){
 		XUngrabPointer(dpy, CurrentTime);
+		XGetWindowAttributes(dpy, placeholder, &attr);
+		XDestroyWindow(dpy, placeholder);
+
+		XMapWindow(dpy, mouse.subwindow);
+		XMoveResizeWindow(dpy, mouse.subwindow, attr.x, attr.y, attr.width, attr.height);
+
 		inmove = 0;
 	}
 	else  unHideWindow(dpy, ev.xbutton.window, 0);
 }
 
 void eMotionNotify(Display *dpy, XEvent ev){
+	if (!inmove) return;
+
 	int xdiff, ydiff;
 	while (XCheckTypedEvent(dpy, MotionNotify, &ev));
 	
@@ -75,8 +91,8 @@ void eMotionNotify(Display *dpy, XEvent ev){
 	xdiff = ev.xbutton.x_root - mouse.x_root;
 	ydiff = ev.xbutton.y_root - mouse.y_root;
 
-	if (mouse.button == 1) XMoveWindow(dpy, ev.xmotion.window, attr.x + xdiff, attr.y + ydiff);
-	if (mouse.button == 3) XResizeWindow(dpy, ev.xmotion.window, MAX(1, attr.width + xdiff), MAX(1, attr.height + ydiff));
+	if (mouse.button == 1) XMoveWindow(dpy, placeholder, attr.x + xdiff, attr.y + ydiff);
+	if (mouse.button == 3) XResizeWindow(dpy, placeholder, MAX(1, attr.width + xdiff), MAX(1, attr.height + ydiff));
 }
 
 void eMapNotify(Display *dpy, XEvent ev){

@@ -13,6 +13,10 @@ Works at a basic level. Raise with Alt+PgUp, lower with Alt+PgDn.
 o Focus-Follows-Pointer - The focus follows the pointer, which prevents focus stealing by
 applications.
 
+o Window Placeholders - SmallWM does not do window resizing and moving directly, because
+that is a graphically intensive operation. It instead uses placeholder windows that it 
+deletes after moving.
+
 o Window Borders - Just a simple border to see the extent of a window.
 
 o Startup File - The startup file is named by user "$USER.sh" in /etc/user.d
@@ -24,7 +28,7 @@ in the /usr/share/xsessions directory.
 
 Todo
 ====
-o Unmap windows and add a placeholder while moving and resizing.
+o Nothing currently
 
 Credits
 =======

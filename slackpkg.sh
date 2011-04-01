@@ -3,7 +3,8 @@
 # Builds a Slackware compatable package to either install or
 # convert
 
-VERSION="0.1.3"
+VERSION="0.1.4"
+ARCH="i686"
 
 if [ -e "working" ]; then
 	rm -r working
@@ -44,6 +45,6 @@ for line in "[Desktop Entry]" "Name=SmallWM" "Icon=" \
 done
 
 cd working
-su -c "makepkg --linkadd y --chown y  ../smallwm-$VERSION.tgz &> /dev/null"
+su -c "makepkg --linkadd y --chown y  ../smallwm-$VERSION-$ARCH.tgz &> /dev/null"
 
 chown -R adamnew123456 .
