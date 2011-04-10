@@ -33,6 +33,7 @@ wlist_t* findList(Window icon){
 	return NULL;
 }
 
+// Same as above, but searching by hidden window
 wlist_t* revList(Window win){
 	wlist_t *tmp = head;
 	while (tmp){
@@ -78,6 +79,8 @@ void unHideWindow(Display *dpy, Window icon, int careful){
 	tmp = head;
 	prev = NULL;
 
+	// Does not use finder loop because this requires the
+	// previous node as well
 	while (tmp){
 		if (tmp->icon == icon) break;
 
@@ -91,7 +94,10 @@ void unHideWindow(Display *dpy, Window icon, int careful){
 	prev->next = tmp->next;
 
 	// Careful flag is set if the window has been destroyed
-	if (!careful) XMapWindow(dpy, tmp->win);
+	if (!careful){
+		XMapWindow(dpy, tmp->win);
+		XRaiseWindow(dpy, tmp->win);
+	}
 
 	XDestroyWindow(dpy, tmp->icon);
 	XFreeGC(dpy, tmp->gc);
@@ -106,6 +112,7 @@ void paintIcons(Display *dpy){
 	int y = 0;
 
 	while (tmp){
+		// Prevent icons from running off the screen
 		if (x + IWIDTH > SWIDTH){
 			x = 0;
 			y += IHEIGHT;

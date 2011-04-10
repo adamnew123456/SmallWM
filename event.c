@@ -75,10 +75,11 @@ void eButtonRelease(Display *dpy, XEvent ev){
 
 		XMapWindow(dpy, mouse.subwindow);
 		XMoveResizeWindow(dpy, mouse.subwindow, attr.x, attr.y, attr.width, attr.height);
+		XRaiseWindow(dpy, mouse.subwindow);
 
 		inmove = 0;
 	}
-	else  unHideWindow(dpy, ev.xbutton.window, 0);
+	else  unHideWindow(dpy, ev.xbutton.window, 0); // For the icon
 }
 
 void eMotionNotify(Display *dpy, XEvent ev){
