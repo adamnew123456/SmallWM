@@ -81,6 +81,6 @@ int main()
 			&rx, &ry, &cx, &cy,
 			&mask);
 
-	XSetInputFocus(dpy, dump, RevertToNone, CurrentTime); 
+	XSetInputFocus(dpy, child, RevertToNone, CurrentTime); 
     }
 }

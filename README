@@ -28,7 +28,7 @@ in the /usr/share/xsessions directory.
 
 Todo
 ====
-o Trying to implement a "Focus-Upon-Click" policy - hasn't worked out well so far
+o Trying to implement a "Focus-Upon-Click" policy - hasn't worked out well so far (note that a partial solution already exists, however - Alt+Click on the desired window)
 
 Credits
 =======
