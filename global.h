@@ -25,6 +25,6 @@ static Window root;
 #define MASK Mod1Mask
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
-#define SHELL "xterm" // The universal X shell
+#define SHELL "xterm"		// The universal X shell
 
 #endif

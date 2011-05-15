@@ -14,7 +14,7 @@ noop(){
 }
 
 if [ ! -e "smallwm" ]; then
-	./build.sh smallwm
+	./build.sh release
 fi
 
 find -name "*.sh" | xargs chmod +x
