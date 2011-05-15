@@ -40,7 +40,16 @@ focus ()
 
   XQueryPointer (dpy, root, &dump, &child, &rx, &ry, &cx, &cy, &mask);
 
-  if (window_exist(child))
+  if (dump == root)
+  {
+	XSetInputFocus (dpy, root, RevertToNone, CurrentTime);
+	return;
+  }
+
+  XWindowAttributes attr;
+  XGetWindowAttributes(dpy, child, &attr);
+
+  if (window_exist(child) && attr.class != InputOnly)
     XSetInputFocus (dpy, child, RevertToNone, CurrentTime);
 }
 
