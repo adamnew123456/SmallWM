@@ -26,5 +26,6 @@ static Window root;
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define SHELL "xterm"		// The universal X shell
+//#define SHELL "mrxvt" // My favorite X shell
 
 #endif

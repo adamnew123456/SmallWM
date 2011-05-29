@@ -1,5 +1,0 @@
-[Desktop Entry]
-Name=SmallWM
-Icon=
-Exec=/usr/local/bin/smallwm.sh
-Type=XSession

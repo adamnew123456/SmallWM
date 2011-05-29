@@ -29,7 +29,8 @@ mkdir $CDIR/src
 mkdir working/install
 
 : > working/install/slack-desc
-for line in "SmallWM - A Hacked for Readability version of TinyWM" \
+echo "       |-----handy-ruler--------------------------------------|" | tee -a working/install/slack-desc
+for line in "SmallWM (A Hacked for Readability version of TinyWM)" \
 	    "" "SmallWM is a refactored TinyWM with a couple extra" \
 	    "features such as window bordering, Xterm-at-a-click, " \
 	    "and a couple extra keyboard shortcuts" \
@@ -45,6 +46,7 @@ for line in "[Desktop Entry]" "Name=SmallWM" "Icon=" \
 done
 
 cd working
-su -c "makepkg --linkadd y --chown y  ../smallwm-$VERSION-$ARCH.tgz &> /dev/null"
+su -c "makepkg --linkadd y --chown y  ../smallwm-$VERSION-$ARCH-1.tgz &> /dev/null"
 
-chown -R adamnew123456 .
+cd ..
+su -c "rm -r working"
