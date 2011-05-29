@@ -6,6 +6,13 @@
 
 #include "smallwm.h"
 
+void
+sigchld(int signal)
+{
+ int status;
+ while (1) wait(&status);
+}
+
 int
 window_exist(Window win)
 {
@@ -56,6 +63,8 @@ focus ()
 int
 main ()
 {
+  signal(SIGCHLD, sigchld);
+
   XEvent ev;
 
   if (!(dpy = XOpenDisplay (NULL)))

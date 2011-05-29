@@ -9,6 +9,7 @@
 #include <X11/keysym.h>
 
 #include <string.h>
+#include <signal.h>
 
 static Display *dpy;
 static Window root;
