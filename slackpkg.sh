@@ -31,10 +31,16 @@ mkdir working/install
 : > working/install/slack-desc
 echo "       |-----handy-ruler--------------------------------------|" | tee -a working/install/slack-desc
 for line in "SmallWM (A Hacked for Readability version of TinyWM)" \
-	    "" "SmallWM is a refactored TinyWM with a couple extra" \
-	    "features such as window bordering, Xterm-at-a-click, " \
-	    "and a couple extra keyboard shortcuts" \
-	    "" "" "" "" "" "Packaged by Adam Marchetti"; do
+			"" \
+	        "SmallWM is a refactored hack of TinyWM that has new " \
+	        "features such as window bordering, Xterm-at-a-click, " \
+	        "window layering, and focus-follows-pointer." \
+	        "" \
+		  	"Despite all these improvements, the binary remains" \
+			"under 50K, under 500 LOC, and rock solid." \
+			"" \
+			"" \
+            "Packaged and written by Adam Marchetti"; do
 	echo "smallwm: $line" | tee -a working/install/slack-desc
 done
 

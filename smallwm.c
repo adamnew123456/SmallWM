@@ -6,132 +6,122 @@
 
 #include "smallwm.h"
 
-void
-sigchld(int signal)
+void sigchld(int signal)
 {
- int status;
- while (1) wait(&status);
+    int status;
+    wait(&status);
 }
 
-int
-window_exist(Window win)
+int window_exist(Window win)
 {
- Window dump, dump2;
- Window *childs;
- unsigned int nchilds;
+    Window dump, dump2;
+    Window *childs;
+    unsigned int nchilds;
 
- XQueryTree(dpy, root, &dump, &dump2, &childs, &nchilds);
- for (;nchilds > 0; --nchilds)
- {
-  if (childs[nchilds - 1] == win){
+    XQueryTree(dpy, root, &dump, &dump2, &childs, &nchilds);
+    for (; nchilds > 0; --nchilds) {
+	if (childs[nchilds - 1] == win) {
+	    free(childs);
+	    return 1;
+	}
+    }
     free(childs);
-    return 1;
-  }
- }
- free(childs);
- return 0;
+    return 0;
 }
 
-void
-focus ()
+void focus()
 {
-  // Sets the focus to wherever the pointer 
-  // is (avoids focus stealing and other nastiness)
-  //
-  // One outstanding bug plagues this place - I can't
-  // see if a window exists, so weird apps (git gui)
-  // crash SmallWM when they are closed
-  Window dump, child;
-  int rx, ry, cx, cy;
-  unsigned int mask;
+    // Sets the focus to wherever the pointer 
+    // is (avoids focus stealing and other nastiness)
+    //
+    // One outstanding bug plagues this place - I can't
+    // see if a window exists, so weird apps (git gui)
+    // crash SmallWM when they are closed
+    Window dump, child;
+    int rx, ry, cx, cy;
+    unsigned int mask;
 
-  XQueryPointer (dpy, root, &dump, &child, &rx, &ry, &cx, &cy, &mask);
+    XQueryPointer(dpy, root, &dump, &child, &rx, &ry, &cx, &cy, &mask);
 
-  if (dump == root)
-  {
-	XSetInputFocus (dpy, root, RevertToNone, CurrentTime);
+    if (dump == root) {
+	XSetInputFocus(dpy, root, RevertToNone, CurrentTime);
 	return;
-  }
+    }
 
-  XWindowAttributes attr;
-  XGetWindowAttributes(dpy, child, &attr);
+    XWindowAttributes attr;
+    XGetWindowAttributes(dpy, child, &attr);
 
-  if (window_exist(child) && attr.class != InputOnly)
-    XSetInputFocus (dpy, child, RevertToNone, CurrentTime);
+    if (window_exist(child) && attr.class != InputOnly)
+	XSetInputFocus(dpy, child, RevertToNone, CurrentTime);
 }
 
-int
-main ()
+int main()
 {
-  signal(SIGCHLD, sigchld);
+    signal(SIGCHLD, sigchld);
 
-  XEvent ev;
+    XEvent ev;
 
-  if (!(dpy = XOpenDisplay (NULL)))
-    return 1;
+    if (!(dpy = XOpenDisplay(NULL)))
+	return 1;
 
-  root = DefaultRootWindow (dpy);
-  XSelectInput (dpy, root, KeyPressMask |
-		ButtonPressMask |
-		ButtonReleaseMask |
-		PointerMotionMask | SubstructureNotifyMask);
+    root = DefaultRootWindow(dpy);
+    XSelectInput(dpy, root, KeyPressMask |
+		 ButtonPressMask |
+		 ButtonReleaseMask |
+		 PointerMotionMask | SubstructureNotifyMask);
 
-  // Loops through all the key shortcuts in event.h and grabs them
-  int i;
-  for (i = 0; i < NSHORTCUTS; i++)
-    {
-      XGrabKey (dpy, XKeysymToKeycode (dpy, SHORTCUTS[i].ksym), MASK, root,
-		True, GrabModeAsync, GrabModeAsync);
+    // Loops through all the key shortcuts in event.h and grabs them
+    int i;
+    for (i = 0; i < NSHORTCUTS; i++) {
+	XGrabKey(dpy, XKeysymToKeycode(dpy, SHORTCUTS[i].ksym), MASK, root,
+		 True, GrabModeAsync, GrabModeAsync);
     }
-  // Exit key combo
-  XGrabKey (dpy, XKeysymToKeycode (dpy, XK_Escape), MASK, root, True,
-	    GrabModeAsync, GrabModeAsync);
+    // Exit key combo
+    XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Escape), MASK, root, True,
+	     GrabModeAsync, GrabModeAsync);
 
-  // The move and resize buttons (also used for other stuff)
-  XGrabButton (dpy, 1, MASK, root, True, ButtonPressMask, GrabModeAsync,
-	       GrabModeAsync, None, None);
-  XGrabButton (dpy, 3, MASK, root, True, ButtonPressMask, GrabModeAsync,
-	       GrabModeAsync, None, None);
+    // The move and resize buttons (also used for other stuff)
+    XGrabButton(dpy, 1, MASK, root, True, ButtonPressMask, GrabModeAsync,
+		GrabModeAsync, None, None);
+    XGrabButton(dpy, 3, MASK, root, True, ButtonPressMask, GrabModeAsync,
+		GrabModeAsync, None, None);
 
-  if (!fork ())
-    {
-      execlp (SHELL, SHELL, NULL);
-      exit (0);
+    if (!fork()) {
+	execlp(SHELL, SHELL, NULL);
+	exit(0);
     }
 
-  initList ();
+    initList();
 
-  while (1)
-    {
-      XNextEvent (dpy, &ev);
+    while (1) {
+	XNextEvent(dpy, &ev);
 
-      wlist_t *tmp = NULL;
-      switch (ev.type)
-	{
+	wlist_t *tmp = NULL;
+	switch (ev.type) {
 	case KeyPress:
-	  eKeyPress (dpy, ev);
-	  break;
+	    eKeyPress(dpy, ev);
+	    break;
 	case ButtonPress:
-	  eButtonPress (dpy, ev);
-	  break;
+	    eButtonPress(dpy, ev);
+	    break;
 	case ButtonRelease:
-	  eButtonRelease (dpy, ev);
-	  break;
+	    eButtonRelease(dpy, ev);
+	    break;
 	case MotionNotify:
-	  eMotionNotify (dpy, ev);
-	  break;
+	    eMotionNotify(dpy, ev);
+	    break;
 	case MapNotify:
-	  eMapNotify (dpy, ev);
-	  break;
+	    eMapNotify(dpy, ev);
+	    break;
 	case Expose:
-	  paintIcon (dpy, ev.xexpose.window);
-	  break;
+	    paintIcon(dpy, ev.xexpose.window);
+	    break;
 	case DestroyNotify:
-	  tmp = revList (ev.xdestroywindow.window);
-	  if (tmp)
-	    unHideWindow (dpy, tmp->icon, 1);
+	    tmp = revList(ev.xdestroywindow.window);
+	    if (tmp)
+		unHideWindow(dpy, tmp->icon, 1);
 	}
 
-      focus ();
+	focus();
     }
 }

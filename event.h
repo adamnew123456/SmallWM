@@ -4,10 +4,9 @@
 #include "global.h"
 #include "icons.h"
 
-typedef struct
-{
-  KeySym ksym;
-  void (*callback) (Display *, XEvent);
+typedef struct {
+    KeySym ksym;
+    void (*callback) (Display *, XEvent);
 } uevent_t;
 
 // Used to define a keyboard shortcut callback
@@ -20,30 +19,30 @@ typedef struct
 // and this works well enough in practice. (Though it
 // is bad form).
 //
-UCALLBACK (RaiseWindow)
+UCALLBACK(RaiseWindow)
 {
-  XRaiseWindow (dpy, ev.xkey.subwindow);
+    XRaiseWindow(dpy, ev.xkey.subwindow);
 }
 
-UCALLBACK (LowerWindow)
+UCALLBACK(LowerWindow)
 {
-  XLowerWindow (dpy, ev.xkey.subwindow);
+    XLowerWindow(dpy, ev.xkey.subwindow);
 }
 
-UCALLBACK (Maximize)
+UCALLBACK(Maximize)
 {
-  XMoveResizeWindow (dpy, ev.xkey.subwindow, 0, IHEIGHT, SWIDTH, SHEIGHT - IHEIGHT	// Leave room for a row of icons
-    );
+    XMoveResizeWindow(dpy, ev.xkey.subwindow, 0, IHEIGHT, SWIDTH, SHEIGHT - IHEIGHT	// Leave room for a row of icons
+	);
 }
 
-UCALLBACK (Close)
+UCALLBACK(Close)
 {
-  XDestroyWindow (dpy, ev.xkey.subwindow);
+    XDestroyWindow(dpy, ev.xkey.subwindow);
 }
 
-UCALLBACK (Hide)
+UCALLBACK(Hide)
 {
-  hideWindow (dpy, ev.xkey.subwindow);
+    hideWindow(dpy, ev.xkey.subwindow);
 }
 
 ////////////////////////////////////////////////
@@ -51,19 +50,19 @@ UCALLBACK (Hide)
 // new keyboard functions
 #define NSHORTCUTS 5
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
-  {XK_Page_Up, RaiseWindow},
-  {XK_Page_Down, LowerWindow},
-  {XK_m, Maximize},
-  {XK_c, Close},
-  {XK_h, Hide},
+    {XK_Page_Up, RaiseWindow},
+    {XK_Page_Down, LowerWindow},
+    {XK_m, Maximize},
+    {XK_c, Close},
+    {XK_h, Hide},
 };
 
 // Used for event loop callback (ie from X)
 #define CALLBACK(name) void name(Display*, XEvent)
-CALLBACK (eKeyPress);
-CALLBACK (eButtonPress);
-CALLBACK (eButtonRelease);
-CALLBACK (eMotionNotify);
-CALLBACK (eMapNotify);
+CALLBACK(eKeyPress);
+CALLBACK(eButtonPress);
+CALLBACK(eButtonRelease);
+CALLBACK(eMotionNotify);
+CALLBACK(eMapNotify);
 
 #endif

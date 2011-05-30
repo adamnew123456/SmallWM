@@ -19,16 +19,19 @@ deletes after moving.
 
 o Window Borders - Just a simple border to see the extent of a window.
 
-o Startup File - The startup file is named by user "$USER.sh" in /etc/user.d
+o Startup File - The startup file is ~/.smallwm.sh
 
 Install
 =======
 Run `install.sh` as root. This will put all the files in /usr/local and an xsession file
 in the /usr/share/xsessions directory.
 
+Or you can build the Slackware package using `su -c "./slackpkg.sh"` and then running
+`su -c "installpkg *tgz"`. This has the benefit of being noticable by your package manager.
+
 Todo
 ====
-o Trying to implement a "Focus-Upon-Click" policy - hasn't worked out well so far (note that a partial solution already exists, however - Alt+Click on the desired window)
+o Trying to implement a "Focus-Upon-Click" policy - hasn't worked out well so far (note that a partial solution already exists, however - Alt+PgUp on the desired window)
 
 Credits
 =======
