@@ -32,6 +32,7 @@ Or you can build the Slackware package using `su -c "./slackpkg.sh"` and then ru
 Todo
 ====
 o Trying to implement a "Focus-Upon-Click" policy - hasn't worked out well so far (note that a partial solution already exists, however - Alt+PgUp on the desired window)
+o Find out how to get GNU indent to output code like astyle does
 
 Credits
 =======

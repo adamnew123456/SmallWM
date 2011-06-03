@@ -6,11 +6,11 @@
 #define wlist_t struct wlist_s
 struct wlist_s
 {
-  char *title;
-  GC gc;
-  Window icon;
-  Window win;
-  wlist_t *next;
+    char *title;
+    GC gc;
+    Window icon;
+    Window win;
+    wlist_t *next;
 };
 
 void initList ();
