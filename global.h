@@ -15,12 +15,12 @@ static Display *dpy;
 static Window root;
 
 // Icon dimensions
-#define IWIDTH 75
-#define IHEIGHT 20
+#define ICON_WIDTH 75
+#define ICON_HEIGHT 20
 
 // Screen dimensions
-#define SWIDTH DisplayWidth(dpy, DefaultScreen(dpy))
-#define SHEIGHT DisplayHeight(dpy, DefaultScreen(dpy))
+#define SCREEN_WIDTH DisplayWidth(dpy, DefaultScreen(dpy))
+#define SCREEN_HEIGHT DisplayHeight(dpy, DefaultScreen(dpy))
 
 // Basic colors
 #define BLACK BlackPixel(dpy, DefaultScreen(dpy))

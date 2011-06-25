@@ -2,16 +2,16 @@
 #define __EVENT__
 
 #include "global.h"
-#include "icons.h"
+#include "client.h"
 
 typedef struct
 {
     KeySym ksym;
-    void (*callback) (Display *, XEvent);
+    void (*callback) (XEvent, client_t*);
 } uevent_t;
 
 // Used to define a keyboard shortcut callback
-#define UCALLBACK(name) static void name(Display *dpy, XEvent ev)
+#define UCALLBACK(name) static void name(XEvent ev, client_t* cli)
 
 // /////////////////////////////////////////////
 // Here are the keyboard shortcuts - their functions
@@ -22,27 +22,30 @@ typedef struct
 //
 UCALLBACK (RaiseWindow)
 {
-    XRaiseWindow (dpy, ev.xkey.subwindow);
+	if (cli->state != Active) return;	
+    XRaiseWindow (dpy, cli->win);
 }
 
 UCALLBACK (LowerWindow)
 {
-    XLowerWindow (dpy, ev.xkey.subwindow);
+	if (cli->state != Active) return;
+    XLowerWindow (dpy, cli->win);
 }
 
 UCALLBACK (Maximize)
 {
-    XMoveResizeWindow (dpy, ev.xkey.subwindow, 0, IHEIGHT, SWIDTH, SHEIGHT - IHEIGHT);	
+	if (cli->state != Active) return;
+    XMoveResizeWindow (dpy, cli->win, 0, ICON_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - ICON_HEIGHT);	
 }
 
 UCALLBACK (Close)
 {
-    XDestroyWindow (dpy, ev.xkey.subwindow);
+	destroy(cli, 0);
 }
 
 UCALLBACK (Hide)
 {
-    hideWindow (dpy, ev.xkey.subwindow);
+    hide(cli);
 }
 
 #define NSHORTCUTS 5
