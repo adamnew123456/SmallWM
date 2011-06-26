@@ -10,6 +10,8 @@ typedef struct
     void (*callback) (XEvent, client_t*);
 } uevent_t;
 
+#define GET_CLIENT(name) client_t *name = fromevent(ev)
+
 // Used to define a keyboard shortcut callback
 #define UCALLBACK(name) static void name(XEvent ev, client_t* cli)
 
@@ -22,20 +24,17 @@ typedef struct
 //
 UCALLBACK (RaiseWindow)
 {
-	if (cli->state != Active) return;	
-    XRaiseWindow (dpy, cli->win);
+	raise(cli);
 }
 
 UCALLBACK (LowerWindow)
 {
-	if (cli->state != Active) return;
-    XLowerWindow (dpy, cli->win);
+	lower(cli);
 }
 
 UCALLBACK (Maximize)
 {
-	if (cli->state != Active) return;
-    XMoveResizeWindow (dpy, cli->win, 0, ICON_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - ICON_HEIGHT);	
+	maximize(cli);
 }
 
 UCALLBACK (Close)

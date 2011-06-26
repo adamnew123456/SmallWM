@@ -8,41 +8,27 @@
  */
 #include "event.h"
 
-// Used for when the mouse is being used to resize/move
-static XButtonEvent mouse;
-static XWindowAttributes attr;
-Window placeholder;
-
-static int inmove = 0;
+static inmove = 0, inresz = 0;
 
 void
 eKeyPress (Display * dpy, XEvent ev)
 {
+	if (*ksym == XK_Excape) exit(0);
+
+	GET_CLIENT(cli);
+   	if (!cli) return;	
+   	if (cli->state != Visible) return;
+
+    int nkeys
     KeySym *ksym = NULL;
-    int nkeys;
-
-    // Unfortunately, X provides no direct way to map keycodes to
-    // keysyms more directly than this...
     ksym = XGetKeyboardMapping (dpy, ev.xkey.keycode, 1, &nkeys);
-
-    // Exit - ALT-Escape
-    if (*ksym == XK_Escape)
-        exit (0);
-
-    // Horrible things would happen if these ops could be done on icons...
-    if (findList (ev.xkey.subwindow))
-        return;
-
-    // All of these are window operations
-    if (ev.xkey.subwindow == None)
-        return;
 
     int i;
     for (i = 0; i < NSHORTCUTS; i++)
     {
         if (*ksym == SHORTCUTS[i].ksym)
         {
-            (*SHORTCUTS[i].callback) (dpy, ev);
+            (*SHORTCUTS[i].callback) (ev, cli);
             break;
         }
     }
@@ -51,9 +37,11 @@ eKeyPress (Display * dpy, XEvent ev)
 void
 eButtonPress (Display * dpy, XEvent ev)
 {
+	GET_CLIENT(cli);
+
     // Root window - run the SHELL
     if (ev.xbutton.subwindow == None &&
-            ev.xbutton.button == 1 && !findList (ev.xbutton.window))
+            ev.xbutton.button == 1 && !cli)
     {
         if (!fork ())
         {
@@ -61,54 +49,48 @@ eButtonPress (Display * dpy, XEvent ev)
             exit (1);
         }
     }
-    if (ev.xbutton.subwindow && ev.xbutton.state & MASK)
+	
+	if (inmove || inresz || !ev.xbutton.subwindow || ev.xbutton.state != MASK)
+		return;
+
+    if (ev.xbutton.button == MOVE)
     {
-        // Start move/resize
         inmove = 1;
-        XGetWindowAttributes (dpy, ev.xbutton.subwindow, &attr);
-        XUnmapWindow (dpy, ev.xbutton.subwindow);
-
-        placeholder =
-            XCreateSimpleWindow (dpy, RootWindow (dpy, DefaultScreen (dpy)),
-                                 attr.x, attr.y, attr.width, attr.height, 1,
-                                 BLACK, WHITE);
-        XMapWindow (dpy, placeholder);
-
-        XGrabPointer (dpy, placeholder, True,
-                      PointerMotionMask | ButtonReleaseMask,
-                      GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
-
-        XRaiseWindow (dpy, placeholder);
-        mouse = ev.xbutton;
+		inresz = 0;
+		beginmvrsz(cli);
     }
+	else if (ev.xbutton.button = RESZ)
+	{
+		inmove = 0;
+		inresz = 1;
+		beginmvrsz(cli);
+	}
 }
 
 void
 eButtonRelease (Display * dpy, XEvent ev)
 {
-    if (inmove)			// Stop move/resize
+	GET_CLIENT(cli);
+	
+    if (inmove || inresz)
     {
-        XUngrabPointer (dpy, CurrentTime);
-        XGetWindowAttributes (dpy, placeholder, &attr);
-        XDestroyWindow (dpy, placeholder);
-
-        XMapWindow (dpy, mouse.subwindow);
-        XMoveResizeWindow (dpy, mouse.subwindow, attr.x, attr.y, attr.width,
-                           attr.height);
-        XRaiseWindow (dpy, mouse.subwindow);
+		endmoversz(cli);
         inmove = 0;
+		inresz = 0;
     }
-    else
-        unHideWindow (dpy, ev.xbutton.window, 0);	// For the icon
+
+	cli = fromicon(ev.xbutton.window);
+	if (cli) unhide(cli);
+	else chfocus(cli);
 }
 
 void
 eMotionNotify (Display * dpy, XEvent ev)
 {
-    if (!inmove)
+    if (!(inmove || inresz))
         return;
 
-    // Prune off the next motion event
+    // Get the latest move event - don't update needlessly
     while (XCheckTypedEvent (dpy, MotionNotify, &ev));
 
     // Visually move/resize
@@ -116,11 +98,13 @@ eMotionNotify (Display * dpy, XEvent ev)
     xdiff = ev.xbutton.x_root - mouse.x_root;
     ydiff = ev.xbutton.y_root - mouse.y_root;
 
-    if (mouse.button == 1)
+    if (inmove)
         XMoveWindow (dpy, placeholder, attr.x + xdiff, attr.y + ydiff);
-    if (mouse.button == 3)
+    if (inresz)
+	{
         XResizeWindow (dpy, placeholder, MAX (1, attr.width + xdiff),
-                       MAX (1, attr.height + ydiff));
+			MAX (1, attr.height + ydiff));
+	}
 }
 
 void
@@ -128,5 +112,5 @@ eMapNotify (Display * dpy, XEvent ev)
 {
 	// Ignore anything we're not supposed to manage
     if (!ev.xmap.override_redirect)	
-        XSetWindowBorderWidth (dpy, ev.xmap.window, 3);
+		create(ev.xmap.window);
 }

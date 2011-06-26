@@ -27,6 +27,8 @@ static Window root;
 #define WHITE WhitePixel(dpy, DefaultScreen(dpy))
 
 // Utility definitions
+#define MOVE 1
+#define RESZ 3
 #define MASK Mod1Mask
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))

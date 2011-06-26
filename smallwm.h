@@ -2,5 +2,5 @@
 #define __SMALLWM__
 #include "global.h"
 #include "event.h"
-#include "icons.h"
+#include "client.h"
 #endif

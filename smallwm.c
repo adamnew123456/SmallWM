@@ -15,53 +15,6 @@ sigchld (int signal)
 }
 
 int
-window_exist (Window win)
-{
-    Window dump, dump2;
-    Window *childs;
-    unsigned int nchilds;
-
-    XQueryTree (dpy, root, &dump, &dump2, &childs, &nchilds);
-    for (; nchilds > 0; --nchilds)
-    {
-        if (childs[nchilds - 1] == win)
-        {
-            free (childs);
-            return 1;
-        }
-    }
-    free (childs);
-    return 0;
-}
-
-void
-focus ()
-{
-    // Sets the focus to wherever the pointer
-    // is (avoids focus stealing and other nastiness)
-    Window dump, child;
-    int rx, ry, cx, cy;
-    unsigned int mask;
-
-    XQueryPointer (dpy, root, &dump, &child, &rx, &ry, &cx, &cy, &mask);
-
-	// root has special semantics - using it in XGetWindowAttributes
-	// will cause Xlib to throw up. But, it is a valid focus window.
-    if (dump == root)
-    {
-        XSetInputFocus (dpy, root, RevertToNone, CurrentTime);
-        return;
-    }
-
-    XWindowAttributes attr;
-    XGetWindowAttributes (dpy, child, &attr);
-
-	// InputOnly windows cannot be focused - make sure this is not the case
-    if (window_exist (child) && attr.class != InputOnly)
-        XSetInputFocus (dpy, child, RevertToNone, CurrentTime);
-}
-
-int
 main ()
 {
 	// Reap the children
@@ -78,13 +31,13 @@ main ()
                   ButtonReleaseMask |
                   PointerMotionMask | SubstructureNotifyMask);
 
-    // Loops through all the key shortcuts in event.h and grabs them
     int i;
     for (i = 0; i < NSHORTCUTS; i++)
     {
         XGrabKey (dpy, XKeysymToKeycode (dpy, SHORTCUTS[i].ksym), MASK, root,
                   True, GrabModeAsync, GrabModeAsync);
     }
+
     // Exit key combo
     XGrabKey (dpy, XKeysymToKeycode (dpy, XK_Escape), MASK, root, True,
               GrabModeAsync, GrabModeAsync);
@@ -102,14 +55,11 @@ main ()
         exit (0);
     }
 
-	// Initalize the iconifier's head element
-    initList ();
-
     while (1)
     {
         XNextEvent (dpy, &ev);
+		client_t *cli = fromwin(ev.xany.window);
 
-        wlist_t *tmp = NULL;
         switch (ev.type)
         {
         case KeyPress:
@@ -128,14 +78,11 @@ main ()
             eMapNotify (dpy, ev);
             break;
         case Expose:
-            paintIcon (dpy, ev.xexpose.window);
+            paint(cli);
             break;
         case DestroyNotify:
-            tmp = revList (ev.xdestroywindow.window);
-            if (tmp)
-                unHideWindow (dpy, tmp->icon, 1);
+			destroy(cli);
+			break;
         }
-
-        focus ();
     }
 }

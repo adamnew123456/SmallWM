@@ -4,12 +4,12 @@ noop(){
 	:
 }
 
-icons(){
-	gcc -c icons.c -g
+client(){
+	gcc -c client.c -g
 }
 
 event(){
-	icons
+	client
 	gcc -c event.c -g
 }
 
@@ -36,7 +36,7 @@ help(){
 	echo "     event - Build the event code"
 	echo "     icons - Build the iconification code"
 	echo "     smallwm - Build the whole program"
-	echo "	   release - Build an optimized release"
+	echo "     release - Build an optimized release"
 	echo "     clean - Remove all build and temporary files"
 }
 
