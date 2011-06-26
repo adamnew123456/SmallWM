@@ -81,7 +81,7 @@ main ()
             paint(cli);
             break;
         case DestroyNotify:
-			destroy(cli);
+			destroy(cli, 1);
 			break;
         }
     }

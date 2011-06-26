@@ -82,7 +82,7 @@ create(Window w)
 		tl->next = cli;
 	}
 
-	focus(cli);
+	chfocus(cli);
 
 	return cli;
 }
@@ -138,8 +138,8 @@ unhide(client_t *client, int danger)
 
 	if (!danger)
 	{
-		XMapWindow(client->win);
-		XRaiseWindow(client->win);
+		XMapWindow(dpy, client->win);
+		XRaiseWindow(dpy, client->win);
 	}
 
 	XDestroyWindow(dpy, client->icon->win);
@@ -167,7 +167,7 @@ beginmvrsz(client_t *client)
 	
 	XMapWindow(dpy, client->pholder);
 
-	XGrabPointer(dpy, client->pholder, True
+	XGrabPointer(dpy, client->pholder, True,
 		PointerMotionMask | ButtonReleaseMask,
 		GrabModeAsync, GrabModeAsync, None,
 		None, CurrentTime);
@@ -178,7 +178,7 @@ beginmvrsz(client_t *client)
 void
 endmoversz(client_t *client)
 {
-	if (client->state != MoveRsz) return;
+	if (client->state != MoveResz) return;
 	client->state = Visible;
 
 	XUngrabPointer(dpy, CurrentTime);
@@ -189,28 +189,28 @@ endmoversz(client_t *client)
 
 	client->x = attr.x;
 	client->y = attr.y;
-	client->w = attr.w;
-	client->h = attr.h;
+	client->w = attr.width;
+	client->h = attr.height;
 
 	XMapWindow(dpy, client->win);
 	XMoveResizeWindow(dpy, client->win, client->x, client->y,
-		client->width, client->height);
+		client->w, client->h);
 
-	raise(client);
+	raise_(client);
 }
 
 void
-raise(client_t *client)
+raise_(client_t *client)
 {
-	if (cli->state != Visible) return;
-	XRaiseWindow(dpy, cli->win);
+	if (client->state != Visible) return;
+	XRaiseWindow(dpy, client->win);
 }
 
 void
 lower(client_t *client)
 {
-	if (cli->state != Visible) return;
-	XLowerWindow(dpy, cli->win);
+	if (client->state != Visible) return;
+	XLowerWindow(dpy, client->win);
 }
 
 void
@@ -221,7 +221,7 @@ maximize(client_t *client)
 	client->w = SCREEN_WIDTH;
 	client->h = SCREEN_HEIGHT - ICON_HEIGHT;
 
-	XMoveResizeWindow(dpy, cli->win, client->x, client->y,
+	XMoveResizeWindow(dpy, client->win, client->x, client->y,
 		client->w, client->h);
 }
 
@@ -257,10 +257,10 @@ updicons()
 void
 paint(client_t *client)
 {
-	XClearWindow(dpy, curr->icon->win);
-	XDrawString(dpy, curr->ic on->win, curr->icon->gc, 0, ICON_HEIGHT,
-		(curr->title ? curr->title : 0),
-		MIN((curr->title ? strlen(curr->title) : 0), 10));
+	XClearWindow(dpy, client->icon->win);
+	XDrawString(dpy, client->win, client->icon->gc, 0, ICON_HEIGHT,
+		(client->title ? client->title : 0),
+		MIN((client->title ? strlen(client->title) : 0), 10));
 }
 
 void
@@ -288,26 +288,9 @@ chfocus(client_t *client)
 				GrabModeAsync, GrabModeAsync, None, None);
 		}
 		else
-			raise(client);
-	}
-}
-
-void
-updfocus()
-{
-	Window w_, chld;
-	int i_;
-	unsigned int u_;
-
-	XQueryPointer(dpy, root, &w_, &chld, &i_, &i_, &i_, &i_, &u_);
-	client_t *cli = fromwin(chld);
-
-	if (chld == root)
-	{
-		chfocus(NULL);
-	}
-	else if (cli && cli->class != InputOnly)
-	{
-		chfocus(cli);
+		{
+			raise_(client);
+			focused = client;
+		}
 	}
 }

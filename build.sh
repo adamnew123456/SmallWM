@@ -15,12 +15,12 @@ event(){
 
 smallwm(){
 	event
-	gcc smallwm.c event.o icons.o -o smallwm -lX11 -g
+	gcc smallwm.c event.o client.o -o smallwm -lX11 -g
 }
 
 release(){
 	event
-	gcc smallwm.c event.o icons.o -o smallwm -lX11 -O3
+	gcc smallwm.c event.o client.o -o smallwm -lX11 -O3
 }
 
 clean(){

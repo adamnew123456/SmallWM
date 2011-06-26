@@ -24,7 +24,7 @@ typedef struct
 //
 UCALLBACK (RaiseWindow)
 {
-	raise(cli);
+	raise_(cli);
 }
 
 UCALLBACK (LowerWindow)

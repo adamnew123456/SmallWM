@@ -8,20 +8,22 @@
  */
 #include "event.h"
 
+static XButtonEvent mouse;
 static inmove = 0, inresz = 0;
+client_t *moving;
 
 void
 eKeyPress (Display * dpy, XEvent ev)
 {
-	if (*ksym == XK_Excape) exit(0);
-
-	GET_CLIENT(cli);
-   	if (!cli) return;	
-   	if (cli->state != Visible) return;
-
-    int nkeys
+    int nkeys;
     KeySym *ksym = NULL;
     ksym = XGetKeyboardMapping (dpy, ev.xkey.keycode, 1, &nkeys);
+
+	if (*ksym == XK_Escape) exit(0);
+
+	GET_CLIENT(cli);
+	if (!cli) return;
+	if (cli->state != Visible) return;
 
     int i;
     for (i = 0; i < NSHORTCUTS; i++)
@@ -58,12 +60,16 @@ eButtonPress (Display * dpy, XEvent ev)
         inmove = 1;
 		inresz = 0;
 		beginmvrsz(cli);
+		mouse = ev.xbutton;
+		moving = cli;
     }
 	else if (ev.xbutton.button = RESZ)
 	{
 		inmove = 0;
 		inresz = 1;
 		beginmvrsz(cli);
+		mouse = ev.xbutton;
+		moving = cli;
 	}
 }
 
@@ -80,7 +86,7 @@ eButtonRelease (Display * dpy, XEvent ev)
     }
 
 	cli = fromicon(ev.xbutton.window);
-	if (cli) unhide(cli);
+	if (cli) unhide(cli, 0);
 	else chfocus(cli);
 }
 
@@ -99,11 +105,11 @@ eMotionNotify (Display * dpy, XEvent ev)
     ydiff = ev.xbutton.y_root - mouse.y_root;
 
     if (inmove)
-        XMoveWindow (dpy, placeholder, attr.x + xdiff, attr.y + ydiff);
+        XMoveWindow (dpy, moving->pholder, moving->x + xdiff, moving->y + ydiff);
     if (inresz)
 	{
-        XResizeWindow (dpy, placeholder, MAX (1, attr.width + xdiff),
-			MAX (1, attr.height + ydiff));
+        XResizeWindow (dpy, moving->pholder, MAX (1, moving->w + xdiff),
+			MAX (1, moving->h + ydiff));
 	}
 }
 
