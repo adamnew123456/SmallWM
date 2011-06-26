@@ -21,7 +21,7 @@ eKeyPress (Display * dpy, XEvent ev)
 
 	if (*ksym == XK_Escape) exit(0);
 
-	GET_CLIENT(cli);
+	client_t *cli = fromwin(ev.xkey.subwindow);
 	if (!cli) return;
 	if (cli->state != Visible) return;
 
@@ -39,7 +39,7 @@ eKeyPress (Display * dpy, XEvent ev)
 void
 eButtonPress (Display * dpy, XEvent ev)
 {
-	GET_CLIENT(cli);
+	client_t *cli = fromwin(ev.xbutton.subwindow);
 
     // Root window - run the SHELL
     if (ev.xbutton.subwindow == None &&
@@ -54,6 +54,8 @@ eButtonPress (Display * dpy, XEvent ev)
 	
 	if (inmove || inresz || !ev.xbutton.subwindow || ev.xbutton.state != MASK)
 		return;
+
+	if (!cli) return;
 
     if (ev.xbutton.button == MOVE)
     {
@@ -76,16 +78,17 @@ eButtonPress (Display * dpy, XEvent ev)
 void
 eButtonRelease (Display * dpy, XEvent ev)
 {
-	GET_CLIENT(cli);
+	client_t *cli = fromwin(ev.xbutton.subwindow);
 	
     if (inmove || inresz)
     {
 		endmoversz(cli);
         inmove = 0;
 		inresz = 0;
+		return;
     }
 
-	cli = fromicon(ev.xbutton.window);
+	cli = fromicon(ev.xbutton.subwindow);
 	if (cli) unhide(cli, 0);
 	else chfocus(cli);
 }
@@ -116,7 +119,8 @@ eMotionNotify (Display * dpy, XEvent ev)
 void
 eMapNotify (Display * dpy, XEvent ev)
 {
+	printf("A window has been mapped - %x\n", ev.xmap.window);
 	// Ignore anything we're not supposed to manage
     if (!ev.xmap.override_redirect)	
-		create(ev.xmap.window);
+		create(dpy, ev.xmap.window);
 }

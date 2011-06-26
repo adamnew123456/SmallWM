@@ -33,7 +33,7 @@ help(){
 	echo "$1 - The SmallWM Build Script"
 	echo "   Arguments:"
 	echo "     event - Build the event code"
-	echo "     icons - Build the iconification code"
+	echo "     client - Build the client code"
 	echo "     smallwm - Build the whole program"
 	echo "     release - Build an optimized release"
 	echo "     clean - Remove all build and temporary files"
@@ -41,7 +41,7 @@ help(){
 
 case "$1" in 
 	"event") event ;;
-	"icons") icons ;;
+	"client") client ;;
 	"smallwm") smallwm ;;
 	"release") release ;;
 	"clean") clean ;;

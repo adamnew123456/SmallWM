@@ -14,6 +14,22 @@ sigchld (int signal)
     wait (&status);
 }
 
+void
+getexisting(Display *dpy, Window root)
+{
+	Window w_;
+	Window *childs;
+	unsigned int nchilds;
+	XQueryTree(dpy, root, &w_, &w_, &childs, &nchilds);
+
+	int i = 0;
+	for (i = 0; i < nchilds; i++)
+	{
+		if (childs[i] == root) continue;
+		create(dpy, childs[i]);
+	}
+}
+
 int
 main ()
 {
@@ -30,6 +46,8 @@ main ()
                   ButtonPressMask |
                   ButtonReleaseMask |
                   PointerMotionMask | SubstructureNotifyMask);
+
+	getexisting(dpy, root);
 
     int i;
     for (i = 0; i < NSHORTCUTS; i++)
@@ -58,7 +76,7 @@ main ()
     while (1)
     {
         XNextEvent (dpy, &ev);
-		client_t *cli = fromwin(ev.xany.window);
+		client_t *cli;
 
         switch (ev.type)
         {
@@ -78,9 +96,11 @@ main ()
             eMapNotify (dpy, ev);
             break;
         case Expose:
+			cli = fromwin(ev.xexpose.window);
             paint(cli);
             break;
         case DestroyNotify:
+			cli = fromwin(ev.xdestroywindow.window);
 			destroy(cli, 1);
 			break;
         }

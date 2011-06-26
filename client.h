@@ -15,8 +15,8 @@ typedef struct {
 	int x,y;
 } icon_t;
 
-typedef struct client_s client_t;
-struct client_s {
+typedef struct client_s {
+	Display *dpy;
 	Window win, pholder;
 	icon_t *icon;
 	char *title;
@@ -24,20 +24,19 @@ struct client_s {
 	unsigned int w, h;
 	WState state;
 	int class;
-	client_t *next;
-};
+	struct client_s *next;
+} client_t;
 
 extern client_t *head;
 extern client_t *focused;
 
 client_t *tail();
-client_t *fromevent(XEvent ev);
-client_t *fromicon(Window icon);
-client_t *fromwin(Window win);
+client_t *fromicon(Window);
+client_t *fromwin(Window);
 
-client_t *create(Window w);
+client_t *create(Display*, Window);
 void destroy(client_t *, int);
-void hide(client_t *);
+void hide(client_t*);
 void unhide(client_t*, int);
 
 void raise_(client_t *);

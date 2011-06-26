@@ -1,27 +1,13 @@
 #include "client.h"
 
-client_t *head;
-client_t *focused;
+client_t *head, *focused;
 
 client_t*
 tail()
 {
 	client_t *c = head;
 	while (c->next) c = c->next;
-	return c->next;
-}
-
-client_t*
-fromevent(XEvent ev)
-{
-	client_t *c = head;
-	while (c)
-	{
-		if (c->win == ev.xany.window)
-			return c;
-		c = c->next;
-	}
-	return NULL;
+	return c;
 }
 
 client_t*
@@ -51,18 +37,19 @@ fromwin(Window win)
 }
 
 client_t*
-create(Window w)
+create(Display *dpy, Window win)
 {
 	client_t *cli = malloc(sizeof(client_t));
 	XWindowAttributes attr;
 	char *title = malloc(sizeof(32));
 
-	XGetWindowAttributes(dpy, w, &attr);
-	XFetchName(dpy, w, &title);
+	XGetWindowAttributes(dpy, win, &attr);
+	XFetchName(dpy, win, &title);
 
-	XSetWindowBorderWidth(dpy, w, 3);
+	XSetWindowBorderWidth(dpy, win, 3);
 
-	cli->win = w;
+	cli->dpy = dpy;
+	cli->win = win;
 	cli->pholder = None;
 	cli->icon = NULL;
 	cli->title = title;
@@ -101,7 +88,7 @@ destroy(client_t *client, int danger)
 		unhide(client, 1);
 
 	if (!danger)
-		XDestroyWindow(dpy, client->win);
+		XDestroyWindow(client->dpy, client->win);
 
 	free(client->title);
 	free(client);
@@ -115,16 +102,16 @@ hide(client_t *client)
 	if (client->state != Visible) return;
 
 	client->icon = malloc(sizeof(icon_t));
-	client->icon->win = XCreateSimpleWindow(dpy, 
+	client->icon->win = XCreateSimpleWindow(client->dpy, 
 				RootWindow(dpy, DefaultScreen(dpy)),
 				-200, -200, ICON_WIDTH, ICON_HEIGHT, 1, BLACK, WHITE);
-	XSelectInput(dpy, client->icon->win, ButtonPressMask | 
+	XSelectInput(client->dpy, client->icon->win, ButtonPressMask | 
 				ButtonReleaseMask | ExposureMask);
-	XMapWindow(dpy, client->icon->win);
+	XMapWindow(client->dpy, client->icon->win);
 
-	client->icon->gc = XCreateGC(dpy, client->icon->win, 0, NULL);
+	client->icon->gc = XCreateGC(client->dpy, client->icon->win, 0, NULL);
 
-	XUnmapWindow(dpy, client->win);
+	XUnmapWindow(client->dpy, client->win);
 
 	client->state = Hidden; 
 
@@ -138,12 +125,12 @@ unhide(client_t *client, int danger)
 
 	if (!danger)
 	{
-		XMapWindow(dpy, client->win);
-		XRaiseWindow(dpy, client->win);
+		XMapWindow(client->dpy, client->win);
+		XRaiseWindow(client->dpy, client->win);
 	}
 
-	XDestroyWindow(dpy, client->icon->win);
-	XFreeGC(dpy, client->icon->gc);
+	XDestroyWindow(client->dpy, client->icon->win);
+	XFreeGC(client->dpy, client->icon->gc);
 	free(client->icon);
 
 	client->state = Visible;
@@ -157,22 +144,22 @@ beginmvrsz(client_t *client)
 	if (client->state != MoveResz) return;
 	client->state = MoveResz;
 
-	XUnmapWindow(dpy, client->win);
+	XUnmapWindow(client->dpy, client->win);
 
 	client->pholder = 
-		XCreateSimpleWindow(dpy, 
+		XCreateSimpleWindow(client->dpy, 
 			RootWindow(dpy, DefaultScreen(dpy)),
 			client->x, client->y, client->w, client->h,
 			1, BLACK, WHITE);
 	
-	XMapWindow(dpy, client->pholder);
+	XMapWindow(client->dpy, client->pholder);
 
-	XGrabPointer(dpy, client->pholder, True,
+	XGrabPointer(client->dpy, client->pholder, True,
 		PointerMotionMask | ButtonReleaseMask,
 		GrabModeAsync, GrabModeAsync, None,
 		None, CurrentTime);
 	
-	XRaiseWindow(dpy, client->pholder);
+	XRaiseWindow(client->dpy, client->pholder);
 }
 
 void
@@ -181,19 +168,19 @@ endmoversz(client_t *client)
 	if (client->state != MoveResz) return;
 	client->state = Visible;
 
-	XUngrabPointer(dpy, CurrentTime);
+	XUngrabPointer(client->dpy, CurrentTime);
 
 	XWindowAttributes attr;
-	XGetWindowAttributes(dpy, client->pholder, &attr);
-	XDestroyWindow(dpy, client->pholder);
+	XGetWindowAttributes(client->dpy, client->pholder, &attr);
+	XDestroyWindow(client->dpy, client->pholder);
 
 	client->x = attr.x;
 	client->y = attr.y;
 	client->w = attr.width;
 	client->h = attr.height;
 
-	XMapWindow(dpy, client->win);
-	XMoveResizeWindow(dpy, client->win, client->x, client->y,
+	XMapWindow(client->dpy, client->win);
+	XMoveResizeWindow(client->dpy, client->win, client->x, client->y,
 		client->w, client->h);
 
 	raise_(client);
@@ -203,14 +190,14 @@ void
 raise_(client_t *client)
 {
 	if (client->state != Visible) return;
-	XRaiseWindow(dpy, client->win);
+	XRaiseWindow(client->dpy, client->win);
 }
 
 void
 lower(client_t *client)
 {
 	if (client->state != Visible) return;
-	XLowerWindow(dpy, client->win);
+	XLowerWindow(client->dpy, client->win);
 }
 
 void
@@ -221,7 +208,7 @@ maximize(client_t *client)
 	client->w = SCREEN_WIDTH;
 	client->h = SCREEN_HEIGHT - ICON_HEIGHT;
 
-	XMoveResizeWindow(dpy, client->win, client->x, client->y,
+	XMoveResizeWindow(client->dpy, client->win, client->x, client->y,
 		client->w, client->h);
 }
 
@@ -245,7 +232,7 @@ updicons()
 		curr->icon->x = x;
 		curr->icon->y = y;
 		
-		XMoveWindow(dpy, curr->icon->win, curr->icon->x, curr->icon->y);
+		XMoveWindow(curr->dpy, curr->icon->win, curr->icon->x, curr->icon->y);
 
 		paint(curr);
 
@@ -257,8 +244,8 @@ updicons()
 void
 paint(client_t *client)
 {
-	XClearWindow(dpy, client->icon->win);
-	XDrawString(dpy, client->win, client->icon->gc, 0, ICON_HEIGHT,
+	XClearWindow(client->dpy, client->icon->win);
+	XDrawString(client->dpy, client->win, client->icon->gc, 0, ICON_HEIGHT,
 		(client->title ? client->title : 0),
 		MIN((client->title ? strlen(client->title) : 0), 10));
 }
@@ -268,22 +255,22 @@ chfocus(client_t *client)
 {
 	if (focused)
 	{
-		XGrabButton(dpy, AnyButton, AnyModifier, client->win, 
+		XGrabButton(focused->dpy, AnyButton, AnyModifier, client->win, 
 			False, ButtonPressMask | ButtonReleaseMask,
 			GrabModeAsync, GrabModeAsync, None, None);
 	}
 	
 	if (client)
 	{
-		XUngrabButton(dpy, AnyButton, AnyModifier, client->win);
-		XSetInputFocus(dpy, client->win, RevertToPointerRoot, CurrentTime);
+		XUngrabButton(client->dpy, AnyButton, AnyModifier, client->win);
+		XSetInputFocus(client->dpy, client->win, RevertToPointerRoot, CurrentTime);
 
 		Window focusr;
 		int revert;
-		XGetInputFocus(dpy, &focusr, &revert);
+		XGetInputFocus(client->dpy, &focusr, &revert);
 		if (focusr != client->win)
 		{
-			XGrabButton(dpy, AnyButton, AnyModifier, client->win,
+			XGrabButton(client->dpy, AnyButton, AnyModifier, client->win,
 				False, ButtonPressMask | ButtonReleaseMask,
 				GrabModeAsync, GrabModeAsync, None, None);
 		}
