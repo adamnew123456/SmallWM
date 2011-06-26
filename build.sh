@@ -24,8 +24,7 @@ release(){
 }
 
 clean(){
-	rm event.o &> /dev/null || noop
-	rm icons.o &> /dev/null || noop
+	rm *.o &> /dev/null || noop
 	rm smallwm &> /dev/null || noop
 	ls | grep "~" | xargs rm
 }

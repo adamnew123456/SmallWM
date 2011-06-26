@@ -12,6 +12,8 @@ Works at a basic level. Raise with Alt+PgUp, lower with Alt+PgDn.
 
 o Focus-Follows-Pointer - The focus follows the pointer, which prevents focus stealing by
 applications.
+    o NOTE that this feature is being removed - when the experimental branch is merged into master for 0.1.5,
+	  there will be a proper click-to-focus system.
 
 o Window Placeholders - SmallWM does not do window resizing and moving directly, because
 that is a graphically intensive operation. It instead uses placeholder windows that it 
@@ -32,6 +34,7 @@ Or you can build the Slackware package using `su -c "./slackpkg.sh"` and then ru
 Todo
 ====
 o Trying to implement a "Focus-Upon-Click" policy - hasn't worked out well so far (note that a partial solution already exists, however - Alt+PgUp on the desired window)
+    o NOTE that this will be done by 0.1.5, thanks to my brief study of the 9wm source
 o Find out how to get GNU indent to output code like astyle does
 
 Credits
