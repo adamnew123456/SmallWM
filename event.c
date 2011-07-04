@@ -88,9 +88,10 @@ eButtonRelease (Display * dpy, XEvent ev)
 		return;
     }
 
+	if (cli) chfocus(cli);
+
 	cli = fromicon(ev.xbutton.subwindow);
 	if (cli) unhide(cli, 0);
-	else chfocus(cli);
 }
 
 void
@@ -120,7 +121,5 @@ void
 eMapNotify (Display * dpy, XEvent ev)
 {
 	printf("A window has been mapped - %x\n", ev.xmap.window);
-	// Ignore anything we're not supposed to manage
-    if (!ev.xmap.override_redirect)	
-		create(dpy, ev.xmap.window);
+	create(dpy, ev.xmap.window);
 }

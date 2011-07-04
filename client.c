@@ -44,6 +44,8 @@ create(Display *dpy, Window win)
 	char *title = malloc(sizeof(32));
 
 	XGetWindowAttributes(dpy, win, &attr);
+	if (attr.override_redirect)
+		return NULL;
 	XFetchName(dpy, win, &title);
 
 	XSetWindowBorderWidth(dpy, win, 3);
@@ -103,7 +105,7 @@ hide(client_t *client)
 
 	client->icon = malloc(sizeof(icon_t));
 	client->icon->win = XCreateSimpleWindow(client->dpy, 
-				RootWindow(dpy, DefaultScreen(dpy)),
+				RootWindow(client->dpy, DefaultScreen(client->dpy)),
 				-200, -200, ICON_WIDTH, ICON_HEIGHT, 1, BLACK, WHITE);
 	XSelectInput(client->dpy, client->icon->win, ButtonPressMask | 
 				ButtonReleaseMask | ExposureMask);
@@ -141,14 +143,13 @@ unhide(client_t *client, int danger)
 void
 beginmvrsz(client_t *client)
 {	
-	if (client->state != MoveResz) return;
+	if (client->state != Visible) return;
 	client->state = MoveResz;
 
 	XUnmapWindow(client->dpy, client->win);
 
-	client->pholder = 
-		XCreateSimpleWindow(client->dpy, 
-			RootWindow(dpy, DefaultScreen(dpy)),
+	client->pholder = XCreateSimpleWindow(client->dpy, 
+			RootWindow(client->dpy, DefaultScreen(client->dpy)),
 			client->x, client->y, client->w, client->h,
 			1, BLACK, WHITE);
 	
@@ -260,8 +261,12 @@ chfocus(client_t *client)
 			GrabModeAsync, GrabModeAsync, None, None);
 	}
 	
-	if (client)
+	if (client && client->class != InputOnly)
 	{
+		XWindowAttributes attr;
+		XGetWindowAttributes(client->dpy, client->win, &attr);
+		if (attr.map_state != IsViewable) return;
+
 		XUngrabButton(client->dpy, AnyButton, AnyModifier, client->win);
 		XSetInputFocus(client->dpy, client->win, RevertToPointerRoot, CurrentTime);
 

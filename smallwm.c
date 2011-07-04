@@ -98,7 +98,7 @@ main ()
         case Expose:
 			cli = fromwin(ev.xexpose.window);
             paint(cli);
-            break;
+
         case DestroyNotify:
 			cli = fromwin(ev.xdestroywindow.window);
 			destroy(cli, 1);
