@@ -37,15 +37,11 @@ CALLBACK(eButtonPress)
 	client_t *ico = fromicon(ev.xbutton.window);
 
 	if (ico)
-	{
 		unhide(ico, 0);
-	}
 	// This is a really complex test to check to see if
 	// we are clicking the root window. Can it be simplfied?
-	// (Probably - I'm guessing with `ev.xbutton.window == root`)
-	else if (ev.xbutton.subwindow == None &&
-            ev.xbutton.button == 1 && 
-			!cli && !ico)
+	else if (ev.xbutton.window == ev.xbutton.root &&
+            ev.xbutton.button == 1 && !cli && !ico)
     {
         if (!fork())
         {
@@ -54,29 +50,34 @@ CALLBACK(eButtonPress)
         }
     }
 
-	if (inmove || inresz || !ev.xbutton.subwindow || ev.xbutton.state != MASK)
+	if (inmove || inresz || !(ev.xbutton.subwindow || ev.xbutton.window != ev.xbutton.root))
 		return;
 
-	if (!cli) return;
-
-    if (ev.xbutton.button == MOVE)
-    {
-        inmove = 1;
-		inresz = 0;
-		beginmvrsz(cli);
-		mouse = ev.xbutton;
-		moving = cli;
-    }
-	else if (ev.xbutton.button == RESZ)
+	if (ev.xbutton.state == MASK)
 	{
-		inmove = 0;
-		inresz = 1;
-		beginmvrsz(cli);
-		mouse = ev.xbutton;
-		moving = cli;
+    	if (ev.xbutton.button == MOVE)
+    	{
+       		inmove = 1;
+			inresz = 0;
+			beginmvrsz(cli);
+			mouse = ev.xbutton;
+			moving = cli;
+    	}
+		else if (ev.xbutton.button == RESZ)
+		{
+			inmove = 0;
+			inresz = 1;
+			beginmvrsz(cli);
+			mouse = ev.xbutton;
+			moving = cli;
+		}
 	}
 	else
+	{
+		cli = fromwin(ev.xbutton.window);
+		if (!cli) return;
 		chfocus(cli);
+	}
 }
 
 CALLBACK(eButtonRelease)

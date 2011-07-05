@@ -311,7 +311,7 @@ chfocus(client_t *client)
 {
 	if (focused)
 	{
-		XGrabButton(focused->dpy, AnyButton, AnyModifier, client->win, 
+		XGrabButton(focused->dpy, AnyButton, AnyModifier, focused->win, 
 			False, ButtonPressMask | ButtonReleaseMask,
 			GrabModeAsync, GrabModeAsync, None, None);
 	}
@@ -333,6 +333,7 @@ chfocus(client_t *client)
 			XGrabButton(client->dpy, AnyButton, AnyModifier, client->win,
 				False, ButtonPressMask | ButtonReleaseMask,
 				GrabModeAsync, GrabModeAsync, None, None);
+			focused = None;
 		}
 		else
 		{
