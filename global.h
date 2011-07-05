@@ -19,17 +19,17 @@ static Window root;
 #define ICON_HEIGHT 20
 
 // Screen dimensions
-#define SCREEN_WIDTH DisplayWidth(dpy, DefaultScreen(dpy))
-#define SCREEN_HEIGHT DisplayHeight(dpy, DefaultScreen(dpy))
+#define SCREEN_WIDTH(dpy) DisplayWidth(dpy, DefaultScreen(dpy))
+#define SCREEN_HEIGHT(dpy) DisplayHeight(dpy, DefaultScreen(dpy))
 
 // Basic colors
-#define BLACK BlackPixel(dpy, DefaultScreen(dpy))
-#define WHITE WhitePixel(dpy, DefaultScreen(dpy))
+#define BLACK(dpy) BlackPixel(dpy, DefaultScreen(dpy))
+#define WHITE(dpy) WhitePixel(dpy, DefaultScreen(dpy))
 
 // Utility definitions
 #define MOVE 1
 #define RESZ 3
-#define MASK Mod1Mask
+#define MASK Mod1Mask // Alt
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define SHELL "xterm"		// The universal X shell

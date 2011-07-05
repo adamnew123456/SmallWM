@@ -1,7 +1,20 @@
+/*
+ * This is most of the abstraction for dealing with clients.
+*/
 #include "client.h"
 
 client_t *head, *focused;
 
+// Get SmallWM to ignore this window (icons or resizing & moving)
+void
+ignore(Display *dpy, Window win)
+{
+	XSetWindowAttributes attr;
+	attr.override_redirect = True;
+	XChangeWindowAttributes(dpy, win, CWOverrideRedirect, &attr);
+}
+
+// Tail of the client list
 client_t*
 tail()
 {
@@ -10,6 +23,7 @@ tail()
 	return c;
 }
 
+// Get the client based upon the icon
 client_t*
 fromicon(Window icon)
 {
@@ -23,6 +37,7 @@ fromicon(Window icon)
 	return NULL;
 }
 
+// Get the client based upon the window
 client_t*
 fromwin(Window win)
 {
@@ -36,25 +51,28 @@ fromwin(Window win)
 	return NULL;
 }
 
+// Register a new client
 client_t*
 create(Display *dpy, Window win)
 {
-	client_t *cli = malloc(sizeof(client_t));
+	// Take care of things like dialogs who we
+	// shouldn't manage anyway
 	XWindowAttributes attr;
-	char *title = malloc(sizeof(32));
-
 	XGetWindowAttributes(dpy, win, &attr);
 	if (attr.override_redirect)
 		return NULL;
-	XFetchName(dpy, win, &title);
 
+	// Also make sure this window doesn't already exist
+	if (fromwin(win))
+		return NULL;
+
+	client_t *cli = malloc(sizeof(client_t));
 	XSetWindowBorderWidth(dpy, win, 3);
 
 	cli->dpy = dpy;
 	cli->win = win;
 	cli->pholder = None;
 	cli->icon = NULL;
-	cli->title = title;
 	cli->x = attr.x;
 	cli->y = attr.y;
 	cli->w = attr.width;
@@ -76,6 +94,7 @@ create(Display *dpy, Window win)
 	return cli;
 }
 
+// Get rid of an existing client
 void
 destroy(client_t *client, int danger)
 {
@@ -83,32 +102,42 @@ destroy(client_t *client, int danger)
 	client_t *succ = client->next;
 	while (prec && prec->next != client)
 		prec = prec->next;
+
 	if (!prec) return;
 
+	if (focused == client)
+		focused = None;
+
 	prec->next = succ;
-	if (client->icon)
+	if (client->state == Hidden)
 		unhide(client, 1);
 
 	if (!danger)
 		XDestroyWindow(client->dpy, client->win);
 
-	free(client->title);
 	free(client);
 
 	updicons();
 }
 
+// Hide (iconify) a client
 void
 hide(client_t *client)
 {
 	if (client->state != Visible) return;
 
 	client->icon = malloc(sizeof(icon_t));
+
 	client->icon->win = XCreateSimpleWindow(client->dpy, 
 				RootWindow(client->dpy, DefaultScreen(client->dpy)),
-				-200, -200, ICON_WIDTH, ICON_HEIGHT, 1, BLACK, WHITE);
-	XSelectInput(client->dpy, client->icon->win, ButtonPressMask | 
-				ButtonReleaseMask | ExposureMask);
+				-200, -200, ICON_WIDTH, ICON_HEIGHT, 
+				1, BLACK(client->dpy), WHITE(client->dpy));
+
+	ignore(client->dpy, client->icon->win);
+
+	XSelectInput(client->dpy, client->icon->win, 
+				ButtonPressMask | ButtonReleaseMask | ExposureMask);
+
 	XMapWindow(client->dpy, client->icon->win);
 
 	client->icon->gc = XCreateGC(client->dpy, client->icon->win, 0, NULL);
@@ -120,6 +149,7 @@ hide(client_t *client)
 	updicons();
 }
 
+// Unhide (deiconify) a client
 void
 unhide(client_t *client, int danger)
 {
@@ -140,6 +170,7 @@ unhide(client_t *client, int danger)
 	updicons();
 }
 
+// Begin moving/resizing a client
 void
 beginmvrsz(client_t *client)
 {	
@@ -148,11 +179,13 @@ beginmvrsz(client_t *client)
 
 	XUnmapWindow(client->dpy, client->win);
 
-	client->pholder = XCreateSimpleWindow(client->dpy, 
+	client->pholder = XCreateSimpleWindow(client->dpy,
 			RootWindow(client->dpy, DefaultScreen(client->dpy)),
 			client->x, client->y, client->w, client->h,
-			1, BLACK, WHITE);
+			1, BLACK(client->dpy), WHITE(client->dpy));
 	
+	ignore(client->dpy, client->pholder);
+
 	XMapWindow(client->dpy, client->pholder);
 
 	XGrabPointer(client->dpy, client->pholder, True,
@@ -163,6 +196,7 @@ beginmvrsz(client_t *client)
 	XRaiseWindow(client->dpy, client->pholder);
 }
 
+// Stop moving/resizing a client
 void
 endmoversz(client_t *client)
 {
@@ -187,6 +221,7 @@ endmoversz(client_t *client)
 	raise_(client);
 }
 
+// Raise a client to the toplevel
 void
 raise_(client_t *client)
 {
@@ -194,6 +229,7 @@ raise_(client_t *client)
 	XRaiseWindow(client->dpy, client->win);
 }
 
+// Lower a client to the bottomlevel
 void
 lower(client_t *client)
 {
@@ -201,18 +237,20 @@ lower(client_t *client)
 	XLowerWindow(client->dpy, client->win);
 }
 
+// Maximize a client (doesn't work with xrandr)
 void
 maximize(client_t *client)
 {
 	client->x = 0;
 	client->y = ICON_HEIGHT;
-	client->w = SCREEN_WIDTH;
-	client->h = SCREEN_HEIGHT - ICON_HEIGHT;
+	client->w = SCREEN_WIDTH(client->dpy);
+	client->h = SCREEN_HEIGHT(client->dpy) - ICON_HEIGHT;
 
 	XMoveResizeWindow(client->dpy, client->win, client->x, client->y,
 		client->w, client->h);
 }
 
+// Update all icon positions, and redraw them
 void
 updicons()
 {
@@ -222,9 +260,13 @@ updicons()
 
 	while (curr)
 	{
-		if (curr->state != Hidden) continue;
+		if (curr->state != Hidden)
+		{
+			curr = curr->next;
+			continue;
+		}
 
-		if (x + ICON_WIDTH > SCREEN_WIDTH)
+		if (x + ICON_WIDTH > SCREEN_WIDTH(curr->dpy))
 		{
 			x = 0;
 			y += ICON_HEIGHT;
@@ -242,15 +284,28 @@ updicons()
 	}
 }
 
+// Paint a specific icon
 void
 paint(client_t *client)
 {
+	char *title = malloc(200);
+	XFetchName(client->dpy, client->win, &title);
+
 	XClearWindow(client->dpy, client->icon->win);
-	XDrawString(client->dpy, client->win, client->icon->gc, 0, ICON_HEIGHT,
-		(client->title ? client->title : 0),
-		MIN((client->title ? strlen(client->title) : 0), 10));
+	XDrawString(client->dpy, client->icon->win, client->icon->gc, 0, ICON_HEIGHT,
+		(title ? title : " "),
+		MIN((title ? strlen(title) : 0), 10));
+
+	XFlush(client->dpy);
+
+	free(title);
 }
 
+/* Change focus
+ *
+ * The idea for this was snatched (blatantly) from 9wm, which has a really
+ * neat click-to-focus implementation that's insanely easy to follow.
+*/
 void
 chfocus(client_t *client)
 {

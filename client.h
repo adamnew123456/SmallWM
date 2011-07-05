@@ -3,23 +3,25 @@
 
 #include "global.h"
 
+// All the states a client can be in
 typedef enum {
 	Visible,
 	Hidden,
 	MoveResz
 } WState;
 
+// Information needed to manage/draw icons
 typedef struct {
 	Window win;
 	GC gc;
 	int x,y;
 } icon_t;
 
+// All info about a client
 typedef struct client_s {
 	Display *dpy;
 	Window win, pholder;
 	icon_t *icon;
-	char *title;
 	int x,y;
 	unsigned int w, h;
 	WState state;

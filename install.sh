@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# Installs smallwm in $1
+# Installs SmallWM into /usr/local/bin. You have to change the
+# BASE variable in order to change the location
 BASE="/usr/local"
 TEST="no"
 

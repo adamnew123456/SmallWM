@@ -1,20 +1,13 @@
-/*
- * Handling of Xlib events, specifically
- *  - KeyPress
- *  - ButtonPress
- *  - ButtonRelease
- *  - MotionNotify
- *  - MapNotify
- */
 #include "event.h"
 
 static XButtonEvent mouse;
-static inmove = 0, inresz = 0;
-client_t *moving;
+static int inmove = 0, inresz = 0;
+client_t *moving; // Misnomer - used either (Moving and Resizing) way
 
-void
-eKeyPress (Display * dpy, XEvent ev)
+CALLBACK(eKeyPress)
 {
+	GET_EVENT;
+
     int nkeys;
     KeySym *ksym = NULL;
     ksym = XGetKeyboardMapping (dpy, ev.xkey.keycode, 1, &nkeys);
@@ -30,28 +23,37 @@ eKeyPress (Display * dpy, XEvent ev)
     {
         if (*ksym == SHORTCUTS[i].ksym)
         {
-            (*SHORTCUTS[i].callback) (ev, cli);
+            (*SHORTCUTS[i].callback) (evp, cli);
             break;
         }
     }
 }
 
-void
-eButtonPress (Display * dpy, XEvent ev)
-{
-	client_t *cli = fromwin(ev.xbutton.subwindow);
+CALLBACK(eButtonPress)
+{	
+	GET_EVENT;
 
-    // Root window - run the SHELL
-    if (ev.xbutton.subwindow == None &&
-            ev.xbutton.button == 1 && !cli)
+	client_t *cli = fromwin(ev.xbutton.subwindow);
+	client_t *ico = fromicon(ev.xbutton.window);
+
+	if (ico)
+	{
+		unhide(ico, 0);
+	}
+	// This is a really complex test to check to see if
+	// we are clicking the root window. Can it be simplfied?
+	// (Probably - I'm guessing with `ev.xbutton.window == root`)
+	else if (ev.xbutton.subwindow == None &&
+            ev.xbutton.button == 1 && 
+			!cli && !ico)
     {
-        if (!fork ())
+        if (!fork())
         {
             execlp (SHELL, SHELL, NULL);
             exit (1);
         }
     }
-	
+
 	if (inmove || inresz || !ev.xbutton.subwindow || ev.xbutton.state != MASK)
 		return;
 
@@ -65,7 +67,7 @@ eButtonPress (Display * dpy, XEvent ev)
 		mouse = ev.xbutton;
 		moving = cli;
     }
-	else if (ev.xbutton.button = RESZ)
+	else if (ev.xbutton.button == RESZ)
 	{
 		inmove = 0;
 		inresz = 1;
@@ -73,35 +75,34 @@ eButtonPress (Display * dpy, XEvent ev)
 		mouse = ev.xbutton;
 		moving = cli;
 	}
+	else
+		chfocus(cli);
 }
 
-void
-eButtonRelease (Display * dpy, XEvent ev)
+CALLBACK(eButtonRelease)
 {
+	GET_EVENT;
+
 	client_t *cli = fromwin(ev.xbutton.subwindow);
 	
     if (inmove || inresz)
     {
-		endmoversz(cli);
+		endmoversz(moving);
         inmove = 0;
 		inresz = 0;
 		return;
     }
-
-	if (cli) chfocus(cli);
-
-	cli = fromicon(ev.xbutton.subwindow);
-	if (cli) unhide(cli, 0);
 }
 
-void
-eMotionNotify (Display * dpy, XEvent ev)
+CALLBACK(eMotionNotify)
 {
-    if (!(inmove || inresz))
+	GET_EVENT;
+
+    if (!(inmove || inresz)) // We don't care
         return;
 
     // Get the latest move event - don't update needlessly
-    while (XCheckTypedEvent (dpy, MotionNotify, &ev));
+    while (XCheckTypedEvent (dpy, MotionNotify, evp));
 
     // Visually move/resize
     int xdiff, ydiff;
@@ -117,9 +118,8 @@ eMotionNotify (Display * dpy, XEvent ev)
 	}
 }
 
-void
-eMapNotify (Display * dpy, XEvent ev)
+CALLBACK(eMapNotify)
 {
-	printf("A window has been mapped - %x\n", ev.xmap.window);
+	GET_EVENT;
 	create(dpy, ev.xmap.window);
 }

@@ -4,18 +4,20 @@
 #include "global.h"
 #include "client.h"
 
+// A key-value (pun intended) mapping to shrink code
 typedef struct
 {
     KeySym ksym;
-    void (*callback) (XEvent, client_t*);
+    void (*callback) (XEvent*, client_t*);
 } uevent_t;
 
-#define GET_CLIENT(name) client_t *name = fromevent(ev)
-
 // Used to define a keyboard shortcut callback
-#define UCALLBACK(name) static void name(XEvent ev, client_t* cli)
+#define UCALLBACK(name) static void name(XEvent* ev, client_t* cli)
 
-// /////////////////////////////////////////////
+// Resolve the event pointer into an actual struct
+#define GET_EVENT XEvent ev = *evp
+
+// ////////////////////////////////////////////////////
 // Here are the keyboard shortcuts - their functions
 // are implemented in the header as to be easy to edit.
 // Their static definition doesn't hurt anything here,
@@ -57,7 +59,7 @@ static uevent_t SHORTCUTS[NSHORTCUTS] = {
 };
 
 // Used for event loop callback (ie from X)
-#define CALLBACK(name) void name(Display*, XEvent)
+#define CALLBACK(name) void name(Display* dpy, XEvent* evp)
 CALLBACK (eKeyPress);
 CALLBACK (eButtonPress);
 CALLBACK (eButtonRelease);

@@ -3,7 +3,7 @@
 # Builds a Slackware compatable package to either install or
 # convert
 
-VERSION="0.1.4"
+VERSION="0.2"
 ARCH="i686"
 
 if [ -e "working" ]; then
@@ -34,10 +34,10 @@ for line in "SmallWM (A Hacked for Readability version of TinyWM)" \
 			"" \
 	        "SmallWM is a refactored hack of TinyWM that has new " \
 	        "features such as window bordering, Xterm-at-a-click, " \
-	        "window layering, and focus-follows-pointer." \
+	        "window layering, and focus-on-click." \
 	        "" \
 		  	"Despite all these improvements, the binary remains" \
-			"under 50K, under 500 LOC, and rock solid." \
+			"under 50K, under 1000 LOC, and rock solid." \
 			"" \
 			"" \
             "Packaged and written by Adam Marchetti"; do
@@ -51,6 +51,7 @@ for line in "[Desktop Entry]" "Name=SmallWM" "Icon=" \
 	echo $line >> working/usr/share/xsessions/smallwm.desktop
 done
 
+# Feel free to change this to sudo, if it makes you feel better.
 cd working
 su -c "makepkg --linkadd y --chown y  ../smallwm-$VERSION-$ARCH-1.tgz &> /dev/null"
 

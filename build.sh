@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# bash syntax makes more sense than Makefile syntax, and won't puke over tabs.
 
 noop(){
 	:

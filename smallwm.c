@@ -1,12 +1,15 @@
 /*
- * TinyWM is written by Nick Welch <mack@incise.org>, 2005. SmallWM was
- * hacked out of TinyWM by Adam Marchetti <adamnew123456@gmail.com>, 2010.
+ * TinyWM is written by Nick Welch <mack@incise.org>, 2005. 
+ *
+ * SmallWM was hacked out of TinyWM by Adam Marchetti <adamnew123456@gmail.com>, 2010.
+ *
  * This software is in the public domain and is provided AS IS, with NO
  * WARRANTY.
  */
 
 #include "smallwm.h"
 
+// Reaps children
 void
 sigchld (int signal)
 {
@@ -14,6 +17,7 @@ sigchld (int signal)
     wait (&status);
 }
 
+// Manage all existing windows
 void
 getexisting(Display *dpy, Window root)
 {
@@ -33,18 +37,17 @@ getexisting(Display *dpy, Window root)
 int
 main ()
 {
-	// Reap the children
     signal (SIGCHLD, sigchld);
 
-    XEvent ev;
+    XEvent *ev = malloc(sizeof(XEvent));
 
     if (!(dpy = XOpenDisplay (NULL)))
         return 1;
 
     root = DefaultRootWindow (dpy);
-    XSelectInput (dpy, root, KeyPressMask |
-                  ButtonPressMask |
-                  ButtonReleaseMask |
+    XSelectInput (dpy, root, 
+				  KeyPressMask |
+                  ButtonPressMask | ButtonReleaseMask |
                   PointerMotionMask | SubstructureNotifyMask);
 
 	getexisting(dpy, root);
@@ -75,10 +78,10 @@ main ()
 
     while (1)
     {
-        XNextEvent (dpy, &ev);
+        XNextEvent (dpy, ev);
 		client_t *cli;
 
-        switch (ev.type)
+        switch (ev->type)
         {
         case KeyPress:
             eKeyPress (dpy, ev);
@@ -96,11 +99,12 @@ main ()
             eMapNotify (dpy, ev);
             break;
         case Expose:
-			cli = fromwin(ev.xexpose.window);
-            paint(cli);
-
+			cli = fromicon(ev->xexpose.window);
+            paint(cli); // No need to check - only icons
+			break;      // will give  us this event
         case DestroyNotify:
-			cli = fromwin(ev.xdestroywindow.window);
+			cli = fromwin(ev->xdestroywindow.window);
+			if (!cli) break;
 			destroy(cli, 1);
 			break;
         }
