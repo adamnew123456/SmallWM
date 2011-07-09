@@ -5,6 +5,16 @@
 
 client_t *head, *focused;
 
+static int error_fails;
+
+// Ignore an error
+int
+error_ignore(Display *dpy, XErrorEvent *ev)
+{
+    error_fails = 1;
+    return;
+}
+
 // Get SmallWM to ignore this window (icons or resizing & moving)
 void
 ignore(Display *dpy, Window win)
@@ -58,7 +68,16 @@ create(Display *dpy, Window win)
 	// Take care of things like dialogs who we
 	// shouldn't manage anyway
 	XWindowAttributes attr;
+
+    // Sometimes windows will appear and disappear fast (a la gksu)
+    // Avoid dying over the little buggers
+    error_fails = 0;
+    XSetErrorHandler(error_ignore);
 	XGetWindowAttributes(dpy, win, &attr);
+    XSetErrorHandler(NULL);
+
+    if (error_fails) return NULL;
+
 	if (attr.override_redirect)
 		return NULL;
 
