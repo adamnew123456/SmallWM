@@ -4,12 +4,19 @@
 #include "global.h"
 #include "client.h"
 
-// A key-value (pun intended) mapping to shrink code
+// A key-value mapping to shrink code
 typedef struct
 {
     KeySym ksym;
     void (*callback) (XEvent*, client_t*);
 } uevent_t;
+
+typedef struct
+{
+    XButtonEvent mouse;
+    int inmove, inresz;
+    client_t *client;
+} moving_t;
 
 // Used to define a keyboard shortcut callback
 #define UCALLBACK(name) static void name(XEvent* ev, client_t* cli)

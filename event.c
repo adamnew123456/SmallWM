@@ -1,8 +1,6 @@
 #include "event.h"
 
-static XButtonEvent mouse;
-static int inmove = 0, inresz = 0;
-client_t *moving; // Misnomer - used either (Moving and Resizing) way
+moving_t moving_state;
 
 CALLBACK(eKeyPress)
 {
@@ -15,8 +13,7 @@ CALLBACK(eKeyPress)
 	if (*ksym == XK_Escape) exit(0);
 
 	client_t *cli = fromwin(ev.xkey.subwindow);
-	if (!cli) return;
-	if (cli->state != Visible) return;
+	if (!cli || cli->state != Visible) return;
 
     int i;
     for (i = 0; i < NSHORTCUTS; i++)
@@ -57,19 +54,19 @@ CALLBACK(eButtonPress)
 	{
     	if (ev.xbutton.button == MOVE)
     	{
-       		inmove = 1;
-			inresz = 0;
-			beginmvrsz(cli);
-			mouse = ev.xbutton;
-			moving = cli;
+            moving_state.inmove = 1;
+            moving_state.inresz = 0;
+            beginmvrsz(cli);
+            moving_state.mouse = ev.xbutton;
+            moving_state.client = cli;
     	}
 		else if (ev.xbutton.button == RESZ)
 		{
-			inmove = 0;
-			inresz = 1;
-			beginmvrsz(cli);
-			mouse = ev.xbutton;
-			moving = cli;
+            moving_state.inmove = 0;
+            moving_state.inresz = 1;
+            beginmvrsz(cli);
+            moving_state.mouse = ev.xbutton;
+            moving_state.client = cli;
 		}
 	}
 	else
@@ -86,11 +83,11 @@ CALLBACK(eButtonRelease)
 
 	client_t *cli = fromwin(ev.xbutton.subwindow);
 	
-    if (inmove || inresz)
+    if (moving_state.inmove || moving_state.inresz)
     {
 		endmoversz(moving);
-        inmove = 0;
-		inresz = 0;
+        moving_state.inmove = 0;
+        moving_state.inresz = 0;
 		return;
     }
 }
@@ -99,7 +96,7 @@ CALLBACK(eMotionNotify)
 {
 	GET_EVENT;
 
-    if (!(inmove || inresz)) // We don't care
+    if (!(moving_state.inmove || moving_state.inresz)) // We don't care
         return;
 
     // Get the latest move event - don't update needlessly
@@ -107,12 +104,12 @@ CALLBACK(eMotionNotify)
 
     // Visually move/resize
     int xdiff, ydiff;
-    xdiff = ev.xbutton.x_root - mouse.x_root;
-    ydiff = ev.xbutton.y_root - mouse.y_root;
+    xdiff = ev.xbutton.x_root - moving_state.mouse.x_root;
+    ydiff = ev.xbutton.y_root - moving_state.mouse.y_root;
 
-    if (inmove)
+    if (moving_state.invmove)
         XMoveWindow (dpy, moving->pholder, moving->x + xdiff, moving->y + ydiff);
-    if (inresz)
+    if (moving_state.inresz)
 	{
         XResizeWindow (dpy, moving->pholder, MAX (1, moving->w + xdiff),
 			MAX (1, moving->h + ydiff));
