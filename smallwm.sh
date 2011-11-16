@@ -4,4 +4,4 @@ if [ -x "$HOME/.smallwm.sh" ]; then
 	$HOME/.smallwm.sh
 fi
 
-/usr/local/bin/smallwm
+/usr/local/bin/smallwm &> /tmp/smallwm.log

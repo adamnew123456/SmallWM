@@ -69,14 +69,7 @@ create(Display *dpy, Window win)
 	// shouldn't manage anyway
 	XWindowAttributes attr;
 
-    // Sometimes windows will appear and disappear fast (a la gksu)
-    // Avoid dying over the little buggers
-    error_fails = 0;
-    XSetErrorHandler(error_ignore);
 	XGetWindowAttributes(dpy, win, &attr);
-    XSetErrorHandler(NULL);
-
-    if (error_fails) return NULL;
 
 	if (attr.override_redirect)
 		return NULL;
