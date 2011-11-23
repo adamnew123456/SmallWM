@@ -47,7 +47,7 @@ CALLBACK(eButtonPress)
         }
     }
 
-	if (inmove || inresz || !(ev.xbutton.subwindow || ev.xbutton.window != ev.xbutton.root))
+	if (moving_state.inmove || moving_state.inresz || !(ev.xbutton.subwindow || ev.xbutton.window != ev.xbutton.root))
 		return;
 
 	if (ev.xbutton.state == MASK)
@@ -85,7 +85,7 @@ CALLBACK(eButtonRelease)
 	
     if (moving_state.inmove || moving_state.inresz)
     {
-		endmoversz(moving);
+		endmoversz(moving_state.client);
         moving_state.inmove = 0;
         moving_state.inresz = 0;
 		return;
@@ -107,12 +107,12 @@ CALLBACK(eMotionNotify)
     xdiff = ev.xbutton.x_root - moving_state.mouse.x_root;
     ydiff = ev.xbutton.y_root - moving_state.mouse.y_root;
 
-    if (moving_state.invmove)
-        XMoveWindow (dpy, moving->pholder, moving->x + xdiff, moving->y + ydiff);
+    if (moving_state.inmove)
+        XMoveWindow (dpy, moving_state.client->pholder, moving_state.client->x + xdiff, moving_state.client->y + ydiff);
     if (moving_state.inresz)
 	{
-        XResizeWindow (dpy, moving->pholder, MAX (1, moving->w + xdiff),
-			MAX (1, moving->h + ydiff));
+        XResizeWindow (dpy, moving_state.client->pholder, MAX (1, moving_state.client->w + xdiff),
+			MAX (1, moving_state.client->h + ydiff));
 	}
 }
 

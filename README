@@ -18,6 +18,9 @@ deletes after moving.
 
 o Window Borders - Just a simple border to see the extent of a window.
 
+o Window Refreshing - Windows can be refreshed (unmapped and mapped quickly) by using Alt+r.
+This avoids subtle focus issues with applications like Chromium which cause certain issues.
+
 o Startup File - The startup file is ~/.smallwm.sh
 
 Install

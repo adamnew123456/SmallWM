@@ -56,13 +56,22 @@ UCALLBACK (Hide)
     hide(cli);
 }
 
-#define NSHORTCUTS 5
+UCALLBACK (Refresh)
+{
+    // Apparently, taking a window and re-mapping it allows
+    // it to gain back the ability to focus. Huh.
+    XUnmapWindow(cli->dpy, cli->win);
+    XMapWindow(cli->dpy, cli->win);
+}
+
+#define NSHORTCUTS 6
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
     {XK_Page_Up, RaiseWindow},
     {XK_Page_Down, LowerWindow},
     {XK_m, Maximize},
     {XK_c, Close},
     {XK_h, Hide},
+    {XK_r, Refresh},
 };
 
 // Used for event loop callback (ie from X)
