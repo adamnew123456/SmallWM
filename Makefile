@@ -4,16 +4,20 @@ client.o: client.c
 event.o: event.c
 	gcc -c event.c -g
 
-smallwm: client.o event.o
+smallwm: smallwm.c smallwm.c client.o event.o
 	gcc smallwm.c event.o client.o -o smallwm -lX11 -g
 
-smallwm-release: client.o event.o
+smallwm-release: smallwm.c global.h smallwm.c client.o event.o
 	gcc smallwm.c event.o client.o -o smallwm-release -lX11 -O3
 
 xephyr-test: smallwm
 	Xephyr :20 &
 	sleep 5
-	DISPLAY=":20" gdb smallwm
+	gdb -ex "set environment DISPLAY = :20" smallwm
+
+reformat:
+	indent -linux *.c *.h 
+	rm *~
 
 clean:
 	rm -f *.o smallwm smallwm-release *~

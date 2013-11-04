@@ -14,6 +14,8 @@
 static Display *dpy;
 static Window root;
 
+void die(const char *, int);
+
 // Icon dimensions
 #define ICON_WIDTH 75
 #define ICON_HEIGHT 20
@@ -29,7 +31,7 @@ static Window root;
 // Utility definitions
 #define MOVE 1
 #define RESZ 3
-#define MASK Mod1Mask // Alt
+#define MASK Mod4Mask
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define SHELL "xterm"		// The universal X shell

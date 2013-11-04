@@ -14,7 +14,7 @@ typedef enum {
 typedef struct {
 	Window win;
 	GC gc;
-	int x,y;
+	int x, y;
 } icon_t;
 
 // All info about a client
@@ -22,7 +22,7 @@ typedef struct client_s {
 	Display *dpy;
 	Window win, pholder;
 	icon_t *icon;
-	int x,y;
+	int x, y;
 	unsigned int w, h;
 	WState state;
 	int class;
@@ -36,10 +36,10 @@ client_t *tail();
 client_t *fromicon(Window);
 client_t *fromwin(Window);
 
-client_t *create(Display*, Window);
+client_t *create(Display *, Window);
 void destroy(client_t *, int);
-void hide(client_t*);
-void unhide(client_t*, int);
+void hide(client_t *);
+void unhide(client_t *, int);
 
 void raise_(client_t *);
 void lower(client_t *);

@@ -5,17 +5,15 @@
 #include "client.h"
 
 // A key-value mapping to shrink code
-typedef struct
-{
-    KeySym ksym;
-    void (*callback) (XEvent*, client_t*);
+typedef struct {
+	KeySym ksym;
+	void (*callback) (XEvent *, client_t *);
 } uevent_t;
 
-typedef struct
-{
-    XButtonEvent mouse;
-    int inmove, inresz;
-    client_t *client;
+typedef struct {
+	XButtonEvent mouse;
+	int inmove, inresz;
+	client_t *client;
 } moving_t;
 
 // Used to define a keyboard shortcut callback
@@ -31,55 +29,55 @@ typedef struct
 // and this works well enough in practice. (Though it
 // is bad form).
 //
-UCALLBACK (RaiseWindow)
+UCALLBACK(RaiseWindow)
 {
 	raise_(cli);
 }
 
-UCALLBACK (LowerWindow)
+UCALLBACK(LowerWindow)
 {
 	lower(cli);
 }
 
-UCALLBACK (Maximize)
+UCALLBACK(Maximize)
 {
 	maximize(cli);
 }
 
-UCALLBACK (Close)
+UCALLBACK(Close)
 {
 	destroy(cli, 0);
 }
 
-UCALLBACK (Hide)
+UCALLBACK(Hide)
 {
-    hide(cli);
+	hide(cli);
 }
 
-UCALLBACK (Refresh)
+UCALLBACK(Refresh)
 {
-    // Apparently, taking a window and re-mapping it allows
-    // it to gain back the ability to focus. Huh.
-    XUnmapWindow(cli->dpy, cli->win);
-    XMapWindow(cli->dpy, cli->win);
+	// Apparently, taking a window and re-mapping it allows
+	// it to gain back the ability to focus. Huh.
+	XUnmapWindow(cli->dpy, cli->win);
+	XMapWindow(cli->dpy, cli->win);
 }
 
 #define NSHORTCUTS 6
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
-    {XK_Page_Up, RaiseWindow},
-    {XK_Page_Down, LowerWindow},
-    {XK_m, Maximize},
-    {XK_c, Close},
-    {XK_h, Hide},
-    {XK_r, Refresh},
+	{XK_Page_Up, RaiseWindow},
+	{XK_Page_Down, LowerWindow},
+	{XK_m, Maximize},
+	{XK_c, Close},
+	{XK_h, Hide},
+	{XK_r, Refresh},
 };
 
 // Used for event loop callback (ie from X)
 #define CALLBACK(name) void name(Display* dpy, XEvent* evp)
-CALLBACK (eKeyPress);
-CALLBACK (eButtonPress);
-CALLBACK (eButtonRelease);
-CALLBACK (eMotionNotify);
-CALLBACK (eMapNotify);
+CALLBACK(eKeyPress);
+CALLBACK(eButtonPress);
+CALLBACK(eButtonRelease);
+CALLBACK(eMotionNotify);
+CALLBACK(eMapNotify);
 
 #endif

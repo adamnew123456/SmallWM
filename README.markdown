@@ -22,7 +22,7 @@ Namely, it has the following interesting targets:
 
 Bugs/Todo
 =========
-- As far as I can tell, all of the keyboard shortcuts are entirely broken. I'm working on that.
+- None at the moment
 
 Credits
 =======
