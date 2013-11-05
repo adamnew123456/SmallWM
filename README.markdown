@@ -4,12 +4,12 @@ SmallWM is an extended version of TinyWM, made for actual desktop use.
 
 Improvements over TinyWM
 ========================
-- Window Iconification - Windows can be hidden with Alt+h, when they are hidden and placed in little rectangles at the top of the screen.
-- Window ``Layering`` - Windows can be layered, but little policy is actually enforced. Works at a basic level. Raise with Alt+PgUp, lower with Alt+PgDn.
+- Window Iconification - Windows can be hidden with Super+h, when they are hidden and placed in little rectangles at the top of the screen.
+- Window Layering - Windows can be layered, but little policy is actually enforced. Works at a basic level. Raise with Super+PgUp, lower with Super+PgDn.
 - Click-To-Focus - SmallWM reimplements an idea from 9wm, keeping the focusing code small.
 - Window Placeholders - SmallWM does not do window resizing and moving directly, because that is a graphically intensive operation. It instead uses placeholder windows that it deletes after moving.
 - Window Borders - Just a simple border to see the extent of a window.
-- Window Refreshing - Windows can be refreshed (unmapped and mapped quickly) by using Alt+r. This avoids subtle focus issues with applications like Chromium which cause certain issues.
+- Window Refreshing - Windows can be refreshed (unmapped and mapped quickly) by using Super+r. This avoids subtle focus issues with applications like Chromium which cause certain issues.
 
 Building
 ========
