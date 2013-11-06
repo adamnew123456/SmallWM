@@ -6,14 +6,14 @@
 
 // A key-value mapping to shrink code
 typedef struct {
-	KeySym ksym;
-	void (*callback) (XEvent *, client_t *);
+    KeySym ksym;
+    void (*callback) (XEvent *, client_t *);
 } uevent_t;
 
 typedef struct {
-	XButtonEvent mouse;
-	int inmove, inresz;
-	client_t *client;
+    XButtonEvent mouse;
+    int inmove, inresz;
+    client_t *client;
 } moving_t;
 
 // Used to define a keyboard shortcut callback
@@ -31,67 +31,67 @@ typedef struct {
 //
 UCALLBACK(RaiseWindow)
 {
-	raise_(cli);
+    raise_(cli);
 }
 
 UCALLBACK(LowerWindow)
 {
-	lower(cli);
+    lower(cli);
 }
 
 UCALLBACK(Maximize)
 {
-	maximize(cli);
+    maximize(cli);
 }
 
 UCALLBACK(Close)
 {
-	destroy(cli, 0);
+    destroy(cli, 0);
 }
 
 UCALLBACK(Hide)
 {
-	hide(cli);
+    hide(cli);
 }
 
 UCALLBACK(Refresh)
 {
-	// Apparently, taking a window and re-mapping it allows
-	// it to gain back the ability to focus. Huh.
-	XUnmapWindow(cli->dpy, cli->win);
-	XMapWindow(cli->dpy, cli->win);
+    // Apparently, taking a window and re-mapping it allows
+    // it to gain back the ability to focus. Huh.
+    XUnmapWindow(cli->dpy, cli->win);
+    XMapWindow(cli->dpy, cli->win);
 }
 
 UCALLBACK(MoveToNextDesktop)
 {
-	int next_desktop = (cli->desktop + 1) % MAX_DESKTOP;
-	cli->desktop = next_desktop;
+    int next_desktop = (cli->desktop + 1) % MAX_DESKTOP;
+    cli->desktop = next_desktop;
 
-	set_desktop(current_desktop);
+    set_desktop();
 }
 
 UCALLBACK(MoveToPrevDesktop)
 {
-	int prev_desktop = cli->desktop - 1;
-	while (prev_desktop < 0)
-		prev_desktop += MAX_DESKTOP;
-	cli->desktop = prev_desktop;
+    int prev_desktop = cli->desktop - 1;
+    while (prev_desktop < 0)
+        prev_desktop += MAX_DESKTOP;
+    cli->desktop = prev_desktop;
 
-	set_desktop(current_desktop);
+    set_desktop();
 }
 
 // The difference between SHORTCUTS and KEYBINDS is that
 // SHORTCUTS apply to a client, while KEYBINDS do not affect a window
 #define NSHORTCUTS 8
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
-	{XK_Page_Up, RaiseWindow},
-	{XK_Page_Down, LowerWindow},
-	{XK_m, Maximize},
-	{XK_c, Close},
-	{XK_h, Hide},
-	{XK_r, Refresh},
-	{XK_bracketright, MoveToNextDesktop},
-	{XK_bracketleft, MoveToPrevDesktop},
+    {XK_Page_Up, RaiseWindow},
+    {XK_Page_Down, LowerWindow},
+    {XK_m, Maximize},
+    {XK_c, Close},
+    {XK_h, Hide},
+    {XK_r, Refresh},
+    {XK_bracketright, MoveToNextDesktop},
+    {XK_bracketleft, MoveToPrevDesktop},
 };
 
 #define NKEYBINDS 3

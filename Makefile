@@ -16,7 +16,8 @@ xephyr-test: smallwm
 	gdb -ex "set environment DISPLAY = :20" smallwm
 
 reformat:
-	indent -linux *.c *.h 
+	indent -linux *.c *.h
+	sed -i~ 's/\t/    /g' *.c *.h
 	rm *~
 
 clean:
