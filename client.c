@@ -74,6 +74,7 @@ client_t *create(Display * dpy, Window win)
 	cli->h = attr.height;
 	cli->state = Visible;
 	cli->class = attr.class;
+	cli->desktop = current_desktop;
 	cli->next = NULL;
 
 	if (!head)
@@ -165,6 +166,27 @@ void unhide(client_t * client, int danger)
 	client->state = Visible;
 
 	updicons();
+}
+
+// Sets the current desktop and maps/unmaps all necessary windows
+void set_desktop(int desktop)
+{
+	client_t *client = head;
+	XWindowAttributes attr;
+
+	while (client) {
+		if (client->state == Visible) {
+			XGetWindowAttributes(client->dpy, client->win, &attr);
+
+			if (attr.map_state == IsViewable
+			    && client->desktop != desktop)
+				XUnmapWindow(client->dpy, client->win);
+			else if (attr.map_state != IsViewable
+				 && client->desktop == desktop)
+				XMapWindow(client->dpy, client->win);
+		}
+        client = client->next;
+	}
 }
 
 // Begin moving/resizing a client

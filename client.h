@@ -26,11 +26,15 @@ typedef struct client_s {
 	unsigned int w, h;
 	WState state;
 	int class;
+	int desktop;
 	struct client_s *next;
 } client_t;
 
 extern client_t *head;
 extern client_t *focused;
+
+static int current_desktop = 0;
+#define MAX_DESKTOP 5
 
 client_t *tail();
 client_t *fromicon(Window);
@@ -40,6 +44,8 @@ client_t *create(Display *, Window);
 void destroy(client_t *, int);
 void hide(client_t *);
 void unhide(client_t *, int);
+
+void set_desktop(int);
 
 void raise_(client_t *);
 void lower(client_t *);

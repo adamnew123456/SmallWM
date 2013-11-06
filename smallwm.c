@@ -10,26 +10,23 @@
 #include "smallwm.h"
 
 // The X error handler
-int x_error_handler(Display *dpy, XErrorEvent *error)
+int x_error_handler(Display * dpy, XErrorEvent * error)
 {
-    char err_desc[500];
-    XGetErrorText(dpy, error->error_code, err_desc, 500);
+	char err_desc[500];
+	XGetErrorText(dpy, error->error_code, err_desc, 500);
 
-    printf("\n****************\n"
-           "X Gave An Error\n"
-           "=================\n"
-           " - Display: %s\n"
-           " - Serial Number: %lu\n"
-           " - Error Code: %d (%s)\n"
-           " - Request Code: %d\n"
-           " - Minor Code: %d\n",
-
-           XDisplayName(NULL),
-           error->serial,
-           error->error_code,
-           err_desc,
-           error->request_code,
-           error->minor_code);
+	printf("\n****************\n"
+	       "X Gave An Error\n"
+	       "=================\n"
+	       " - Display: %s\n"
+	       " - Serial Number: %lu\n"
+	       " - Error Code: %d (%s)\n"
+	       " - Request Code: %d\n"
+	       " - Minor Code: %d\n",
+	       XDisplayName(NULL),
+	       error->serial,
+	       error->error_code,
+	       err_desc, error->request_code, error->minor_code);
 }
 
 // Prints a message and crashes
@@ -68,7 +65,7 @@ int main()
 	int retval;
 
 	signal(SIGCHLD, sigchld);
-    XSetErrorHandler(x_error_handler);
+	XSetErrorHandler(x_error_handler);
 
 	XEvent *ev = malloc(sizeof(XEvent));
 
@@ -76,26 +73,28 @@ int main()
 		return 1;
 
 	root = DefaultRootWindow(dpy);
-    XSelectInput(dpy, root, PointerMotionMask | SubstructureNotifyMask);
+	XSelectInput(dpy, root, PointerMotionMask | SubstructureNotifyMask);
 	getexisting(dpy, root);
 
 	int i;
 	for (i = 0; i < NSHORTCUTS; i++) {
 		int keysym = XKeysymToKeycode(dpy, SHORTCUTS[i].ksym);
-        XGrabKey(dpy, keysym, MASK, root, True, GrabModeAsync,
-			     GrabModeAsync);
+		XGrabKey(dpy, keysym, MASK, root, True, GrabModeAsync,
+			 GrabModeAsync);
 	}
 
-	// Exit key combo
-    XGrabKey(dpy, XKeysymToKeycode(dpy, XK_Escape), MASK, root, True,
-         GrabModeAsync, GrabModeAsync);
+    for (i = 0; i < NKEYBINDS; i++) {
+        int keysym = XKeysymToKeycode(dpy, KEYBINDS[i]);
+        XGrabKey(dpy, keysym, MASK, root, True, GrabModeAsync,
+             GrabModeAsync);
+    }
 
 	// The move and resize buttons (also used for other stuff)
-    XGrabButton(dpy, MOVE, MASK, root, True, ButtonPressMask,
-        GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(dpy, MOVE, MASK, root, True, ButtonPressMask,
+		    GrabModeAsync, GrabModeAsync, None, None);
 
-    XGrabButton(dpy, RESZ, MASK, root, True, ButtonPressMask,
-        GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(dpy, RESZ, MASK, root, True, ButtonPressMask,
+		    GrabModeAsync, GrabModeAsync, None, None);
 
 	// Run a shell upon startup
 	if (!fork()) {
@@ -134,5 +133,5 @@ int main()
 			destroy(cli, 1);
 			break;
 		}
-    }
+	}
 }

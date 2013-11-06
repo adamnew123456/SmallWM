@@ -62,7 +62,27 @@ UCALLBACK(Refresh)
 	XMapWindow(cli->dpy, cli->win);
 }
 
-#define NSHORTCUTS 6
+UCALLBACK(MoveToNextDesktop)
+{
+	int next_desktop = (cli->desktop + 1) % MAX_DESKTOP;
+	cli->desktop = next_desktop;
+
+	set_desktop(current_desktop);
+}
+
+UCALLBACK(MoveToPrevDesktop)
+{
+	int prev_desktop = cli->desktop - 1;
+	while (prev_desktop < 0)
+		prev_desktop += MAX_DESKTOP;
+	cli->desktop = prev_desktop;
+
+	set_desktop(current_desktop);
+}
+
+// The difference between SHORTCUTS and KEYBINDS is that
+// SHORTCUTS apply to a client, while KEYBINDS do not affect a window
+#define NSHORTCUTS 8
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
 	{XK_Page_Up, RaiseWindow},
 	{XK_Page_Down, LowerWindow},
@@ -70,6 +90,15 @@ static uevent_t SHORTCUTS[NSHORTCUTS] = {
 	{XK_c, Close},
 	{XK_h, Hide},
 	{XK_r, Refresh},
+	{XK_bracketright, MoveToNextDesktop},
+	{XK_bracketleft, MoveToPrevDesktop},
+};
+
+#define NKEYBINDS 3
+static KeySym KEYBINDS[NKEYBINDS] = {
+    XK_Escape,
+    XK_comma,
+    XK_period,
 };
 
 // Used for event loop callback (ie from X)

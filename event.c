@@ -10,8 +10,24 @@ CALLBACK(eKeyPress)
 	KeySym *ksym = NULL;
 	ksym = XGetKeyboardMapping(dpy, ev.xkey.keycode, 1, &nkeys);
 
-	if (*ksym == XK_Escape)
-		exit(0);
+    switch (*ksym) {
+    case XK_Escape:
+        exit(0);
+        return;
+    case XK_comma:
+        current_desktop--;
+
+        // I'm not quite sure how different compiles handle negative modulos,
+        // so be absolutely safe here
+        while (current_desktop < 0)
+            current_desktop += MAX_DESKTOP;
+        set_desktop(current_desktop);
+        return;
+    case XK_period:
+        current_desktop = (current_desktop + 1) % MAX_DESKTOP;
+        set_desktop(current_desktop);
+        return;
+    }
 
 	client_t *cli = fromwin(ev.xkey.subwindow);
 	if (!cli || cli->state != Visible)
@@ -107,9 +123,8 @@ CALLBACK(eMotionNotify)
 	if (moving_state.inresz) {
 		XResizeWindow(dpy, moving_state.client->pholder,
 			      MAX(1, moving_state.client->w + xdiff), MAX(1,
-									  moving_state.
-									  client->
-									  h +
+									  moving_state.client->h
+									  +
 									  ydiff));
 	}
 }

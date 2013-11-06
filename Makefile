@@ -5,10 +5,10 @@ event.o: event.c
 	gcc -c event.c -g
 
 smallwm: smallwm.c smallwm.c client.o event.o
-	gcc smallwm.c event.o client.o -o smallwm -lX11 -g
+	gcc smallwm.c client.o event.o -o smallwm -lX11 -g
 
 smallwm-release: smallwm.c global.h smallwm.c client.o event.o
-	gcc smallwm.c event.o client.o -o smallwm-release -lX11 -O3
+	gcc smallwm.c client.o event.o -o smallwm-release -lX11 -O3
 
 xephyr-test: smallwm
 	Xephyr :20 &
