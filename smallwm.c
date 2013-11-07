@@ -57,6 +57,8 @@ void getexisting(Display * dpy, Window root)
             continue;
         create(dpy, childs[i]);
     }
+
+    XFree(childs);
 }
 
 int main()
