@@ -182,11 +182,11 @@ void set_desktop()
         if (client->state == Visible) {
             XGetWindowAttributes(client->dpy, client->win, &attr);
 
-            char should_be_viewable = (client->desktop == current_desktop) ||
-                (client->desktop == ALL_DESKTOPS);
+            char should_be_viewable =
+                (client->desktop == current_desktop)
+                || (client->desktop == ALL_DESKTOPS);
 
-            if (attr.map_state == IsViewable
-                && !should_be_viewable)
+            if (attr.map_state == IsViewable && !should_be_viewable)
                 XUnmapWindow(client->dpy, client->win);
             else if (attr.map_state != IsViewable
                  && should_be_viewable)
