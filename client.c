@@ -165,7 +165,9 @@ void unhide(client_t * client, int danger)
     free(client->icon);
 
     client->state = Visible;
-    client->desktop = current_desktop;
+
+    if (client->desktop != ALL_DESKTOPS)
+        client->desktop = current_desktop;
 
     updicons();
 }
@@ -180,11 +182,14 @@ void set_desktop()
         if (client->state == Visible) {
             XGetWindowAttributes(client->dpy, client->win, &attr);
 
+            char should_be_viewable = (client->desktop == current_desktop) ||
+                (client->desktop == ALL_DESKTOPS);
+
             if (attr.map_state == IsViewable
-                && client->desktop != current_desktop)
+                && !should_be_viewable)
                 XUnmapWindow(client->dpy, client->win);
             else if (attr.map_state != IsViewable
-                 && client->desktop == current_desktop)
+                 && should_be_viewable)
                 XMapWindow(client->dpy, client->win);
         }
         client = client->next;

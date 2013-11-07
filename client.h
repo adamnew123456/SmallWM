@@ -34,6 +34,7 @@ extern Window focused;
 
 extern int current_desktop;
 #define MAX_DESKTOP 5
+#define ALL_DESKTOPS -1
 
 client_t *tail();
 client_t *fromicon(Window);

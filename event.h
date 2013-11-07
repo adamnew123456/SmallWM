@@ -80,9 +80,17 @@ UCALLBACK(MoveToPrevDesktop)
     set_desktop();
 }
 
+UCALLBACK(StickToDesktop)
+{
+    if (cli->desktop != ALL_DESKTOPS)
+        cli->desktop = ALL_DESKTOPS;
+    else
+        cli->desktop = current_desktop;
+}
+
 // The difference between SHORTCUTS and KEYBINDS is that
 // SHORTCUTS apply to a client, while KEYBINDS do not affect a window
-#define NSHORTCUTS 8
+#define NSHORTCUTS 9
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
     {XK_Page_Up, RaiseWindow},
     {XK_Page_Down, LowerWindow},
@@ -92,6 +100,7 @@ static uevent_t SHORTCUTS[NSHORTCUTS] = {
     {XK_r, Refresh},
     {XK_bracketright, MoveToNextDesktop},
     {XK_bracketleft, MoveToPrevDesktop},
+    {XK_backslash, StickToDesktop},
 };
 
 #define NKEYBINDS 3

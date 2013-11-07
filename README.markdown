@@ -11,6 +11,7 @@ Improvements over TinyWM
 - Window Borders - Just a simple border to see the extent of a window.
 - Window Refreshing - Windows can be refreshed - this avoids subtle focus issues with applications like Chromium which cause certain issues.
 - Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured in `client.h`.
+- Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops
 
 Controls
 ========
@@ -26,6 +27,7 @@ The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUT
 - `Super+Escape`: Quits SmallWM
 - `Super+,`: Move to the previous desktop
 - `Super+.`: Move to the next desktop
+- `Super+\`: Stick to all desktops/unstick
 
 Building
 ========
