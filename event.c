@@ -66,6 +66,9 @@ CALLBACK(eButtonPress)
         return;
 
     if (ev.xbutton.state == MASK) {
+        if (!cli)
+            return;
+
         if (ev.xbutton.button == MOVE) {
             moving_state.inmove = 1;
             moving_state.inresz = 0;
@@ -81,6 +84,7 @@ CALLBACK(eButtonPress)
         }
     } else {
         cli = fromwin(ev.xbutton.window);
+
         if (!cli)
             return;
 
