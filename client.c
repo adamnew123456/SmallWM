@@ -355,12 +355,14 @@ void paint(client_t * client)
     XGetWMIconName(client->dpy, client->win, &icon_name);
     title = (char *)icon_name.value;
 
+    // Some applications do not set their own icon name
+    if (title == NULL)
+        XFetchName(client->dpy, client->win, &title);
+
     int text_offset =
         client->icon->has_graphic ? client->icon->graphic_width : 0;
     XClearWindow(client->dpy, client->icon->win);
 
-    // I have found out that a NULL check is not important here - XDrawString will
-    // ignore the string to draw if it is NULL
     XDrawString(client->dpy, client->icon->win, client->icon->gc,
             text_offset, ICON_HEIGHT, title,
             MIN((title ? strlen(title) : 0), 10));
@@ -369,6 +371,8 @@ void paint(client_t * client)
         XCopyArea(client->dpy, client->icon->graphic, client->icon->win,
               client->icon->gc, 0, 0, client->icon->graphic_width,
               client->icon->graphic_height, 0, 0);
+
+    XFree(title);
 }
 
 /* Change focus
