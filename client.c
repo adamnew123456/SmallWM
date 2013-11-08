@@ -49,12 +49,12 @@ client_t *fromwin(Window win)
 }
 
 // Updates the dimensions of a client.
-void update_dims(client_t *cli, XWindowAttributes *use_this_attr)
+void update_dims(client_t * cli, XWindowAttributes * use_this_attr)
 {
     XWindowAttributes attr;
     if (use_this_attr != NULL)
         attr = *use_this_attr;
-    else    
+    else
         XGetWindowAttributes(cli->dpy, cli->win, &attr);
 
     cli->x = attr.x;
@@ -154,6 +154,30 @@ void hide(client_t * client)
     XMapWindow(client->dpy, client->icon->win);
 
     client->icon->gc = XCreateGC(client->dpy, client->icon->win, 0, NULL);
+
+    // It's kind of involved to get the necessray information about the icon
+    // pixmap - the resource, and the dimensions
+    XWMHints *hints = XGetWMHints(client->dpy, client->win);
+
+    client->icon->has_graphic = hints->flags | IconPixmapHint;
+    if (client->icon->has_graphic) {
+        client->icon->graphic = hints->icon_pixmap;
+
+        // All of this is garbage - only the dimensions are useful
+        Window _root;
+        int _x, _y;
+        unsigned int _border;
+        unsigned int _depth;
+
+        XGetGeometry(client->dpy,
+                 client->icon->graphic,
+                 &_root,
+                 &_x, &_y,
+                 &client->icon->graphic_width,
+                 &client->icon->graphic_height, &_border, &_depth);
+    }
+
+    XFree(hints);
 
     XUnmapWindow(client->dpy, client->win);
 
@@ -326,15 +350,25 @@ void updicons()
 // Paint a specific icon
 void paint(client_t * client)
 {
-    char *title = malloc(200);
-    XFetchName(client->dpy, client->win, &title);
+    char *title;
+    XTextProperty icon_name;
+    XGetWMIconName(client->dpy, client->win, &icon_name);
+    title = (char *)icon_name.value;
 
+    int text_offset =
+        client->icon->has_graphic ? client->icon->graphic_width : 0;
     XClearWindow(client->dpy, client->icon->win);
-    XDrawString(client->dpy, client->icon->win, client->icon->gc, 0,
-            ICON_HEIGHT, (title ? title : " "),
+
+    // I have found out that a NULL check is not important here - XDrawString will
+    // ignore the string to draw if it is NULL
+    XDrawString(client->dpy, client->icon->win, client->icon->gc,
+            text_offset, ICON_HEIGHT, title,
             MIN((title ? strlen(title) : 0), 10));
 
-    free(title);
+    if (client->icon->has_graphic)
+        XCopyArea(client->dpy, client->icon->graphic, client->icon->win,
+              client->icon->gc, 0, 0, client->icon->graphic_width,
+              client->icon->graphic_height, 0, 0);
 }
 
 /* Change focus

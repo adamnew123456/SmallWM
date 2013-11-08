@@ -40,7 +40,7 @@ Namely, it has the following interesting targets:
 
 Bugs/Todo
 =========
-- None at the moment
+- Improved ICCCM compliance
 
 Credits
 =======

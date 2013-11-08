@@ -2,6 +2,7 @@
 #define __CLIENT__
 
 #include "global.h"
+#include <X11/Xutil.h>
 
 // All the states a client can be in
 typedef enum {
@@ -14,6 +15,12 @@ typedef enum {
 typedef struct {
     Window win;
     GC gc;
+
+    // Metadata about the client's icon, should it have one
+    char has_graphic;
+    Pixmap graphic;
+    unsigned int graphic_width, graphic_height;
+
     int x, y;
 } icon_t;
 
