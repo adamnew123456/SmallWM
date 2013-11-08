@@ -48,6 +48,21 @@ client_t *fromwin(Window win)
     return NULL;
 }
 
+// Updates the dimensions of a client.
+void update_dims(client_t *cli, XWindowAttributes *use_this_attr)
+{
+    XWindowAttributes attr;
+    if (use_this_attr != NULL)
+        attr = *use_this_attr;
+    else    
+        XGetWindowAttributes(cli->dpy, cli->win, &attr);
+
+    cli->x = attr.x;
+    cli->y = attr.y;
+    cli->w = attr.width;
+    cli->h = attr.height;
+}
+
 // Register a new client
 client_t *create(Display * dpy, Window win)
 {
@@ -70,13 +85,11 @@ client_t *create(Display * dpy, Window win)
     cli->win = win;
     cli->pholder = None;
     cli->icon = NULL;
-    cli->x = attr.x;
-    cli->y = attr.y;
-    cli->w = attr.width;
-    cli->h = attr.height;
     cli->state = Visible;
     cli->desktop = current_desktop;
     cli->next = NULL;
+
+    update_dims(cli, &attr);
 
     if (!head)
         head = cli;
@@ -201,6 +214,11 @@ void beginmvrsz(client_t * client)
 {
     if (client->state != Visible)
         return;
+
+    // Some apps, like stalonetray, resize themselves frequently; make sure to
+    // keep up to date with respect to the client's dimensions.
+    update_dims(client, NULL);
+
     client->state = MoveResz;
 
     XUnmapWindow(client->dpy, client->win);
@@ -237,10 +255,7 @@ void endmoversz(client_t * client)
     XGetWindowAttributes(client->dpy, client->pholder, &attr);
     XDestroyWindow(client->dpy, client->pholder);
 
-    client->x = attr.x;
-    client->y = attr.y;
-    client->w = attr.width;
-    client->h = attr.height;
+    update_dims(client, &attr);
 
     XMapWindow(client->dpy, client->win);
     XMoveResizeWindow(client->dpy, client->win, client->x, client->y,
