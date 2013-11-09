@@ -12,6 +12,7 @@ Improvements over TinyWM
 - Window Refreshing - Windows can be refreshed - this avoids subtle focus issues with applications like Chromium which cause certain issues.
 - Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured in `client.h`.
 - Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops
+- Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or bottom-half of the screen
 
 Controls
 ========
@@ -28,6 +29,7 @@ The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUT
 - `Super+,`: Move to the previous desktop
 - `Super+.`: Move to the next desktop
 - `Super+\`: Stick to all desktops/unstick
+- `Super+Up` `Super+Down` `Super+Left` `Super+Right`: Snap window to that half of the screen
 
 Building
 ========

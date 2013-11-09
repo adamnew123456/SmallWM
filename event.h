@@ -88,9 +88,49 @@ UCALLBACK(StickToDesktop)
         cli->desktop = current_desktop;
 }
 
+UCALLBACK(SnapLeft)
+{
+    int new_x = 0;
+    int new_y = ICON_HEIGHT;
+    unsigned int new_width = SCREEN_WIDTH(cli->dpy) / 2;
+    unsigned int new_height = SCREEN_HEIGHT(cli->dpy) - ICON_HEIGHT;
+
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+}
+
+UCALLBACK(SnapRight)
+{
+    int new_x = SCREEN_WIDTH(cli->dpy) / 2;
+    int new_y = ICON_HEIGHT;
+    unsigned int new_width = SCREEN_WIDTH(cli->dpy) / 2;
+    unsigned int new_height = SCREEN_HEIGHT(cli->dpy) - ICON_HEIGHT;
+
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+}
+
+UCALLBACK(SnapUp)
+{
+    int new_x = 0;
+    int new_y = ICON_HEIGHT;
+    unsigned int new_width = SCREEN_WIDTH(cli->dpy);
+    unsigned int new_height = (SCREEN_HEIGHT(cli->dpy) / 2) - ICON_HEIGHT;
+
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+}
+
+UCALLBACK(SnapDown)
+{
+    int new_x = 0;
+    int new_y = SCREEN_HEIGHT(cli->dpy) / 2;
+    unsigned int new_width = SCREEN_WIDTH(cli->dpy);
+    unsigned int new_height = (SCREEN_HEIGHT(cli->dpy) / 2) - ICON_HEIGHT;
+
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+}
+
 // The difference between SHORTCUTS and KEYBINDS is that
 // SHORTCUTS apply to a client, while KEYBINDS do not affect a window
-#define NSHORTCUTS 9
+#define NSHORTCUTS 13
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
     {XK_Page_Up, RaiseWindow},
     {XK_Page_Down, LowerWindow},
@@ -101,6 +141,10 @@ static uevent_t SHORTCUTS[NSHORTCUTS] = {
     {XK_bracketright, MoveToNextDesktop},
     {XK_bracketleft, MoveToPrevDesktop},
     {XK_backslash, StickToDesktop},
+    {XK_Left, SnapLeft},
+    {XK_Right, SnapRight},
+    {XK_Down, SnapDown},
+    {XK_Up, SnapUp},
 };
 
 #define NKEYBINDS 3
