@@ -29,21 +29,22 @@ int x_error_handler(Display * dpy, XErrorEvent * error)
            err_desc, error->request_code, error->minor_code);
 }
 
-// Prints a message and crashes
+// Prints out a message of the current function that is being run, and then
+// crashes
 void die(const char *call, int line)
 {
     printf("Line %d: Failed when calling %s\n", line, call);
     exit(1);
 }
 
-// Reaps children
+// Waits for a child process to exit
 void sigchld(int signal)
 {
     int status;
     wait(&status);
 }
 
-// Manage all existing windows
+// Get a list of all existing windows and place them under SmallWM's control
 void getexisting(Display * dpy, Window root)
 {
     Window w_;
@@ -63,9 +64,6 @@ void getexisting(Display * dpy, Window root)
 
 int main()
 {
-    // Used for testing various return values to see where SmallWM fails
-    int retval;
-
     signal(SIGCHLD, sigchld);
     XSetErrorHandler(x_error_handler);
 

@@ -15,7 +15,7 @@ void ignore(Display * dpy, Window win)
     XChangeWindowAttributes(dpy, win, CWOverrideRedirect, &attr);
 }
 
-// Tail of the client list
+// Get the final client in the linked list
 client_t *tail()
 {
     client_t *c = head;
@@ -24,7 +24,7 @@ client_t *tail()
     return c;
 }
 
-// Get the client based upon the icon
+// Get the client based upon the window of the icon
 client_t *fromicon(Window icon)
 {
     client_t *c = head;
@@ -36,7 +36,7 @@ client_t *fromicon(Window icon)
     return NULL;
 }
 
-// Get the client based upon the window
+// Get the client based upon the main window
 client_t *fromwin(Window win)
 {
     client_t *c = head;
@@ -48,7 +48,8 @@ client_t *fromwin(Window win)
     return NULL;
 }
 
-// Updates the dimensions of a client.
+// Refreshes the dimensions of this client.
+// (needed for some clients, like stalonetray, that resize themselves)
 void update_dims(client_t * cli, XWindowAttributes * use_this_attr)
 {
     XWindowAttributes attr;
@@ -63,18 +64,19 @@ void update_dims(client_t * cli, XWindowAttributes * use_this_attr)
     cli->h = attr.height;
 }
 
-// Register a new client
+// Create a new client given the window
 client_t *create(Display * dpy, Window win)
 {
-    // Take care of things like dialogs who we
-    // shouldn't manage anyway
+    // An override_redirect flag indicates that the window manager should not
+    // manage this window (such as a dialog, or a window internal to SmallWM
+    // itself)
     XWindowAttributes attr;
     XGetWindowAttributes(dpy, win, &attr);
 
     if (attr.override_redirect)
         return NULL;
 
-    // Also make sure this window doesn't already exist
+    // Make sure this window doesn't already exist
     if (fromwin(win))
         return NULL;
 
@@ -103,7 +105,8 @@ client_t *create(Display * dpy, Window win)
     return cli;
 }
 
-// Get rid of an existing client
+// Get rid of an existing client - danger determines if the window should not
+// be destroyed (danger = 1 when the window does not exist)
 void destroy(client_t * client, int danger)
 {
     client_t *prec = head;
@@ -137,6 +140,8 @@ void hide(client_t * client)
 
     client->icon = malloc(sizeof(icon_t));
 
+    // Note the -200's - they position the window off the screen until it is
+    // repositioned.
     client->icon->win = XCreateSimpleWindow(client->dpy,
                         RootWindow(client->dpy,
                                DefaultScreen
@@ -155,28 +160,25 @@ void hide(client_t * client)
 
     client->icon->gc = XCreateGC(client->dpy, client->icon->win, 0, NULL);
 
-    // It's kind of involved to get the necessray information about the icon
-    // pixmap - the resource, and the dimensions
     XWMHints *hints = XGetWMHints(client->dpy, client->win);
+    if (hints->flags & IconPixmapHint) {
+        client->icon->graphic = malloc(sizeof(icon_graphic_t));
+        client->icon->graphic->pixmap = hints->icon_pixmap;
 
-    client->icon->has_graphic = hints->flags | IconPixmapHint;
-    if (client->icon->has_graphic) {
-        client->icon->graphic = hints->icon_pixmap;
-
-        // All of this is garbage - only the dimensions are useful
+        // Only the width and height are useful - ignore everything else
         Window _root;
         int _x, _y;
         unsigned int _border;
         unsigned int _depth;
 
         XGetGeometry(client->dpy,
-                 client->icon->graphic,
+                 client->icon->graphic->pixmap,
                  &_root,
                  &_x, &_y,
-                 &client->icon->graphic_width,
-                 &client->icon->graphic_height, &_border, &_depth);
-    }
-
+                 &client->icon->graphic->w,
+                 &client->icon->graphic->h, &_border, &_depth);
+    } else
+        client->icon->graphic = NULL;
     XFree(hints);
 
     XUnmapWindow(client->dpy, client->win);
@@ -186,7 +188,8 @@ void hide(client_t * client)
     updicons();
 }
 
-// Unhide (deiconify) a client
+// Unhide (deiconify) a client - like in destroy(), danger is set if the
+// client window does not exist and should not be remapped
 void unhide(client_t * client, int danger)
 {
     if (client->state != Hidden)
@@ -209,7 +212,8 @@ void unhide(client_t * client, int danger)
     updicons();
 }
 
-// Sets the current desktop and maps/unmaps all necessary windows
+// Sets the current destkop by unmapping all the windows on other desktops
+// and then mapping all the viewable windows
 void set_desktop()
 {
     client_t *client = head;
@@ -233,14 +237,14 @@ void set_desktop()
     }
 }
 
-// Begin moving/resizing a client
+// Begins moving or resizing a client - the only difference between the two is
+// the type of event that triggers this to be called, since the logic is
+// exactly the same
 void beginmvrsz(client_t * client)
 {
     if (client->state != Visible)
         return;
 
-    // Some apps, like stalonetray, resize themselves frequently; make sure to
-    // keep up to date with respect to the client's dimensions.
     update_dims(client, NULL);
 
     client->state = MoveResz;
@@ -266,7 +270,8 @@ void beginmvrsz(client_t * client)
     XRaiseWindow(client->dpy, client->pholder);
 }
 
-// Stop moving/resizing a client
+// Finalize a window after moving/resizing it. As with beginmvresz(), the code
+// paths are identical.
 void endmoversz(client_t * client)
 {
     if (client->state != MoveResz)
@@ -288,7 +293,7 @@ void endmoversz(client_t * client)
     raise_(client);
 }
 
-// Raise a client to the toplevel
+// Raise a client to the top of the view stack
 void raise_(client_t * client)
 {
     if (client->state != Visible)
@@ -296,7 +301,7 @@ void raise_(client_t * client)
     XRaiseWindow(client->dpy, client->win);
 }
 
-// Lower a client to the bottomlevel
+// Lower a client to the bottom of the view stack
 void lower(client_t * client)
 {
     if (client->state != Visible)
@@ -304,7 +309,8 @@ void lower(client_t * client)
     XLowerWindow(client->dpy, client->win);
 }
 
-// Maximize a client (doesn't work with xrandr)
+// Maximize a client. Note that SCREEN_WIDTH and SCREEN_HEIGHT (global.h) don't
+// work with xrandr - they are set when SmallWM starts.
 void maximize(client_t * client)
 {
     client->x = 0;
@@ -316,7 +322,7 @@ void maximize(client_t * client)
               client->w, client->h);
 }
 
-// Update all icon positions, and redraw them
+// Reflow all the icons into rows on the top of the screen
 void updicons()
 {
     client_t *curr = head;
@@ -347,7 +353,7 @@ void updicons()
     }
 }
 
-// Paint a specific icon
+// Draws a specific icon, including the window title and the pixmap
 void paint(client_t * client)
 {
     char *title;
@@ -355,30 +361,37 @@ void paint(client_t * client)
     XGetWMIconName(client->dpy, client->win, &icon_name);
     title = (char *)icon_name.value;
 
-    // Some applications do not set their own icon name
+    // Some applications do not set their own icon name - use their main window
+    // name as the backup
     if (title == NULL)
         XFetchName(client->dpy, client->win, &title);
 
     int text_offset =
-        client->icon->has_graphic ? client->icon->graphic_width : 0;
+        client->icon->graphic != NULL ? client->icon->graphic->w : 0;
+
     XClearWindow(client->dpy, client->icon->win);
 
     XDrawString(client->dpy, client->icon->win, client->icon->gc,
             text_offset, ICON_HEIGHT, title,
             MIN((title ? strlen(title) : 0), 10));
 
-    if (client->icon->has_graphic)
-        XCopyArea(client->dpy, client->icon->graphic, client->icon->win,
-              client->icon->gc, 0, 0, client->icon->graphic_width,
-              client->icon->graphic_height, 0, 0);
+    if (client->icon->graphic != NULL)
+        XCopyArea(client->dpy, client->icon->graphic->pixmap,
+              client->icon->win, client->icon->gc, 0, 0,
+              client->icon->graphic->w, client->icon->graphic->h, 0,
+              0);
 
     XFree(title);
 }
 
-/* Change focus
+/* Change focus to the given window
  *
  * The idea for this was snatched (blatantly) from 9wm, which has a really
  * neat click-to-focus implementation that's insanely easy to follow.
+ *
+ * This method grabs a button on the unfocused window, and eButtonPress()
+ * (event.c) responds to that button grab. The window to get the focus has
+ * its button grab removed and is given the input focus.
 */
 void chfocus(Display * dpy, Window win)
 {
@@ -403,8 +416,7 @@ void chfocus(Display * dpy, Window win)
                     ButtonPressMask | ButtonReleaseMask,
                     GrabModeAsync, GrabModeAsync, None, None);
             focused = None;
-        } else {
+        } else
             focused = win;
-        }
     }
 }

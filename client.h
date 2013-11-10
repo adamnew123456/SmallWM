@@ -11,16 +11,17 @@ typedef enum {
     MoveResz
 } WState;
 
+// Pixmap information for the icon
+typedef struct {
+    Pixmap pixmap;
+    unsigned int w, h;
+} icon_graphic_t;
+
 // Information needed to manage/draw icons
 typedef struct {
     Window win;
     GC gc;
-
-    // Metadata about the client's icon, should it have one
-    char has_graphic;
-    Pixmap graphic;
-    unsigned int graphic_width, graphic_height;
-
+    icon_graphic_t *graphic;
     int x, y;
 } icon_t;
 
@@ -36,6 +37,7 @@ typedef struct client_s {
     struct client_s *next;
 } client_t;
 
+// The head of the client linked list
 extern client_t *head;
 extern Window focused;
 

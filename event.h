@@ -10,6 +10,7 @@ typedef struct {
     void (*callback) (XEvent *, client_t *);
 } uevent_t;
 
+// Manages the current state of whatever window the user is moving/resizing
 typedef struct {
     XButtonEvent mouse;
     int inmove, inresz;
@@ -72,6 +73,7 @@ UCALLBACK(MoveToNextDesktop)
 
 UCALLBACK(MoveToPrevDesktop)
 {
+    // As in client.c, mimic a modulo to avoid negative results
     int prev_desktop = cli->desktop - 1;
     while (prev_desktop < 0)
         prev_desktop += MAX_DESKTOP;
@@ -95,7 +97,8 @@ UCALLBACK(SnapLeft)
     unsigned int new_width = SCREEN_WIDTH(cli->dpy) / 2;
     unsigned int new_height = SCREEN_HEIGHT(cli->dpy) - ICON_HEIGHT;
 
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
+              new_height);
 }
 
 UCALLBACK(SnapRight)
@@ -105,7 +108,8 @@ UCALLBACK(SnapRight)
     unsigned int new_width = SCREEN_WIDTH(cli->dpy) / 2;
     unsigned int new_height = SCREEN_HEIGHT(cli->dpy) - ICON_HEIGHT;
 
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
+              new_height);
 }
 
 UCALLBACK(SnapUp)
@@ -115,7 +119,8 @@ UCALLBACK(SnapUp)
     unsigned int new_width = SCREEN_WIDTH(cli->dpy);
     unsigned int new_height = (SCREEN_HEIGHT(cli->dpy) / 2) - ICON_HEIGHT;
 
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
+              new_height);
 }
 
 UCALLBACK(SnapDown)
@@ -125,7 +130,8 @@ UCALLBACK(SnapDown)
     unsigned int new_width = SCREEN_WIDTH(cli->dpy);
     unsigned int new_height = (SCREEN_HEIGHT(cli->dpy) / 2) - ICON_HEIGHT;
 
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width, new_height);
+    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
+              new_height);
 }
 
 // The difference between SHORTCUTS and KEYBINDS is that

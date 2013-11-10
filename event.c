@@ -2,6 +2,8 @@
 
 moving_t moving_state;
 
+// Handle a keypress which is listened to by SmallWM - see events.h for a list
+// of keys handled here
 CALLBACK(eKeyPress)
 {
     GET_EVENT;
@@ -15,12 +17,13 @@ CALLBACK(eKeyPress)
         exit(0);
         return;
     case XK_comma:
+        // This is essentially a basic modulo - since I'm not sure how
+        // compilers handle the case of negative modulos, just "unfold" the
+        // operation to make sure current_desktop is positive
         current_desktop--;
-
-        // I'm not quite sure how different compiles handle negative modulos,
-        // so be absolutely safe here
         while (current_desktop < 0)
             current_desktop += MAX_DESKTOP;
+
         set_desktop();
         return;
     case XK_period:
@@ -42,6 +45,11 @@ CALLBACK(eKeyPress)
     }
 }
 
+// Handle a button press - this function has a couple of important cases:
+//  a) This function will change focus if the user is just clicking on an 
+//     unfocused window (in this case, the MASK will not appear in the event)
+//  b) This function starts moving if the user does a left click
+//  c) This function starts resizing if the user does a right click
 CALLBACK(eButtonPress)
 {
     GET_EVENT;
@@ -92,6 +100,8 @@ CALLBACK(eButtonPress)
     }
 }
 
+// This function just stops moving and resizing if the user was moving/resizing
+// before.
 CALLBACK(eButtonRelease)
 {
     GET_EVENT;
@@ -106,6 +116,7 @@ CALLBACK(eButtonRelease)
     }
 }
 
+// This function updates the window that is being moved/resized
 CALLBACK(eMotionNotify)
 {
     GET_EVENT;
@@ -125,15 +136,17 @@ CALLBACK(eMotionNotify)
         XMoveWindow(dpy, moving_state.client->pholder,
                 moving_state.client->x + xdiff,
                 moving_state.client->y + ydiff);
-    if (moving_state.inresz) {
+
+    if (moving_state.inresz)
         XResizeWindow(dpy, moving_state.client->pholder,
                   MAX(1, moving_state.client->w + xdiff), MAX(1,
-                                      moving_state.client->h
-                                      +
+                                      moving_state.
+                                      client->
+                                      h +
                                       ydiff));
-    }
 }
 
+// This function creates a new window when it is created
 CALLBACK(eMapNotify)
 {
     GET_EVENT;
