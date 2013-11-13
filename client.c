@@ -124,8 +124,20 @@ void destroy(client_t * client, int danger)
     if (client->state == Hidden)
         unhide(client, 1);
 
-    if (!danger)
-        XDestroyWindow(client->dpy, client->win);
+    if (!danger) {
+        // Be nice and follow the ICCCM instead of just destroying the window
+        XEvent close_event;
+        close_event.xclient.type = ClientMessage;
+        close_event.xclient.window = client->win;
+        close_event.xclient.message_type =
+            XInternAtom(client->dpy, "WM_PROTOCOLS", False);
+        close_event.xclient.format = 32;
+        close_event.xclient.data.l[0] =
+            XInternAtom(client->dpy, "WM_DELETE_WINDOW", False);
+        close_event.xclient.data.l[1] = CurrentTime;
+        XSendEvent(client->dpy, client->win, False, NoEventMask,
+               &close_event);
+    }
 
     free(client);
 

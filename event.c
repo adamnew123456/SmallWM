@@ -140,9 +140,8 @@ CALLBACK(eMotionNotify)
     if (moving_state.inresz)
         XResizeWindow(dpy, moving_state.client->pholder,
                   MAX(1, moving_state.client->w + xdiff), MAX(1,
-                                      moving_state.
-                                      client->
-                                      h +
+                                      moving_state.client->h
+                                      +
                                       ydiff));
 }
 
