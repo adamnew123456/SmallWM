@@ -44,8 +44,8 @@ Configuration
 =============
 The terminal that SmallWM uses can be configured. Open up ~/.config/smallwm, and put something like the following in:
 
-  [smallwm]
-  shell=your-preferred-terminal
+    [smallwm]
+    shell=your-preferred-terminal
 
 The path to the terminal can be elided as long as it is on your $PATH. SmallWM will use this terminal when launching or
 opening up new terminals with `Super-LClick`.

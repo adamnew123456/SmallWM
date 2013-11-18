@@ -64,10 +64,9 @@ void getexisting(Display * dpy, Window root)
     XFree(childs);
 }
 
-static int config_handler(void *user, 
-                          const char *section, 
-                          const char *name, 
-                          const char *value)
+static int config_handler(void *user,
+              const char *section,
+              const char *name, const char *value)
 {
     if (!strcmp(section, "smallwm") && !strcmp(name, "shell")) {
         SHELL = strdup(value);
@@ -84,14 +83,14 @@ int main()
     XSetErrorHandler(x_error_handler);
 
     // Load the shell name from the configuration file
-    char *path = malloc(strlen(getenv("HOME")) + strlen("/.config/smallwm"));
+    char *path =
+        malloc(strlen(getenv("HOME")) + strlen("/.config/smallwm"));
     sprintf(path, "%s/.config/smallwm", getenv("HOME"));
     ini_parse(path, config_handler, NULL);
 
     if (SHELL == NULL) {
         SHELL = "xterm";
     }
-
 
     XEvent *ev = malloc(sizeof(XEvent));
 
