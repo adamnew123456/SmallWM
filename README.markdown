@@ -40,6 +40,16 @@ Namely, it has the following interesting targets:
 - `mall smallwm-release` builds an optimized version useful for running
 - `make xephyr-test` runs SmallWM via GDB inside a virtual X11 server so that you can test SmallWM without having to logout.
 
+Configuration
+=============
+The terminal that SmallWM uses can be configured. Open up ~/.config/smallwm, and put something like the following in:
+
+  [smallwm]
+  shell=your-preferred-terminal
+
+The path to the terminal can be elided as long as it is on your $PATH. SmallWM will use this terminal when launching or
+opening up new terminals with `Super-LClick`.
+
 Bugs/Todo
 =========
 - Improved ICCCM compliance
@@ -48,10 +58,11 @@ Credits
 =======
 - Nick Welch <mack@incise.org>, the original TinyWM author.
 - Myself (Adam Marchetti <adamnew123456@gmail.com>).
+- The author(s) of the inih library.
 - Possibly, you - assuming you make any useful changes and I accept your pull request. Refactorings are welcome, as are those who are actually knowledgeable about Xorg and could spot any obvious mistakes.
 
 License
 =======
-In the spirit of the original TinyWM, SmallWM is public domain as well. 
+SmallWM was migrated to the 2-Clause BSD License on 2013-11-18. See LICENSE.txt for details.
 
-Simply keep this README file (or credit me and the original author) with any distribution you make.
+The inih code, included as a part of SmallWM, is available under the New BSD License. See inih/LICENSE.txt for details.

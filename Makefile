@@ -4,11 +4,14 @@ client.o: client.c
 event.o: event.c
 	gcc -c event.c -g
 
-smallwm: smallwm.c smallwm.c client.o event.o
-	gcc smallwm.c client.o event.o -o smallwm -lX11 -g
+ini.o: inih/ini.c
+	gcc -c inih/ini.c
 
-smallwm-release: smallwm.c global.h smallwm.c client.o event.o
-	gcc smallwm.c client.o event.o -o smallwm-release -lX11 -O3
+smallwm: smallwm.c smallwm.c client.o event.o ini.o
+	gcc smallwm.c client.o event.o ini.o -o smallwm -lX11 -g
+
+smallwm-release: smallwm.c global.h smallwm.c client.o event.o ini.o
+	gcc smallwm.c client.o event.o ini.o -o smallwm-release -lX11 -O3
 
 xephyr-test: smallwm
 	Xephyr :20 &
@@ -21,4 +24,4 @@ reformat:
 	rm *~
 
 clean:
-	rm -f *.o smallwm smallwm-release *~
+	rm -f *.o inih/*.o smallwm smallwm-release *~
