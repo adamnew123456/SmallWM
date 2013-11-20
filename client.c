@@ -105,26 +105,11 @@ client_t *create(Display * dpy, Window win)
     return cli;
 }
 
-// Get rid of an existing client - danger determines if the window should not
-// be destroyed (danger = 1 when the window does not exist)
-void destroy(client_t * client, int danger)
+// Get rid of an existing client
+void destroy(client_t * client, int delete_immediately)
 {
-    client_t *prec = head;
-    client_t *succ = client->next;
-    while (prec && prec->next != client)
-        prec = prec->next;
 
-    if (!prec)
-        return;
-
-    if (focused == client->win)
-        focused = None;
-
-    prec->next = succ;
-    if (client->state == Hidden)
-        unhide(client, 1);
-
-    if (!danger) {
+    if (!delete_immediately) {
         // Be nice and follow the ICCCM instead of just destroying the window
         XEvent close_event;
         close_event.xclient.type = ClientMessage;
@@ -137,9 +122,28 @@ void destroy(client_t * client, int danger)
         close_event.xclient.data.l[1] = CurrentTime;
         XSendEvent(client->dpy, client->win, False, NoEventMask,
                &close_event);
-    }
+    } else {
+        /* Only delete the window and shift the linked list around if it
+         * is being destroyed now, and is not merely being destroyed.
+         */
+        client_t *prec = head;
+        client_t *succ = client->next;
+        while (prec && prec->next != client)
+            prec = prec->next;
 
-    free(client);
+        if (!prec)
+            return;
+
+        if (focused == client->win)
+            focused = None;
+
+        prec->next = succ;
+        if (client->state == Hidden)
+            unhide(client, 1);
+
+        free(client);
+
+    }
 
     updicons();
 }
