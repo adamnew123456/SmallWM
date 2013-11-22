@@ -12,11 +12,11 @@ Improvements over TinyWM
 - Window Refreshing - Windows can be refreshed - this avoids subtle focus issues with applications like Chromium which cause certain issues.
 - Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured in `client.h`.
 - Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops
-- Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or bottom-half of the screen
+- Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or right-half of the screen
 
 Controls
 ========
-The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUTS` and `KEYBINDS`. The defaults are as follows:
+The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUTS` and `KEYBINDS`. Note, however, that these key combinations only work when _no other modifiers are pressed_, including NumLock or CapsLock. The defaults are as follows:
 - `Super+PageUp`: Layers the current window onto the top
 - `Super+PageDown`: Layers the current window onto the bottom
 - `Super+m`: Maximizes the current window
@@ -30,6 +30,10 @@ The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUT
 - `Super+.`: Move to the next desktop
 - `Super+\`: Stick to all desktops/unstick
 - `Super+Up` `Super+Down` `Super+Left` `Super+Right`: Snap window to that half of the screen
+- `Super+LClick`
+    - If this is used on the background, a new terminal will be launched
+    - If this is used on a window, the window will begin moving. To set the window's position, let go of the left mouse button.
+- `Super+RClick`: When used on a window, this combination starts resising a window. To set the window's size, let go of the right mouse button.
 
 Building
 ========
