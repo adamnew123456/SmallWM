@@ -50,6 +50,11 @@ UCALLBACK(Close)
     destroy(cli, 0);
 }
 
+UCALLBACK(ForceClose)
+{
+    destroy(cli, 1);
+}
+
 UCALLBACK(Hide)
 {
     hide(cli);
@@ -136,12 +141,13 @@ UCALLBACK(SnapDown)
 
 // The difference between SHORTCUTS and KEYBINDS is that
 // SHORTCUTS apply to a client, while KEYBINDS do not affect a window
-#define NSHORTCUTS 13
+#define NSHORTCUTS 14
 static uevent_t SHORTCUTS[NSHORTCUTS] = {
     {XK_Page_Up, RaiseWindow},
     {XK_Page_Down, LowerWindow},
     {XK_m, Maximize},
     {XK_c, Close},
+    {XK_x, ForceClose},
     {XK_h, Hide},
     {XK_r, Refresh},
     {XK_bracketright, MoveToNextDesktop},

@@ -124,8 +124,11 @@ void destroy(client_t * client, int delete_immediately)
                &close_event);
     } else {
         /* Only delete the window and shift the linked list around if it
-         * is being destroyed now, and is not merely being destroyed.
+         * is being destroyed now, and this is not merely a request
          */
+
+        // Just make sure that the window is actually gone
+        XDestroyWindow(client->dpy, client->win);
         client_t *prec = head;
         client_t *succ = client->next;
         while (prec && prec->next != client)

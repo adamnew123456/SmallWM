@@ -21,6 +21,7 @@ The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUT
 - `Super+PageDown`: Layers the current window onto the bottom
 - `Super+m`: Maximizes the current window
 - `Super+c`: Closes the current window
+- `Super+x`: Forcefully closes the current window
 - `Super+h`: Iconifies the current window
 - `Super+r`: Refreshes the current window
 - `Super+[`: Move the current window to the previous desktop
