@@ -180,7 +180,7 @@ void hide(client_t * client)
     client->icon->gc = XCreateGC(client->dpy, client->icon->win, 0, NULL);
 
     XWMHints *hints = XGetWMHints(client->dpy, client->win);
-    if (hints->flags & IconPixmapHint) {
+    if (hints && hints->flags & IconPixmapHint) {
         client->icon->graphic = malloc(sizeof(icon_graphic_t));
         client->icon->graphic->pixmap = hints->icon_pixmap;
 
