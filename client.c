@@ -376,9 +376,7 @@ void updicons()
 void paint(client_t * client)
 {
     char *title;
-    XTextProperty icon_name;
-    XGetWMIconName(client->dpy, client->win, &icon_name);
-    title = (char *)icon_name.value;
+    XGetIconName(client->dpy, client->win, &title);
 
     // Some applications do not set their own icon name - use their main window
     // name as the backup
