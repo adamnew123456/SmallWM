@@ -83,6 +83,11 @@ int main()
         SHELL = "xterm";
     }
 
+    iconsz = XAllocIconSize();
+    iconsz->min_width = iconsz->max_width = ICON_WIDTH;
+    iconsz->min_height = iconsz->max_height = ICON_HEIGHT;
+    iconsz->width_inc = iconsz->height_inc = 0;
+
     XEvent *ev = malloc(sizeof(XEvent));
 
     if (!(dpy = XOpenDisplay(NULL)))

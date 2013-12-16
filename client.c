@@ -5,6 +5,7 @@
 
 client_t *head;
 Window focused;
+XIconSize *iconsz;
 int current_desktop = 0;
 
 // Get SmallWM to ignore this window (icons or resizing & moving)
@@ -92,6 +93,8 @@ client_t *create(Display * dpy, Window win)
     cli->next = NULL;
 
     update_dims(cli, &attr);
+
+    XSetIconSizes(cli->dpy, cli->win, iconsz, 1);
 
     if (!head)
         head = cli;

@@ -2,7 +2,6 @@
 #define __CLIENT__
 
 #include "global.h"
-#include <X11/Xutil.h>
 
 // All the states a client can be in
 typedef enum {
@@ -39,7 +38,9 @@ typedef struct client_s {
 
 // The head of the client linked list
 extern client_t *head;
+
 extern Window focused;
+extern XIconSize *iconsz;
 
 extern int current_desktop;
 #define MAX_DESKTOP 5

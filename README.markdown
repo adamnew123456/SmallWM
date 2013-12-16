@@ -57,7 +57,7 @@ opening up new terminals with `Super-LClick`.
 
 Bugs/Todo
 =========
-- Improved ICCCM compliance
+- Support for the EWMH and the `_NET*` atoms
 
 Credits
 =======

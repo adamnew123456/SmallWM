@@ -31,4 +31,4 @@ SmallWM supports.
 
  - `WM_STATE` is used to communicate to the client the state of the window - "withdrawn" (meaning closed), "normal" (meaning shown) and "iconic" (meaning hidden). SmallWM does not use this property.
 
- - `WM_ICON_SIZE` is used to communicate to the client the desired size of the window's icon. SmallWM does not use this property.
+ - `WM_ICON_SIZE` is used to communicate to the client the desired size of the window's icon. SmallWM uses this property - it creates this structure with `XAllocIconSize` and then sets it for each client via `XSetIconSize`.
