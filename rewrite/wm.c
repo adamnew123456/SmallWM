@@ -25,18 +25,6 @@ static int config_handler(void *user,
 }
 #undef SET_CONFIG_VAR
 
-/* Gets the value of string via strtoul - error is either set to zero (no error)
- * or one (failure).
-*/
-unsigned long long string_to_long(char *string, Bool *state)
-{
-    char str_error;
-    unsigned long long x = strtoul(string, &str_error, 0);
-
-    *state = (str_error == '\0' ? True : False);
-    return x;
-}
-
 /* Initializes the window manager state:
  *
  *  - Loads configuration file information (shell program, number of desktops)
@@ -65,10 +53,10 @@ smallwm_t init_wm()
 #undef SET_VAR_DEFAULT
 
     // Copy over everything into the WM state structure, doing numeric conversions as necessary
-    Bool conversion_state;
+    status_t conversion_state;
 #define SET_STATE_NUM(state_var, config_var, default_var) \
     state_var = string_to_long(config_var, &conversion_state); \
-    if (!conversion_state) state_var = (default_var);
+    if (conversion_state == FAIL) state_var = (default_var);
 
     state.leftclick_launch = (config_shell == NULL ? "xterm" : config_shell);
     SET_STATE_NUM(state.num_desktops, config_num_desktops, 5);
