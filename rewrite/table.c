@@ -103,7 +103,7 @@ void **to_list_table(table_t *table, int *n_elems)
         while (node)
         {
             node = node->next;
-            *n_elems++;
+            *n_elems = *n_elems + 1;
         }
     }
 

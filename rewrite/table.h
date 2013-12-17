@@ -2,6 +2,7 @@
 #define __SMALLWM_TABLE__
 
 #include <stdlib.h>
+#include <string.h>
 
 // A node of the linked list which the elements of a table_t point to - this is
 // used to resolve collisions in the table.
