@@ -1,4 +1,5 @@
 /* Routines for managing core window manager state. */
+#include "client.h"
 #include "wm.h"
 
 // A callback for the configuration parser which sets the appropriate config_* variable
@@ -206,4 +207,43 @@ void refocus_wm(smallwm_t *state, Window window)
         } else
             state.focused = window;
     }
+}
+
+// Gets a client which corresponds to a particular window
+client_t *client_from_window_wm(smallwm_t *state, Window window)
+{
+    return get_table(state->clients, (int)window);
+}
+
+// Creates a client from a particular window
+void add_client_wm(smallwm_t *state, Window window)
+{
+    // Make sure that this client wants to be managed - override_redirect means that a client does
+    // not want to be managed by us
+    XWindowAttribtues attr;
+    XGetWindowAttributes(state->display, window, &attr);
+
+    if (attr.override_redirect)
+        return;
+
+    // Make sure that this window is not being duplicated
+    if (client_from_window_wm(state, window))
+        return;
+
+    client_t *client = malloc(sizeof(client_t));
+    client->wm = state;
+    client->window = window;
+    client->state = C_VISIBLE;
+
+    client->dimension.x = attr.x;
+    client->dimension.y = attr.y;
+    client->dimension.width = attr.width;
+    client->dimension.height = attr.height;
+
+    client->sticky = False;
+    client->desktop = current_desktop;
+
+    add_table(state->clients, window, client);
+
+    refocus_wm(state, window);
 }
