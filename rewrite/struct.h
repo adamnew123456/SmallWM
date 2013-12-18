@@ -19,11 +19,11 @@ typedef struct {
     table_t *clients, *icons;
     Window focused_window;
 
+    // The event offset to register for XRandR events
+    int xrandr_event_offset;
+
     // The program to launch on META+LClick
     char *leftclick_launch;
-
-    // Table of event callbacks (indexed by event)
-    table_t *events;
 } smallwm_t;
 
 // The three states a client can be in:
@@ -54,4 +54,31 @@ typedef struct {
     int desktop;
 } client_t;
 
+// All information about an icon
+typedef struct {
+    // The window manager that owns the icon
+    smallwm_t *wm;
+    // The client which is launched by clicking this icon
+    client_t *client;
+
+    // The window used by the icon
+    Window window;
+    // The graphics context used to draw the text and pixmap
+    GC gc;
+
+    // Whether or not this icon has a pixmap assigned to it
+    Bool has_pixmap;
+    // The Pixmap used as an icon
+    Pixmap pixmap;
+    // The dimensions of the pixmap
+    unsigned int width, height;
+} icon_t;
+
+// Information about event handlers
+typedef struct {
+    // The core callbacks respond to e.g. KeyPress, ButtonPress, etc.
+    table_t *event_callbacks;
+    // The key combination event callbacks
+    table_t *key_callbacks;
+} events_t;
 #endif

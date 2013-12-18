@@ -73,7 +73,6 @@ smallwm_t init_wm()
     state.root = DefaultRootWindow(state.display);
 
     // Initialize the tables (XRandR has an update event which needs to go inside)
-    state.events = new_table();
     state.clients = new_table();
     state.icons = new_table();
     state.focused_window = None;
@@ -87,6 +86,9 @@ smallwm_t init_wm()
     }
     else
     {
+        // Add the event base to the window manager state
+        state.xrandr_event_offset = xrandr_evt_base;
+
         // Version 1.4 is what is currently on my Saucy Salamander machine
         int major_version = 1, minor_version = 4;
         XRRQueryVersion(&major_version, &minor_version);
@@ -106,9 +108,6 @@ smallwm_t init_wm()
     // Asks X to report all interesting events to us (PointerMotion is used for moving/resizing clients)
     XSelectInput(state.display, state.root, PointerMotionMask | SubstructureNotifyMask);
 
-    // Grab all the necessary button and key combos
-    event_init(&state);
-    
     // Collect all the children and move them under our ownership
     Window _unused1;
     Window *children;
@@ -150,7 +149,7 @@ void lclick_launch_wm(smallwm_t *state, XEvent *event)
 void update_icons_wm(smallwm_t *state)
 {
     int n_icons;
-    void **clients = to_list_table(state->icons, &n_icons);
+    void **icons = to_list_table(state->icons, &n_icons);
 
     int idx;
     int x = 0, y = 0;
@@ -163,7 +162,7 @@ void update_icons_wm(smallwm_t *state)
             y += state->icon_height;
         }
 
-        icon_t *icon = clients[idx];
+        icon_t *icon = icons[idx];
         place_icon(icon, x, y);
         paint_icon(icon);
 
