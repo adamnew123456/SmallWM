@@ -1,3 +1,4 @@
+/* Routines for handling icons */
 #include "icon.h"
 
 // Creates an icon from a client, and hides the client
@@ -90,16 +91,11 @@ void paint_icon(icon_t *icon)
 
     if (title)
     {
-        int max_len = 10;
-        if (strlen(title) < max_len) 
-            max_len = strlen(title);
-
         XDrawString(icon->wm->display, icon->window, icon->gc,
                 text_offset, icon->wm->icon_height, title,
                 strlen(title), max_len);
     }
 
-    // Paint the pixmap onto the upper-left of the icon window if it exists
     if (icon->has_pixmap)
     {
         XCopyArea(icon->wm->display, icon->pixmap, icon->window, icon->gc,

@@ -35,7 +35,7 @@ void add_table(table_t *table, int key, void *value)
     node->next = NULL;
 
     // There is no element, so start the linked list
-    if (table[idx] == NULL)
+    if (!table[idx])
         table[idx] = node;
     else
     {
