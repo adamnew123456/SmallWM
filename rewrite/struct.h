@@ -9,6 +9,7 @@ typedef struct {
     // Information about the main display
     Display *display;
     Window root;
+    int screen;
     int width, height;
     int icon_width, icon_height;
 

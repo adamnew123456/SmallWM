@@ -71,6 +71,7 @@ smallwm_t init_wm()
         die("Unable to open X display");
 
     state.root = DefaultRootWindow(state.display);
+    state.screen = DefaultScreen(state.display);
 
     // Initialize the tables (XRandR has an update event which needs to go inside)
     state.clients = new_table();
