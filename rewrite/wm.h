@@ -12,7 +12,7 @@
 
 smallwm_t init_wm();
 void set_size_wm(smallwm_t *state, XEvent *event);
-void lclick_launch_wm(smallwm_t *state, XEvent *event);
+void shell_launch_wm(smallwm_t *state);
 void update_icons_wm(smallwm_t *state);
 void refocus_wm(smallwm_t *state, Window window);
 void set_desktop_wm(smallwm_t *state, int desktop);
