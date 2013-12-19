@@ -43,11 +43,8 @@ typedef struct {
     Window window;
     // The current visibility state of the client
     clientstate_t state;
-    // The current location and size of the client
-    struct {
-        int x, y;
-        unsigned int width, height;
-    } dimension;
+    // The placeholder window, in case this client is being moved or resized
+    Window mvresz_placeholder;
 
     // Whether or not this client is visible on all desktops
     Bool sticky;

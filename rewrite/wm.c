@@ -235,11 +235,6 @@ void add_client_wm(smallwm_t *state, Window window)
     client->window = window;
     client->state = C_VISIBLE;
 
-    client->dimension.x = attr.x;
-    client->dimension.y = attr.y;
-    client->dimension.width = attr.width;
-    client->dimension.height = attr.height;
-
     client->sticky = False;
     client->desktop = current_desktop;
 
