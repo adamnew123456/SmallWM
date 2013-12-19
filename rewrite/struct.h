@@ -4,6 +4,15 @@
 #include "table.h"
 #include "x11.h"
 
+// Whether or not a window is being moved/resized
+typedef enum {
+    MR_MOVE,
+    MR_RESZ,
+    MR_NONE,
+} mvresz_state_t;
+
+struct client_s;
+
 // Handles global window manager state
 typedef struct {
     // Information about the main display
@@ -25,6 +34,13 @@ typedef struct {
 
     // The program to launch on META+LClick
     char *leftclick_launch;
+
+    // The state of the currently moving/resizing window
+    struct {
+        mvresz_state_t state;
+        XButtonEvent event;
+        struct client_s *client;
+    }  movement;
 } smallwm_t;
 
 // The three states a client can be in:
@@ -35,7 +51,7 @@ typedef enum {
 } clientstate_t;
 
 // All information related to a particular client
-typedef struct {
+typedef struct client_s {
     // The window manager that owns the client
     smallwm_t *wm;
 
@@ -74,6 +90,8 @@ typedef struct {
 
 // Information about event handlers
 typedef struct {
+    // The owning WM instance
+    smallwm_t *wm;
     // The core callbacks respond to e.g. KeyPress, ButtonPress, etc.
     table_t *event_callbacks;
     // The key combination event callbacks

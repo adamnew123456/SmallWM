@@ -72,6 +72,7 @@ smallwm_t init_wm()
 
     state.root = DefaultRootWindow(state.display);
     state.screen = DefaultScreen(state.display);
+    state.movement.state = MR_NONE;
 
     // Initialize the tables (XRandR has an update event which needs to go inside)
     state.clients = new_table();
@@ -137,7 +138,7 @@ void set_size_wm(smallwm_t *state, XEvent *event)
 }
 
 // Launches the program given by the left click
-void lclick_launch_wm(smallwm_t *state, XEvent *event)
+void shell_launch_wm(smallwm_t *state)
 {
     if (!fork())
     {
