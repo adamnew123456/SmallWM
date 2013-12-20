@@ -73,6 +73,7 @@ smallwm_t init_wm()
     state.root = DefaultRootWindow(state.display);
     state.screen = DefaultScreen(state.display);
     state.movement.state = MR_NONE;
+    state.current_desktop = 0;
 
     // Initialize the tables (XRandR has an update event which needs to go inside)
     state.clients = new_table();
@@ -207,13 +208,33 @@ void refocus_wm(smallwm_t *state, Window window)
             state.focused = None;
         } else
             state.focused = window;
-    }
+    } 
 }
 
-// Gets a client which corresponds to a particular window
-client_t *client_from_window_wm(smallwm_t *state, Window window)
+// Shows/ hides windows that are/aren't visible on the current desktop
+void update_desktop_wm(smallwm_t *state)
 {
-    return get_table(state->clients, (int)window);
+    int n_clients;
+    void **clients = to_list_table(state->clients, &n_clients);
+
+    int idx;
+    XWindowAttributes attr;
+
+    for (idx = 0; idx < n_clients; idx++)
+    {
+        client_t *client = clients[idx];
+        XGetWindowAttributes(state->display, client->window, &attr);
+        Bool should_be_viewable = (
+                client->sticky || client->desktop == state->current_desktop);
+
+        if (attr.map_state != IsViewable && should_be_viewable)
+            XMapWindow(state->display, client->window);
+
+        if (attr.map_state == IsViewable && !should_be_viewable)
+            XUnmapWindow(state->display, client->window);
+    }
+
+    free(clients);
 }
 
 // Creates a client from a particular window
