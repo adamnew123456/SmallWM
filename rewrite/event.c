@@ -56,9 +56,9 @@ void run_loop_event(events_t *events)
     {
         XNextEvent(events->wm->display, &event);
 
-        event_callback_t *handler = get_table(events->event_callbacks, event.type);
+        event_callback_t handler = get_table(events->event_callbacks, event.type);
         if (handler)
-            (*handler)(events->wm, &event);
+            handler(events->wm, &event);
     }
 }
 
@@ -69,9 +69,9 @@ void on_keypress_event(smallwm_t *wm, XEvent *event)
     KeySym *keysym = NULL;
     keysym = XGetKeyboardMapping(wm->display, event->xkey.keycode, 1, &nkeys);
 
-    event_callback_t *handler = get_table(wm->events->key_callbacks, *keysym);
+    event_callback_t handler = get_table(wm->events->key_callbacks, *keysym);
     if (handler)
-        (*handler)(wm, event);
+        handler(wm, event);
 }
 
 /* Handle a button press, which can do one of a few things:
