@@ -87,7 +87,7 @@ void on_buttonpress_event(smallwm_t *wm, XEvent *event)
     icon_t *icon = get_table(wm->icons, event->xbutton.window);
 
     //  click on the root window
-    if (!(client || icon) && event->xbutton.button == LAUNCH)
+    if (!(client || icon) && event->xbutton.button == LAUNCH && event->xbutton.state == MASK)
     {
         shell_launch_wm(wm);
     }
@@ -95,33 +95,32 @@ void on_buttonpress_event(smallwm_t *wm, XEvent *event)
     {
         to_client(icon);
     }
-    else if (client)
+    else if (client && event->xbutton.state == MASK)
     {
-        if (event->xbutton.state == MASK)
+        switch (event->xbutton.button)
         {
-            switch (event->xbutton.button)
-            {
-            case MOVE:
-            {
-                wm->movement.state = MR_MOVE;
-                wm->movement.event = event->xbutton;
-                wm->movement.client = client;
-                begin_moveresize_client(client);
-            }; break;
-            case RESZ:
-            {
-                wm->movement.state = MR_RESZ;
-                wm->movement.event = event->xbutton;
-                wm->movement.client = client;
-                begin_moveresize_client(client);
-            }; break;
-            }
-        }
-        else
+        case MOVE:
         {
-            client = get_table(wm->clients, event->xbutton.window);
-            refocus_wm(wm, client->window);
+            wm->movement.state = MR_MOVE;
+            wm->movement.event = event->xbutton;
+            wm->movement.client = client;
+            begin_moveresize_client(client);
+        }; break;
+        case RESZ:
+        {
+            wm->movement.state = MR_RESZ;
+            wm->movement.event = event->xbutton;
+            wm->movement.client = client;
+            begin_moveresize_client(client);
+        }; break;
         }
+    }
+    else
+    {
+        client_t *client = get_table(wm->clients, event->xbutton.window);
+        if (!client) return;
+
+        refocus_wm(wm, client->window);
     }
 }
 
