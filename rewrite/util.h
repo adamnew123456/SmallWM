@@ -8,4 +8,5 @@ typedef enum {
 } status_t;
 
 unsigned long long string_to_long(const char *, status_t *);
+void die(const char *message)
 #endif

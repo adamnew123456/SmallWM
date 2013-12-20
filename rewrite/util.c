@@ -9,3 +9,9 @@ unsigned long long string_to_long(const char *string, status_t *status)
     *status = (*str_error == '\0' ? SUCCESS : FAIL);
     return x;
 }
+
+// Exits the process immediately
+void die(const char *message)
+{
+    fprintf(stderr, "SmallWM Terminated: %s\n", message);
+}
