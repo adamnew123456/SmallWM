@@ -164,3 +164,145 @@ void on_mapnotify_event(smallwm_t *wm, XEvent *event)
 {
     add_client_wm(wm, event->xmap.window);
 }
+
+// Raise a client to the top
+void do_raise_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    raise_client(client);
+}
+
+// Lower a client to the bottom
+void do_lower_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    lower_client(client);
+}
+
+// Maximize a client
+void do_maximize_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, 0, wm->width, wm->height);
+}
+
+// Request a client to close
+void do_close_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    request_close_client(client);
+}
+
+// Force a client to close
+void do_kill_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    destroy_client(client);
+}
+
+// Move to the next desktop
+void do_desktopnext_event(smallwm_t *wm, XEvent *event)
+{
+    wm->current_desktop++;
+    if (wm->current_desktop == wm->num_desktops)
+        wm->current_desktop = 0;
+
+    update_desktop_wm(wm);
+}
+
+// Move to the previous desktop
+void do_desktopprev_event(smallwm_t *wm, XEvent *event)
+{
+    wm->current_desktop--;
+    if (wm->current_desktop < 0)
+        wm->current_desktop = wm->num_desktops - 1;
+
+    update_desktop_wm(wm);
+}
+
+// Move a client to the next desktop
+void do_movetodesktopnext_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    client->desktop++;
+    if (client->desktop == wm->num_desktops)
+        client->desktop = 0;
+
+    update_desktop_wm(wm);
+}
+
+// Move a client to the previous desktop
+void do_movetodesktopprev_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    client->desktop--;
+    if (client->desktop < 0)
+        client->desktop = wm->num_desktops - 1;
+    
+    update_desktop_wm(wm);
+}
+
+// Stick/unstick a client to/from all desktops
+void do_stick_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    client->sticky = !client->sticky;
+}
+
+// Snap a client to the left side of the screen
+void do_snapleft_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, 0, wm->width / 2, wm->height);
+}
+
+// Snap a client to the right side of the screen
+void do_snapright_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, wm->width / 2, 0, wm->width / 2, wm->height);
+}
+
+// Snap a client to the top of the screen
+void do_snapup_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, 0, wm->width, wm->height / 2);
+}
+
+// Snap a client to the bottom of the screen
+void do_snapleft_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, wm->height / 2, wm->width, wm->height);
+}
+
+// Kill SmallWM and all children
+void do_endwm_event(smallwm_t *wm, XEvent *event)
+{
+    kill(0, SIGKILL);
+}
