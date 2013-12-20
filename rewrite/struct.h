@@ -19,8 +19,8 @@ typedef struct {
     Display *display;
     Window root;
     int screen;
-    int width, height;
-    int icon_width, icon_height;
+    unsigned int width, height;
+    unsigned int icon_width, icon_height;
 
     // Information about virtual desktops
     unsigned long long num_desktops, current_desktop;
@@ -65,7 +65,7 @@ typedef struct client_s {
     // Whether or not this client is visible on all desktops
     Bool sticky;
     // The desktop that owns this client
-    int desktop;
+    unsigned long long desktop;
 } client_t;
 
 // All information about an icon
