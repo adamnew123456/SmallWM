@@ -151,6 +151,9 @@ void on_motionnotify_event(smallwm_t *wm, XEvent *event)
     xdiff = event->xbutton.x_root - wm->movement.event.x_root;
     ydiff = event->xbutton.y_root - wm->movement.event.y_root;
 
+    // Update the WM event to the most recent version
+    wm->movement.event = event->xbutton;
+
     // Get the old location of the window
     XWindowAttributes attr;
     XGetWindowAttributes(wm->display, wm->movement.client->mvresz_placeholder, &attr);
