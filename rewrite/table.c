@@ -115,7 +115,7 @@ void **to_list_table(table_t *table, int *n_elems)
         table_linkednode_t *node = table[idx];
         while (node)
         {
-            list_elems[idx++] = node;
+            list_elems[list_idx++] = node->value;
             node = node->next;
         }
     }
