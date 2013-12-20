@@ -14,4 +14,5 @@ unsigned long long string_to_long(const char *string, status_t *status)
 void die(const char *message)
 {
     fprintf(stderr, "SmallWM Terminated: %s\n", message);
+    exit(1);
 }
