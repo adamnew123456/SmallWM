@@ -38,7 +38,7 @@ static int config_handler(void *user,
 */
 smallwm_t init_wm()
 {
-    smallwm_t state;
+    smallwm_t *state = malloc(sizeof(smallwm_t));
 
     // Loads the configuration file via the inih API
     char *path = mallco(strlen(getenv("HOME")) + strlen("/.config/smallwm"));
@@ -59,30 +59,30 @@ smallwm_t init_wm()
     state_var = string_to_long(config_var, &conversion_state); \
     if (conversion_state == FAIL) state_var = (default_var);
 
-    state.leftclick_launch = (config_shell == NULL ? "xterm" : config_shell);
-    SET_STATE_NUM(state.num_desktops, config_num_desktops, 5);
-    SET_STATE_NUM(state.icon_width, config_icon_width, 75);
-    SET_STATE_NUM(state.icon_height, config_icon_height, 20);
+    state->leftclick_launch = (config_shell == NULL ? "xterm" : config_shell);
+    SET_STATE_NUM(state->num_desktops, config_num_desktops, 5);
+    SET_STATE_NUM(state->icon_width, config_icon_width, 75);
+    SET_STATE_NUM(state->icon_height, config_icon_height, 20);
 #undef SET_STATE_NUM
 
     // Get information about the display and root window
-    state.display = XOpenDisplay(NULL);
-    if (!state.display)
+    state->display = XOpenDisplay(NULL);
+    if (!state->display)
         die("Unable to open X display");
 
-    state.root = DefaultRootWindow(state.display);
-    state.screen = DefaultScreen(state.display);
-    state.movement.state = MR_NONE;
-    state.current_desktop = 0;
+    state->root = DefaultRootWindow(state->display);
+    state->screen = DefaultScreen(state->display);
+    state->movement.state = MR_NONE;
+    state->current_desktop = 0;
 
     // Initialize the tables (XRandR has an update event which needs to go inside)
-    state.clients = new_table();
-    state.icons = new_table();
-    state.focused_window = None;
+    state->clients = new_table();
+    state->icons = new_table();
+    state->focused_window = None;
 
     // Initialize XRandR
     int xrandr_evt_base, xrandr_err_base;
-    Bool xrandr_state = XRRQueryExtension(state.display, &xrandr_evt_base, &xrandr_err_base);
+    Bool xrandr_state = XRRQueryExtension(state->display, &xrandr_evt_base, &xrandr_err_base);
     if (xrandr_state == False)
     {
         die("Unable to initialize XRandR");
@@ -90,50 +90,50 @@ smallwm_t init_wm()
     else
     {
         // Add the event base to the window manager state
-        state.xrandr_event_offset = xrandr_evt_base;
+        state->xrandr_event_offset = xrandr_evt_base;
 
         // Version 1.4 is what is currently on my Saucy Salamander machine
         int major_version = 1, minor_version = 4;
         XRRQueryVersion(&major_version, &minor_version);
 
         // Get the initial screen information
-        XRRScreenConfiguration *screen_config = XRRGetScreenInfo(state.display, state.root);
+        XRRScreenConfiguration *screen_config = XRRGetScreenInfo(state->display, state->root);
         XRRScreenSize *screen_size = XRRConfigSizes(screen_config, 1);
 
-        state.width = screen_size->width;
-        state.height = screen_size->height;
+        state->width = screen_size->width;
+        state->height = screen_size->height;
 
         // Register the event hook to update the screen information later
-        XRRSelectInput(state.display, state.root, RRScreenChangeNotifyMask);
-        add_table(state.events, RRScreenChangeNotify + xrandr_evt_base, event_xrandr_resize);
+        XRRSelectInput(state->display, state->root, RRScreenChangeNotifyMask);
+        add_table(state->events, RRScreenChangeNotify + xrandr_evt_base, event_xrandr_resize);
     }
 
     // Asks X to report all interesting events to us (PointerMotion is used for moving/resizing clients)
-    XSelectInput(state.display, state.root, PointerMotionMask | SubstructureNotifyMask);
+    XSelectInput(state->display, state->root, PointerMotionMask | SubstructureNotifyMask);
 
     // Collect all the children and move them under our ownership
     Window _unused1;
     Window *children;
     unsigned int nchildren;
 
-    XQueryTree(state.display, state.root, &_unused1, &_unused1, &children, &nchildren);
+    XQueryTree(state->display, state->root, &_unused1, &_unused1, &children, &nchildren);
 
     int idx;
     for (idx = 0; idx < nchildren; idx++)
     {
-        if (children[idx] != state.root)
-            client_add(&state, children[idx]);
+        if (children[idx] != state->root)
+            client_add(state, children[idx]);
     }
 
     XFree(children);
 
-    return status;
+    return state;
 }
 
 // Updates the size of the screen - called when xrandr changes the screen dimensions
 void set_size_wm(smallwm_t *state, XEvent *event)
 {
-    XRRScreenChangedNotifyEvent xrr_event = (XRRScreenChangedNotifyEvent)event->xany;
+    XRRScreenChangeNotifyEvent xrr_event = (XRRScreenChangedNotifyEvent)event->xany;
     state->width = xrr_event.width;
     state->height = xrr_event.height;
 }
