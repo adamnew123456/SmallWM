@@ -86,6 +86,7 @@ void end_moveresize_client(client_t *client)
     XMoveResizeWindow(client->wm->display, client->window, attr.x, attr.y, attr.width, attr.height);
 
     raise_client(client);
+    refocus_wm(client->wm, client->window);
 }
 
 // Removes a client once the window closes
