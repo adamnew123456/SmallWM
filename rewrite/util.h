@@ -1,6 +1,7 @@
-#ifndef __SMALLMW_UTIL__
+#ifndef __SMALLWM_UTIL__
 #define __SMALLWM_UTIL__
 
+#include <stdio.h>
 #include <stdlib.h>
 
 typedef enum {
@@ -8,5 +9,5 @@ typedef enum {
 } status_t;
 
 unsigned long long string_to_long(const char *, status_t *);
-void die(const char *message)
+void die(const char *message);
 #endif

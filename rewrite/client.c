@@ -20,7 +20,8 @@ void request_close_client(client_t *client)
 {
     // Being nice like this is mandated by the ICCCM
     XEvent close_event;
-    close_event.xclient = {
+
+    XClientMessageEvent client_close = {
         .type = ClientMessage,
         .window = client->window,
         .message_type = XInternAtom(client->wm->display, "WM_PROTOCOLS", False),
@@ -30,6 +31,8 @@ void request_close_client(client_t *client)
                    CurrentTime }
         }
     };
+
+    close_event.xclient = client_close;
     XSendEvent(client->wm->display, client->window, False, NoEventMask, &close_event);
 }
 
@@ -52,20 +55,20 @@ void begin_moveresize_client(client_t *client)
             WhitePixel(client->wm->display, client->wm->screen));
 
     // Ask the WM module to ignore this window
-    XSetWindowAttributes attr;
-    attr.override_redirect;
-    XChangeWindowAttributes(client->wm->display, client->mvresz_placeholder, CWOverrideRedirect, &attr);
+    XSetWindowAttributes set_attr;
+    set_attr.override_redirect;
+    XChangeWindowAttributes(client->wm->display, client->mvresz_placeholder, CWOverrideRedirect, &set_attr);
 
     // Put up the window and force the pointer into the window
     XMapWindow(client->wm->display, client->mvresz_placeholder);
     XGrabPointer(client->wm->display, client->mvresz_placeholder, True,
             PointerMotionMask | ButtonReleaseMask,
-            GrabModeAsync, GrabModeAsync, Node, Node, CurrentTime);
+            GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
     XRaiseWindow(client->wm->display, client->mvresz_placeholder);
 }
 
 // Stop moving or resizing the client
-void end_moveresz_client(client_t *client)
+void end_moveresize_client(client_t *client)
 {
     if (client->state != C_MOVERESZ)
         return;
@@ -75,8 +78,8 @@ void end_moveresz_client(client_t *client)
     XUngrabPointer(client->wm->display, CurrentTime);
 
     XWindowAttributes attr;
-    XGetWindowAttribues(client->wm->display, client->mvresz_placeholder);
-    XDestroyWindow(clietn->wm->display, client->mvresz_placeholder);
+    XGetWindowAttributes(client->wm->display, client->mvresz_placeholder, &attr);
+    XDestroyWindow(client->wm->display, client->mvresz_placeholder);
 
     // Place the original window
     XMapWindow(client->wm->display, client->window);

@@ -1,6 +1,6 @@
 /* This allows one module to refer to another module's structure with importing all the functions. */
 #ifndef __SMALLWM_STRUCT__
-#define __SMALLMW_STRUCT__
+#define __SMALLWM_STRUCT__
 #include "table.h"
 #include "x11.h"
 
@@ -12,6 +12,7 @@ typedef enum {
 } mvresz_state_t;
 
 struct client_s;
+struct events_s;
 
 // Handles global window manager state
 typedef struct {
@@ -34,6 +35,9 @@ typedef struct {
 
     // The program to launch on META+LClick
     char *leftclick_launch;
+
+    // The event handler that is being used
+    struct events_s *events;
 
     // The state of the currently moving/resizing window
     struct {
@@ -85,11 +89,11 @@ typedef struct {
     // The Pixmap used as an icon
     Pixmap pixmap;
     // The dimensions of the pixmap
-    unsigned int width, height;
+    unsigned int pix_width, pix_height;
 } icon_t;
 
 // Information about event handlers
-typedef struct {
+typedef struct events_s {
     // The owning WM instance
     smallwm_t *wm;
     // The core callbacks respond to e.g. KeyPress, ButtonPress, etc.

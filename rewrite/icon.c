@@ -8,7 +8,7 @@ void to_icon(client_t *client)
         return;
     
     icon_t *icon = malloc(sizeof(icon_t));
-    hidden_clint->wm = client->wm;
+    icon->wm = client->wm;
     icon->client = client;
 
     // Position the window off-screen until it can be moved by the WM module
@@ -21,7 +21,7 @@ void to_icon(client_t *client)
 
     // Communicate to the WM module that this window is not a client
     XSetWindowAttributes attr;
-    attr.override_redirect = True
+    attr.override_redirect = True;
     XChangeWindowAttributes(icon->wm->display, icon->window, CWOverrideRedirect, &attr);
 
     // Hook into the click and redraw events for this icon
@@ -31,7 +31,7 @@ void to_icon(client_t *client)
     XMapWindow(icon->wm->display, icon->window);
     
     // Create a graphics context for drawing the text and the icon
-    icon->gc = XCreateGC(icon->display, icon->window, 0, NULL);
+    icon->gc = XCreateGC(icon->wm->display, icon->window, 0, NULL);
 
     // Get the pixmap for the icon
     XWMHints *hints = XGetWMHints(icon->wm->display, icon->window);
@@ -47,14 +47,14 @@ void to_icon(client_t *client)
 
         XGetGeometry(icon->wm->display, icon->pixmap, 
                 &_unused1, &_unused2, &_unused2, 
-                &icon->width, &icon->height, 
+                &icon->pix_width, &icon->pix_height, 
                 &_unused3, &_unused3);
     }
     else
         icon->has_pixmap = False;
     XFree(hints);
 
-    XUnmapWindow(client->window);
+    XUnmapWindow(client->wm->display, client->window);
     client->state = C_HIDDEN;
 
     // Remove the hidden client and add the visible icon to the WM's object tables
@@ -93,7 +93,7 @@ void paint_icon(icon_t *icon)
     {
         XDrawString(icon->wm->display, icon->window, icon->gc,
                 text_offset, icon->wm->icon_height, title,
-                strlen(title), max_len);
+                strlen(title));
     }
 
     if (icon->has_pixmap)

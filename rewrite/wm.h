@@ -10,7 +10,7 @@
 #include "util.h"
 #include "inih/ini.h"
 
-smallwm_t init_wm();
+smallwm_t *init_wm();
 void set_size_wm(smallwm_t *state, XEvent *event);
 void shell_launch_wm(smallwm_t *state);
 void update_icons_wm(smallwm_t *state);
