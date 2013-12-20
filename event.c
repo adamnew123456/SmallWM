@@ -1,154 +1,350 @@
+/* Recieve and handle X events */
 #include "event.h"
 
-moving_t moving_state;
-
-// Handle a keypress which is listened to by SmallWM - see events.h for a list
-// of keys handled here
-CALLBACK(eKeyPress)
+// Creates a new empty event table
+events_t *event_init(smallwm_t *wm)
 {
-    GET_EVENT;
+    events_t *events = malloc(sizeof(events_t));
+    events->event_callbacks = new_table();
+    events->key_callbacks = new_table();
 
+    XGrabButton(wm->display, MOVE, MASK, wm->root, True, ButtonPressMask,
+                GrabModeAsync, GrabModeAsync, None, None);
+    XGrabButton(wm->display, RESZ, MASK, wm->root, True, ButtonPressMask,
+                GrabModeAsync, GrabModeAsync, None, None);
+
+    int idx = 0;
+    while (event_callbacks[idx])
+    {
+        add_table(events->event_callbacks, event_types[idx], event_callbacks[idx]);
+        idx++;
+    }
+
+    idx = 0;
+    while (key_callbacks[idx])
+    {
+        add_table(events->key_callbacks, keysym_types[idx], key_callbacks[idx]);
+
+        int keycode = XKeysymToKeycode(wm->display, keysym_types[idx]);
+        XGrabKey(wm->display, keycode, MASK, wm->root, True, GrabModeAsync, GrabModeAsync);
+
+        idx++;
+    }
+
+    events->wm = wm;
+    wm->events = events;
+    return events;
+}
+
+// Adds a keyboard event handler
+void add_keyboard_handler_event(events_t *events, KeySym key, event_callback_t callback)
+{
+    add_table(events->key_callbacks, key, callback);
+}
+
+// Adds a general event handler
+void add_handler_event(events_t *events, int event, event_callback_t callback)
+{
+    add_table(events->event_callbacks, event, callback);
+}
+
+// Dispatches on X events
+void run_loop_event(events_t *events)
+{
+    XEvent event;
+    while (1)
+    {
+        XNextEvent(events->wm->display, &event);
+
+        event_callback_t handler = get_table(events->event_callbacks, event.type);
+        if (handler)
+            handler(events->wm, &event);
+    }
+}
+
+// Handle keyboard commands by simple table dispatch
+void on_keypress_event(smallwm_t *wm, XEvent *event)
+{
     int nkeys;
-    KeySym *ksym = NULL;
-    ksym = XGetKeyboardMapping(dpy, ev.xkey.keycode, 1, &nkeys);
+    KeySym *keysym = NULL;
+    keysym = XGetKeyboardMapping(wm->display, event->xkey.keycode, 1, &nkeys);
 
-    switch (*ksym) {
-    case XK_Escape:
-        exit(0);
-        return;
-    case XK_comma:
-        // This is essentially a basic modulo - since I'm not sure how
-        // compilers handle the case of negative modulos, just "unfold" the
-        // operation to make sure current_desktop is positive
-        current_desktop--;
-        while (current_desktop < 0)
-            current_desktop += MAX_DESKTOP;
+    event_callback_t handler = get_table(wm->events->key_callbacks, *keysym);
+    if (handler)
+        handler(wm, event);
+}
 
-        set_desktop();
-        return;
-    case XK_period:
-        current_desktop = (current_desktop + 1) % MAX_DESKTOP;
-        set_desktop();
-        return;
+/* Handle a button press, which can do one of a few things:
+ *  (a) Changes the focus when clicking on an unfocused window
+ *      (in this case, the mask will not be equal to MASK)
+ *  (b) This function starts moving or resizing
+ *  (c) This function shows a previously hidden window
+ *  (d) Launches a shell
+*/
+void on_buttonpress_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xbutton.subwindow);
+    icon_t *icon = get_table(wm->icons, event->xbutton.window);
+
+    //  click on the root window
+    if (!(client || icon) && event->xbutton.button == LAUNCH && event->xbutton.state == MASK)
+    {
+        shell_launch_wm(wm);
     }
-
-    client_t *cli = fromwin(ev.xkey.subwindow);
-    if (!cli || cli->state != Visible)
-        return;
-
-    int i;
-    for (i = 0; i < NSHORTCUTS; i++) {
-        if (*ksym == SHORTCUTS[i].ksym) {
-            (*SHORTCUTS[i].callback) (evp, cli);
-            break;
+    else if (icon)
+    {
+        to_client(icon);
+    }
+    else if (client && event->xbutton.state == MASK)
+    {
+        switch (event->xbutton.button)
+        {
+        case MOVE:
+        {
+            wm->movement.state = MR_MOVE;
+            wm->movement.event = event->xbutton;
+            wm->movement.client = client;
+            begin_moveresize_client(client);
+        }; break;
+        case RESZ:
+        {
+            wm->movement.state = MR_RESZ;
+            wm->movement.event = event->xbutton;
+            wm->movement.client = client;
+            begin_moveresize_client(client);
+        }; break;
         }
+    }
+    else
+    {
+        client_t *client = get_table(wm->clients, event->xbutton.window);
+        if (!client) return;
+
+        refocus_wm(wm, client->window);
     }
 }
 
-// Handle a button press - this function has a couple of important cases:
-//  a) This function will change focus if the user is just clicking on an 
-//     unfocused window (in this case, the MASK will not appear in the event)
-//  b) This function starts moving if the user does a left click
-//  c) This function starts resizing if the user does a right click
-CALLBACK(eButtonPress)
+// Stops moving/resizing if there is anything which is being moved/resized
+void on_buttonrelease_event(smallwm_t *wm, XEvent *event)
 {
-    GET_EVENT;
+    if (wm->movement.state != MR_NONE)
+    {
+        client_t *client = get_table(wm->clients, event->xbutton.window);
+        end_moveresize_client(wm->movement.client);
 
-    client_t *cli = fromwin(ev.xbutton.subwindow);
-    client_t *ico = fromicon(ev.xbutton.window);
-
-    if (ico)
-        unhide(ico, 0);
-    // This is a really complex test to check to see if
-    // we are clicking the root window. Can it be simplfied?
-    else if (ev.xbutton.window == ev.xbutton.root &&
-         ev.xbutton.button == 1 && !cli && !ico) {
-        if (!fork()) {
-            execlp(SHELL, SHELL, NULL);
-            exit(1);
-        }
-    }
-
-    if (moving_state.inmove || moving_state.inresz
-        || !(ev.xbutton.subwindow || ev.xbutton.window != ev.xbutton.root))
-        return;
-
-    if (ev.xbutton.state == MASK) {
-        if (!cli)
-            return;
-
-        if (ev.xbutton.button == MOVE) {
-            moving_state.inmove = 1;
-            moving_state.inresz = 0;
-            beginmvrsz(cli);
-            moving_state.mouse = ev.xbutton;
-            moving_state.client = cli;
-        } else if (ev.xbutton.button == RESZ) {
-            moving_state.inmove = 0;
-            moving_state.inresz = 1;
-            beginmvrsz(cli);
-            moving_state.mouse = ev.xbutton;
-            moving_state.client = cli;
-        }
-    } else {
-        cli = fromwin(ev.xbutton.window);
-
-        if (!cli)
-            return;
-
-        chfocus(cli->dpy, cli->win);
+        wm->movement.state = MR_NONE;
     }
 }
 
-// This function just stops moving and resizing if the user was moving/resizing
-// before.
-CALLBACK(eButtonRelease)
+// Updates the window which is being moved or resized
+void on_motionnotify_event(smallwm_t *wm, XEvent *event)
 {
-    GET_EVENT;
-
-    client_t *cli = fromwin(ev.xbutton.subwindow);
-
-    if (moving_state.inmove || moving_state.inresz) {
-        endmoversz(moving_state.client);
-        moving_state.inmove = 0;
-        moving_state.inresz = 0;
-        return;
-    }
-}
-
-// This function updates the window that is being moved/resized
-CALLBACK(eMotionNotify)
-{
-    GET_EVENT;
-
-    if (!(moving_state.inmove || moving_state.inresz))    // We don't care
+    if (wm->movement.state == MR_NONE)
         return;
 
-    // Get the latest move event - don't update needlessly
-    while (XCheckTypedEvent(dpy, MotionNotify, evp)) ;
+    // Go ahead and get the final movement to avoid needless updating
+    while (XCheckTypedEvent(wm->display, MotionNotify, event));
 
-    // Visually move/resize
+    // Do the movement
     int xdiff, ydiff;
-    xdiff = ev.xbutton.x_root - moving_state.mouse.x_root;
-    ydiff = ev.xbutton.y_root - moving_state.mouse.y_root;
+    xdiff = event->xbutton.x_root - wm->movement.event.x_root;
+    ydiff = event->xbutton.y_root - wm->movement.event.y_root;
 
-    if (moving_state.inmove)
-        XMoveWindow(dpy, moving_state.client->pholder,
-                moving_state.client->x + xdiff,
-                moving_state.client->y + ydiff);
+    // Update the WM event to the most recent version
+    wm->movement.event = event->xbutton;
 
-    if (moving_state.inresz)
-        XResizeWindow(dpy, moving_state.client->pholder,
-                  MAX(1, moving_state.client->w + xdiff), MAX(1,
-                                      moving_state.
-                                      client->
-                                      h +
-                                      ydiff));
+    // Get the old location of the window
+    XWindowAttributes attr;
+    XGetWindowAttributes(wm->display, wm->movement.client->mvresz_placeholder, &attr);
+
+    if (wm->movement.state == MR_MOVE)
+        XMoveWindow(wm->display, wm->movement.client->mvresz_placeholder,
+                attr.x + xdiff, attr.y + ydiff);
+
+    if (wm->movement.state == MR_RESZ)
+    {
+        int new_width = attr.width + xdiff;
+        int new_height = attr.height + ydiff;
+
+        XResizeWindow(wm->display, wm->movement.client->mvresz_placeholder,
+                (new_width > 1 ? new_width : 1), (new_height > 1 ? new_height : 1));
+    }
 }
 
-// This function creates a new window when it is created
-CALLBACK(eMapNotify)
+// Initialize a new client
+void on_mapnotify_event(smallwm_t *wm, XEvent *event)
 {
-    GET_EVENT;
-    create(dpy, ev.xmap.window);
+    add_client_wm(wm, event->xmap.window);
+}
+
+// Redraw the exposed icon
+void on_expose_event(smallwm_t *wm, XEvent *event)
+{
+    icon_t *icon = get_table(wm->icons, event->xexpose.window);
+    if (!icon) return;
+
+    paint_icon(icon);
+}
+
+// Destroy the client backing a removed window
+void on_destroynotify_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xdestroywindow.window);
+    if (!client) return;
+
+    destroy_client(client);
+}
+
+// Raise a client to the top
+void do_raise_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    raise_client(client);
+}
+
+// Lower a client to the bottom
+void do_lower_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    lower_client(client);
+}
+
+// Maximize a client
+void do_maximize_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, wm->icon_height, wm->width, wm->height - wm->icon_height);
+}
+
+// Request a client to close
+void do_close_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    request_close_client(client);
+}
+
+// Force a client to close
+void do_kill_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XDestroyWindow(wm->display, client->window);
+}
+
+// Hide a particular client
+void do_hide_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    to_icon(client);
+}
+
+// Move to the next desktop
+void do_desktopnext_event(smallwm_t *wm, XEvent *event)
+{
+    wm->current_desktop++;
+    if (wm->current_desktop == wm->num_desktops)
+        wm->current_desktop = 0;
+
+    update_desktop_wm(wm);
+}
+
+// Move to the previous desktop
+void do_desktopprev_event(smallwm_t *wm, XEvent *event)
+{
+    wm->current_desktop--;
+    if (wm->current_desktop < 0)
+        wm->current_desktop = wm->num_desktops - 1;
+
+    update_desktop_wm(wm);
+}
+
+// Move a client to the next desktop
+void do_movetodesktopnext_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    client->desktop++;
+    if (client->desktop == wm->num_desktops)
+        client->desktop = 0;
+
+    update_desktop_wm(wm);
+}
+
+// Move a client to the previous desktop
+void do_movetodesktopprev_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    client->desktop--;
+    if (client->desktop < 0)
+        client->desktop = wm->num_desktops - 1;
+    
+    update_desktop_wm(wm);
+}
+
+// Stick/unstick a client to/from all desktops
+void do_stick_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    client->sticky = !client->sticky;
+
+    // Since unsticking a window could make it disappear
+    update_desktop_wm(wm);
+}
+
+// Snap a client to the left side of the screen
+void do_snapleft_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, wm->icon_height, wm->width / 2, wm->height - wm->icon_height);
+}
+
+// Snap a client to the right side of the screen
+void do_snapright_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, wm->width / 2, wm->icon_height, wm->width / 2, wm->height - wm->icon_height);
+}
+
+// Snap a client to the top of the screen
+void do_snapup_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, wm->icon_height, wm->width, (wm->height / 2) - wm->icon_height);
+}
+
+// Snap a client to the bottom of the screen
+void do_snapdown_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xkey.subwindow);
+    if (!client) return;
+
+    XMoveResizeWindow(wm->display, client->window, 0, wm->height / 2, wm->width, wm->height / 2);
+}
+
+// Kill SmallWM and all children
+void do_endwm_event(smallwm_t *wm, XEvent *event)
+{
+    exit(0);
 }

@@ -1,177 +1,62 @@
-#ifndef __EVENT__
-#define __EVENT__
+#ifndef __SMALLWM_EVENT__
+#define __SMALLWM_EVENT__
 
-#include "global.h"
+#include <signal.h>
+#include <stdlib.h>
+
 #include "client.h"
+#include "icon.h"
+#include "struct.h"
+#include "wm.h"
+#include "x11.h"
 
-// A key-value mapping to shrink code
-typedef struct {
-    KeySym ksym;
-    void (*callback) (XEvent *, client_t *);
-} uevent_t;
+// A generic event callback
+typedef void(*event_callback_t)(smallwm_t*, XEvent*);
 
-// Manages the current state of whatever window the user is moving/resizing
-typedef struct {
-    XButtonEvent mouse;
-    int inmove, inresz;
-    client_t *client;
-} moving_t;
+events_t *event_init(smallwm_t *wm);
+void add_keyboard_handler_event(events_t *events, KeySym key, event_callback_t callback);
+void add_handler_event(events_t *events, int event, event_callback_t callback);
+void run_loop_event(events_t *events);
 
-// Used to define a keyboard shortcut callback
-#define UCALLBACK(name) static void name(XEvent* ev, client_t* cli)
+void on_keypress_event(smallwm_t *wm, XEvent *event);
+void on_buttonpress_event(smallwm_t *wm, XEvent *event);
+void on_buttonrelease_event(smallwm_t *wm, XEvent *event);
+void on_motionnotify_event(smallwm_t *wm, XEvent *event);
+void on_mapnotify_event(smallwm_t *wm, XEvent *event);
+void on_expose_event(smallwm_t *wm, XEvent *event);
+void on_destroynotify_event(smallwm_t *wm, XEvent *event);
 
-// Resolve the event pointer into an actual struct
-#define GET_EVENT XEvent ev = *evp
+static int event_types[] = { KeyPress, ButtonPress, ButtonRelease, MotionNotify, MapNotify , Expose, DestroyNotify };
+static event_callback_t event_callbacks[] = { on_keypress_event, on_buttonpress_event,
+                                       on_buttonrelease_event, on_motionnotify_event,
+                                       on_mapnotify_event , on_expose_event,
+                                       on_destroynotify_event, NULL };
 
-// ////////////////////////////////////////////////////
-// Here are the keyboard shortcuts - their functions
-// are implemented in the header as to be easy to edit.
-// Their static definition doesn't hurt anything here,
-// and this works well enough in practice. (Though it
-// is bad form).
-//
-UCALLBACK(RaiseWindow)
-{
-    raise_(cli);
-}
+void do_raise_event(smallwm_t *wm, XEvent *event);
+void do_lower_event(smallwm_t *wm, XEvent *event);
+void do_maximize_event(smallwm_t *wm, XEvent *event);
+void do_close_event(smallwm_t *wm, XEvent *event);
+void do_kill_event(smallwm_t *wm, XEvent *event);
+void do_hide_event(smallwm_t *wm, XEvent *event);
+void do_desktopnext_event(smallwm_t *wm, XEvent *event);
+void do_desktopprev_event(smallwm_t *wm, XEvent *event);
+void do_stick_event(smallwm_t *wm, XEvent *event);
+void do_snapleft_event(smallwm_t *wm, XEvent *event);
+void do_snapright_event(smallwm_t *wm, XEvent *event);
+void do_snapup_event(smallwm_t *wm, XEvent *event);
+void do_snapdown_event(smallwm_t *wm, XEvent *event);
+void do_movetodesktopnext_event(smallwm_t *wm, XEvent *event);
+void do_movetodesktopprev_event(smallwm_t *wm, XEvent *event);
+void do_endwm_event(smallwm_t *wm, XEvent *event);
 
-UCALLBACK(LowerWindow)
-{
-    lower(cli);
-}
+static int keysym_types[] = { XK_Page_Up, XK_Page_Down, XK_m, XK_c, XK_x, XK_h,
+                        XK_bracketright, XK_bracketleft, XK_backslash, XK_Left,
+                        XK_Right, XK_Up, XK_Down , XK_Escape, XK_comma, XK_period };
 
-UCALLBACK(Maximize)
-{
-    maximize(cli);
-}
-
-UCALLBACK(Close)
-{
-    destroy(cli, 0);
-}
-
-UCALLBACK(ForceClose)
-{
-    destroy(cli, 1);
-}
-
-UCALLBACK(Hide)
-{
-    hide(cli);
-}
-
-UCALLBACK(Refresh)
-{
-    // Apparently, taking a window and re-mapping it allows
-    // it to gain back the ability to focus. Huh.
-    XUnmapWindow(cli->dpy, cli->win);
-    XMapWindow(cli->dpy, cli->win);
-}
-
-UCALLBACK(MoveToNextDesktop)
-{
-    int next_desktop = (cli->desktop + 1) % MAX_DESKTOP;
-    cli->desktop = next_desktop;
-
-    set_desktop();
-}
-
-UCALLBACK(MoveToPrevDesktop)
-{
-    // As in client.c, mimic a modulo to avoid negative results
-    int prev_desktop = cli->desktop - 1;
-    while (prev_desktop < 0)
-        prev_desktop += MAX_DESKTOP;
-    cli->desktop = prev_desktop;
-
-    set_desktop();
-}
-
-UCALLBACK(StickToDesktop)
-{
-    if (cli->desktop != ALL_DESKTOPS)
-        cli->desktop = ALL_DESKTOPS;
-    else
-        cli->desktop = current_desktop;
-}
-
-UCALLBACK(SnapLeft)
-{
-    int new_x = 0;
-    int new_y = ICON_HEIGHT;
-    unsigned int new_width = SCREEN_WIDTH(cli->dpy) / 2;
-    unsigned int new_height = SCREEN_HEIGHT(cli->dpy) - ICON_HEIGHT;
-
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
-              new_height);
-}
-
-UCALLBACK(SnapRight)
-{
-    int new_x = SCREEN_WIDTH(cli->dpy) / 2;
-    int new_y = ICON_HEIGHT;
-    unsigned int new_width = SCREEN_WIDTH(cli->dpy) / 2;
-    unsigned int new_height = SCREEN_HEIGHT(cli->dpy) - ICON_HEIGHT;
-
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
-              new_height);
-}
-
-UCALLBACK(SnapUp)
-{
-    int new_x = 0;
-    int new_y = ICON_HEIGHT;
-    unsigned int new_width = SCREEN_WIDTH(cli->dpy);
-    unsigned int new_height = (SCREEN_HEIGHT(cli->dpy) / 2) - ICON_HEIGHT;
-
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
-              new_height);
-}
-
-UCALLBACK(SnapDown)
-{
-    int new_x = 0;
-    int new_y = SCREEN_HEIGHT(cli->dpy) / 2;
-    unsigned int new_width = SCREEN_WIDTH(cli->dpy);
-    unsigned int new_height = (SCREEN_HEIGHT(cli->dpy) / 2) - ICON_HEIGHT;
-
-    XMoveResizeWindow(cli->dpy, cli->win, new_x, new_y, new_width,
-              new_height);
-}
-
-// The difference between SHORTCUTS and KEYBINDS is that
-// SHORTCUTS apply to a client, while KEYBINDS do not affect a window
-#define NSHORTCUTS 14
-static uevent_t SHORTCUTS[NSHORTCUTS] = {
-    {XK_Page_Up, RaiseWindow},
-    {XK_Page_Down, LowerWindow},
-    {XK_m, Maximize},
-    {XK_c, Close},
-    {XK_x, ForceClose},
-    {XK_h, Hide},
-    {XK_r, Refresh},
-    {XK_bracketright, MoveToNextDesktop},
-    {XK_bracketleft, MoveToPrevDesktop},
-    {XK_backslash, StickToDesktop},
-    {XK_Left, SnapLeft},
-    {XK_Right, SnapRight},
-    {XK_Down, SnapDown},
-    {XK_Up, SnapUp},
-};
-
-#define NKEYBINDS 3
-static KeySym KEYBINDS[NKEYBINDS] = {
-    XK_Escape,
-    XK_comma,
-    XK_period,
-};
-
-// Used for event loop callback (ie from X)
-#define CALLBACK(name) void name(Display* dpy, XEvent* evp)
-CALLBACK(eKeyPress);
-CALLBACK(eButtonPress);
-CALLBACK(eButtonRelease);
-CALLBACK(eMotionNotify);
-CALLBACK(eMapNotify);
-
+static event_callback_t key_callbacks[] = { do_raise_event, do_lower_event, do_maximize_event, 
+                                     do_close_event, do_kill_event, do_hide_event, 
+                                     do_movetodesktopnext_event, do_movetodesktopprev_event,
+                                     do_stick_event, do_snapleft_event, do_snapright_event,
+                                     do_snapup_event, do_snapdown_event, do_endwm_event, 
+                                     do_desktopprev_event, do_desktopnext_event, NULL };
 #endif
