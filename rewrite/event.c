@@ -235,7 +235,7 @@ void do_kill_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xkey.subwindow);
     if (!client) return;
 
-    destroy_client(client);
+    XDestroyWindow(wm->display, client->window);
 }
 
 // Hide a particular client

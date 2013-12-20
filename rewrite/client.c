@@ -92,10 +92,18 @@ void end_moveresize_client(client_t *client)
 // Removes a client once the window closes
 void destroy_client(client_t *client)
 {
-    if (client->state == C_VISIBLE)
+    // If the moving/resizing operation is interrupted, then
+    // undo the effects immediately
+    if (client->state == C_MOVERESZ)
     {
-        XDestroyWindow(client->wm->display, client->window);
-        del_table(client->wm->clients, client->window);
-        free(client);
+        // I assume that X removes the pointer grab if the window is destroyed
+        XDestroyWindow(client->wm->display, client->mvresz_placeholder);
     }
+
+    // Make sure to remove the focus if the dead client was focused before
+    if (client->wm->focused_window == client->window)
+        client->wm->focused_window = None;
+
+    del_table(client->wm->clients, client->window);
+    free(client);
 }
