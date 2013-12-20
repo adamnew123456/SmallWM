@@ -2,11 +2,16 @@
 #include "event.h"
 
 // Creates a new empty event table
-events_t *event_init(smallwm_t *smallwm)
+events_t *event_init(smallwm_t *wm)
 {
     events_t *events = malloc(sizeof(events_t));
     events->event_callbacks = new_table();
     events->key_callbacks = new_table();
+
+    XGrabKey(wm->display, MOVE, MASK, wm->root, True, ButtonPressMask,
+                GrabModeAsync, GrabModeAsync, None, None);
+    XGrabKey(wm->display, RESZ, MASK, wm->root, True, ButtonPressMask,
+                GrabModeAsync, GrabModeAsync, None, None);
 
     int idx = 0;
     while (event_callbacks[idx])
@@ -19,10 +24,14 @@ events_t *event_init(smallwm_t *smallwm)
     while (key_callbacks[idx])
     {
         add_table(events->key_callbacks, keysym_types[idx], key_callbacks[idx]);
+
+        int keycode = XKeysymToKeycode(wm->display, keysym_types[idx]);
+        XGrabKey(wm->display, keycode, MASK, wm->root, True, GrabModeAsync, GrabModeAsync);
+
         idx++;
     }
 
-    events->wm = smallwm;
+    events->wm = wm;
     return events;
 }
 
@@ -304,5 +313,5 @@ void do_snapleft_event(smallwm_t *wm, XEvent *event)
 // Kill SmallWM and all children
 void do_endwm_event(smallwm_t *wm, XEvent *event)
 {
-    kill(0, SIGKILL);
+    exit(0);
 }
