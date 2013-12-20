@@ -34,8 +34,8 @@ void to_icon(client_t *client)
     icon->gc = XCreateGC(icon->wm->display, icon->window, 0, NULL);
 
     // Get the pixmap for the icon
-    XWMHints *hints = XGetWMHints(icon->wm->display, icon->window);
-    if (hints && hints ->flags & IconPixmapHint)
+    XWMHints *hints = XGetWMHints(icon->wm->display, client->window);
+    if (hints && hints->flags & IconPixmapHint)
     {
         icon->has_pixmap = True;
         icon->pixmap = hints->icon_pixmap;
@@ -77,11 +77,11 @@ void paint_icon(icon_t *icon)
     char *title;
 
     // Primary attempt - just ask the client for its preferred icon window
-    XGetIconName(icon->wm->display, icon->window, &title);
+    XGetIconName(icon->wm->display, icon->client->window, &title);
 
     // Secondary attempt - ask the client for its preferred main title
     if (!title)
-        XFetchName(icon->wm->display, icon->window, &title);
+        XFetchName(icon->wm->display, icon->client->window, &title);
 
     int text_offset = (icon->has_pixmap == True ?
                         icon->pix_width :
