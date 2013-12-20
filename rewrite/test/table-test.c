@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "../table.h"
@@ -36,13 +37,25 @@ int main()
     // This is a key not in the table
     assert(get_table(table, TABLE_SIZE * 2) == NULL);
 
+    // Try removing some things to make sure the removal process works
+    for (idx = 0; idx < (int)(TABLE_SIZE * 1.5); idx += 3)
+    {
+        int *x = del_table(table, idx);
+        assert(*x == idx);
+        free(x);
+    }
+
     // Ensure that turning the table into a list works
     int n_elems;
     void **elements = to_list_table(table, &n_elems);
-    assert(n_elems == (int)(TABLE_SIZE * 1.5));
 
-    // Don't iterate through each element, since the index does not necessarily correspond
-    // to the value inside anyway. Just _assume_ that all the elements are there.
+    // Print out each element, at least to try and make sure they are all ther
+    for (idx = 0; idx < n_elems; idx++)
+    {
+        int *i = elements[idx];
+        printf("elements[%d] = %d\n", idx, *i);
+    }
+
     free(elements);
 
     // Delete everything
