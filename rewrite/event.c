@@ -130,7 +130,7 @@ void on_buttonrelease_event(smallwm_t *wm, XEvent *event)
     if (wm->movement.state != MR_NONE)
     {
         client_t *client = get_table(wm->clients, event->xbutton.window);
-        end_moveresize_client(client);
+        end_moveresize_client(wm->movement.client);
 
         wm->movement.state = MR_NONE;
     }
@@ -302,6 +302,9 @@ void do_stick_event(smallwm_t *wm, XEvent *event)
     if (!client) return;
 
     client->sticky = !client->sticky;
+
+    // Since unsticking a window could make it disappear
+    update_desktop_wm(wm);
 }
 
 // Snap a client to the left side of the screen

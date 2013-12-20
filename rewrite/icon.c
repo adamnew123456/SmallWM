@@ -115,6 +115,7 @@ void to_client(icon_t *icon)
     XRaiseWindow(icon->wm->display, client->window);
     add_table(icon->wm->clients, client->window, client);
     client->state = C_VISIBLE;
+    client->desktop = icon->wm->current_desktop;
 
     // Kill the icon
     XDestroyWindow(icon->wm->display, icon->window);

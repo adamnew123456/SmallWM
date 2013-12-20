@@ -52,9 +52,11 @@ void do_endwm_event(smallwm_t *wm, XEvent *event);
 static int keysym_types[] = { XK_Page_Up, XK_Page_Down, XK_m, XK_c, XK_x, XK_h,
                         XK_bracketright, XK_bracketleft, XK_backslash, XK_Left,
                         XK_Right, XK_Up, XK_Down , XK_Escape, XK_comma, XK_period };
-static event_callback_t key_callbacks[] = { do_raise_event, do_lower_event, do_close_event,
-                                     do_hide_event, do_movetodesktopnext_event, do_movetodesktopprev_event,
+
+static event_callback_t key_callbacks[] = { do_raise_event, do_lower_event, do_maximize_event, 
+                                     do_close_event, do_kill_event, do_hide_event, 
+                                     do_movetodesktopnext_event, do_movetodesktopprev_event,
                                      do_stick_event, do_snapleft_event, do_snapright_event,
                                      do_snapup_event, do_snapdown_event, do_endwm_event, 
-                                     do_desktopnext_event, do_desktopprev_event, NULL };
+                                     do_desktopprev_event, do_desktopnext_event, NULL };
 #endif

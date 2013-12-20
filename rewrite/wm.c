@@ -187,14 +187,11 @@ void update_icons_wm(smallwm_t *state)
 // grab and the window gets keyboard input.
 void refocus_wm(smallwm_t *state, Window window)
 {
-    // Place a grab on the old window, so that it can be refocused if clicked again later
-    if (state->focused_window)
-    {
+    if (state->focused_window != None)
         XGrabButton(state->display, AnyButton, AnyModifier, state->focused_window,
-                False, ButtonPressMask | ButtonReleaseMask,
-                GrabModeAsync, GrabModeAsync, None, None);
-    }
-
+                False, ButtonPressMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync,
+                None, None);
+        
     XWindowAttributes attr;
     XGetWindowAttributes(state->display, window, &attr);
 
