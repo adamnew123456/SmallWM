@@ -63,6 +63,15 @@ smallwm_t *init_wm()
     SET_STATE_NUM(state->num_desktops, config_num_desktops, 5);
     SET_STATE_NUM(state->icon_width, config_icon_width, 75);
     SET_STATE_NUM(state->icon_height, config_icon_height, 20);
+
+    if (state->num_desktops == 0)
+        state->num_desktops++;
+
+    if (state->icon_width <= 0)
+        state->icon_width = 75;
+
+    if (state->icon_height <= 0)
+        state->icon_height = 20;
 #undef SET_STATE_NUM
 
     // Get information about the display and root window
