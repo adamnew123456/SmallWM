@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "client.h"
+#include "icon.h"
 #include "struct.h"
 #include "wm.h"
 #include "x11.h"
@@ -22,11 +23,14 @@ void on_buttonpress_event(smallwm_t *wm, XEvent *event);
 void on_buttonrelease_event(smallwm_t *wm, XEvent *event);
 void on_motionnotify_event(smallwm_t *wm, XEvent *event);
 void on_mapnotify_event(smallwm_t *wm, XEvent *event);
+void on_expose_event(smallwm_t *wm, XEvent *event);
+void on_destroynotify_event(smallwm_t *wm, XEvent *event);
 
-static int event_types[] = { KeyPress, ButtonPress, ButtonRelease, MotionNotify, MapNotify };
+static int event_types[] = { KeyPress, ButtonPress, ButtonRelease, MotionNotify, MapNotify , Expose, DestroyNotify };
 static event_callback_t event_callbacks[] = { on_keypress_event, on_buttonpress_event,
                                        on_buttonrelease_event, on_motionnotify_event,
-                                       on_mapnotify_event , NULL };
+                                       on_mapnotify_event , on_expose_event,
+                                       on_destroynotify_event, NULL };
 
 void do_raise_event(smallwm_t *wm, XEvent *event);
 void do_lower_event(smallwm_t *wm, XEvent *event);

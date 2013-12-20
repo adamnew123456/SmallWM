@@ -175,6 +175,24 @@ void on_mapnotify_event(smallwm_t *wm, XEvent *event)
     add_client_wm(wm, event->xmap.window);
 }
 
+// Redraw the exposed icon
+void on_expose_event(smallwm_t *wm, XEvent *event)
+{
+    icon_t *icon = get_table(wm->icons, event->xexpose.window);
+    if (!icon) return;
+
+    paint_icon(icon);
+}
+
+// Destroy the client backing a removed window
+void on_destroynotify_event(smallwm_t *wm, XEvent *event)
+{
+    client_t *client = get_table(wm->clients, event->xdestroywindow.window);
+    if (!client) return;
+
+    destroy_client(client);
+}
+
 // Raise a client to the top
 void do_raise_event(smallwm_t *wm, XEvent *event)
 {
