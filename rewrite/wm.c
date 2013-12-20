@@ -114,7 +114,8 @@ smallwm_t *init_wm()
         state->height = screen_size->height;
 
         // Register the event hook to update the screen information later
-        XRRSelectInput(state->display, state->root, RRScreenChangeNotifyMask);
+        XRRSelectInput(state->display, state->root,
+                RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask | RROutputChangeNotifyMask | RROutputPropertyNotifyMask);
     }
 
     // Asks X to report all interesting events to us (PointerMotion is used for moving/resizing clients)
@@ -142,9 +143,13 @@ smallwm_t *init_wm()
 // Updates the size of the screen - called when xrandr changes the screen dimensions
 void set_size_wm(smallwm_t *state, XEvent *event)
 {
-    XRRScreenChangeNotifyEvent *xrr_event = (XRRScreenChangeNotifyEvent*)&event->xany;
-    state->width = xrr_event->width;
-    state->height = xrr_event->height;
+    // Get the new screen information
+    int nsizes;
+    XRRScreenConfiguration *screen_config = XRRGetScreenInfo(state->display, state->root);
+    XRRScreenSize *screen_size = XRRConfigSizes(screen_config, &nsizes);
+
+    state->width = screen_size->width;
+    state->height = screen_size->height;
 }
 
 // Launches the program given by the left click
