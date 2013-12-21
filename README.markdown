@@ -16,14 +16,14 @@ Improvements over TinyWM
 
 Controls
 ========
-The controls of SmallWM are customizable - see `event.h`, specifically `SHORTCUTS` and `KEYBINDS`. Note, however, that these key combinations only work when _no other modifiers are pressed_, including NumLock or CapsLock. The defaults are as follows:
+The controls listed below are defined inside event.h, and can be configured only via modification and recompilation:
+
 - `Super+PageUp`: Layers the current window onto the top
 - `Super+PageDown`: Layers the current window onto the bottom
 - `Super+m`: Maximizes the current window
 - `Super+c`: Closes the current window
 - `Super+x`: Forcefully closes the current window
 - `Super+h`: Iconifies the current window
-- `Super+r`: Refreshes the current window
 - `Super+[`: Move the current window to the previous desktop
 - `Super+]`: Move the current window to the next desktop
 - `Super+Escape`: Quits SmallWM
@@ -41,19 +41,25 @@ Building
 The Makefile contains everything you need to build and test SmallWM.
 
 Namely, it has the following interesting targets:
-- `make smallwm` builds a debug version useful for testing
-- `mall smallwm-release` builds an optimized version useful for running
-- `make xephyr-test` runs SmallWM via GDB inside a virtual X11 server so that you can test SmallWM without having to logout.
+ - `make smallwm-debug` compiles a version with symbols useful for debugging
+ - `make smallwm-release` compiles an optimized version useful for daily use
 
 Configuration
 =============
-The terminal that SmallWM uses can be configured. Open up ~/.config/smallwm, and put something like the following in:
+With the rewrite in place, a few things about SmallWM can now be configured:
 
     [smallwm]
     shell=your-preferred-terminal
+    desktops=42
+    icon_width=75
+    icon_height=20
 
-The path to the terminal can be elided as long as it is on your $PATH. SmallWM will use this terminal when launching or
-opening up new terminals with `Super-LClick`.
+These are, respectively:
+
+ - The shell launched by `Super+LClick` (default: xterm)
+ - The number of desktops (default: 5)
+ - The width in pixels of icons (default: 75)
+ - The height in pixels of icons (default: 20)
 
 Bugs/Todo
 =========
