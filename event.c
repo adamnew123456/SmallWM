@@ -263,7 +263,9 @@ void do_desktopnext_event(smallwm_t *wm, XEvent *event)
 void do_desktopprev_event(smallwm_t *wm, XEvent *event)
 {
     wm->current_desktop--;
-    if (wm->current_desktop < 0)
+    
+    // This works since the desktop types are unsigned
+    if (wm->current_desktop >= wm->num_desktops)
         wm->current_desktop = wm->num_desktops - 1;
 
     update_desktop_wm(wm);
@@ -289,7 +291,9 @@ void do_movetodesktopprev_event(smallwm_t *wm, XEvent *event)
     if (!client) return;
 
     client->desktop--;
-    if (client->desktop < 0)
+
+    // As in do_desktopprev_event
+    if (client->desktop >= wm->num_desktops)
         client->desktop = wm->num_desktops - 1;
     
     update_desktop_wm(wm);
