@@ -26,11 +26,17 @@ void on_mapnotify_event(smallwm_t *wm, XEvent *event);
 void on_expose_event(smallwm_t *wm, XEvent *event);
 void on_destroynotify_event(smallwm_t *wm, XEvent *event);
 
-static int event_types[] = { KeyPress, ButtonPress, ButtonRelease, MotionNotify, MapNotify , Expose, DestroyNotify };
-static event_callback_t event_callbacks[] = { on_keypress_event, on_buttonpress_event,
-                                       on_buttonrelease_event, on_motionnotify_event,
-                                       on_mapnotify_event , on_expose_event,
-                                       on_destroynotify_event, NULL };
+// A better way to organize default event callbacks than array pairs
+typedef struct {
+    int type;
+    event_callback_t callback;
+} event_pair_t;
+
+static event_pair_t event_callbacks[] = {
+    {KeyPress, on_keypress_event}, {ButtonPress, on_buttonpress_event}, 
+    {ButtonRelease, on_buttonrelease_event}, {MotionNotify, on_motionnotify_event},
+    {MapNotify, on_mapnotify_event}, {Expose, on_expose_event}, {DestroyNotify, on_destroynotify_event},
+    {-1, NULL}};
 
 void do_raise_event(smallwm_t *wm, XEvent *event);
 void do_lower_event(smallwm_t *wm, XEvent *event);
@@ -49,14 +55,11 @@ void do_movetodesktopnext_event(smallwm_t *wm, XEvent *event);
 void do_movetodesktopprev_event(smallwm_t *wm, XEvent *event);
 void do_endwm_event(smallwm_t *wm, XEvent *event);
 
-static int keysym_types[] = { XK_Page_Up, XK_Page_Down, XK_m, XK_c, XK_x, XK_h,
-                        XK_bracketright, XK_bracketleft, XK_backslash, XK_Left,
-                        XK_Right, XK_Up, XK_Down , XK_Escape, XK_comma, XK_period };
-
-static event_callback_t key_callbacks[] = { do_raise_event, do_lower_event, do_maximize_event, 
-                                     do_close_event, do_kill_event, do_hide_event, 
-                                     do_movetodesktopnext_event, do_movetodesktopprev_event,
-                                     do_stick_event, do_snapleft_event, do_snapright_event,
-                                     do_snapup_event, do_snapdown_event, do_endwm_event, 
-                                     do_desktopprev_event, do_desktopnext_event, NULL };
+static event_pair_t keysym_callbacks[] = {
+    {XK_Page_Up, do_raise_event}, {XK_Page_Down, do_lower_event}, {XK_m, do_maximize_event},
+    {XK_c, do_close_event}, {XK_x, do_kill_event}, {XK_h, do_hide_event},
+    {XK_bracketright, do_movetodesktopnext_event}, {XK_bracketleft, do_movetodesktopprev_event},
+    {XK_backslash, do_stick_event}, {XK_Left, do_snapleft_event}, {XK_Right, do_snapright_event},
+    {XK_Up, do_snapup_event}, {XK_Down, do_snapdown_event}, {XK_Escape, do_endwm_event},
+    {XK_period, do_desktopnext_event}, {XK_comma, do_desktopprev_event}, {-1, NULL}};
 #endif

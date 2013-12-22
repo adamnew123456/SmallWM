@@ -13,22 +13,22 @@ events_t *event_init(smallwm_t *wm)
     XGrabButton(wm->display, RESZ, MASK, wm->root, True, ButtonPressMask,
                 GrabModeAsync, GrabModeAsync, None, None);
 
-    int idx = 0;
-    while (event_callbacks[idx])
+    event_pair_t *event_pair = event_callbacks;
+    while (event_pair->callback != NULL)
     {
-        add_table(events->event_callbacks, event_types[idx], event_callbacks[idx]);
-        idx++;
+        add_table(events->event_callbacks, event_pair->type, event_pair->callback);
+        event_pair++;
     }
 
-    idx = 0;
-    while (key_callbacks[idx])
+    event_pair = keysym_callbacks;
+    while (event_pair->callback != NULL)
     {
-        add_table(events->key_callbacks, keysym_types[idx], key_callbacks[idx]);
+        add_table(events->key_callbacks, event_pair->type, event_pair->callback);
 
-        int keycode = XKeysymToKeycode(wm->display, keysym_types[idx]);
+        int keycode = XKeysymToKeycode(wm->display, event_pair->type);
         XGrabKey(wm->display, keycode, MASK, wm->root, True, GrabModeAsync, GrabModeAsync);
-
-        idx++;
+        
+        event_pair++;
     }
 
     events->wm = wm;
