@@ -4,7 +4,7 @@ SmallWM is an extended version of TinyWM, made for actual desktop use.
 
 Improvements over TinyWM
 ========================
-- Window Iconification - Windows can be hidden and placed in little rectangles at the top of the screen.
+- Window Iconification - Windows can be hidden and placed in little rectangles at the top of the screen. Clicking the rectangles re-opens the client.
 - Window Layering - Windows can be layered, but little policy is actually enforced.
 - Click-To-Focus - SmallWM reimplements an idea from 9wm, keeping the focusing code small.
 - Window Placeholders - SmallWM does not do window resizing and moving directly, because that is a graphically intensive operation. It instead uses placeholder windows that it deletes after moving.
@@ -16,25 +16,31 @@ Improvements over TinyWM
 
 Controls
 ========
-The controls listed below are defined inside event.h, and can be configured only via modification and recompilation:
 
-- `Super+PageUp`: Layers the current window onto the top
-- `Super+PageDown`: Layers the current window onto the bottom
-- `Super+m`: Maximizes the current window
-- `Super+c`: Closes the current window
-- `Super+x`: Forcefully closes the current window
-- `Super+h`: Iconifies the current window
-- `Super+[`: Move the current window to the previous desktop
-- `Super+]`: Move the current window to the next desktop
-- `Super+Escape`: Quits SmallWM
-- `Super+,`: Move to the previous desktop
-- `Super+.`: Move to the next desktop
-- `Super+\`: Stick to all desktops/unstick
-- `Super+Up` `Super+Down` `Super+Left` `Super+Right`: Snap window to that half of the screen
-- `Super+LClick`
-    - If this is used on the background, a new terminal will be launched
-    - If this is used on a window, the window will begin moving. To set the window's position, let go of the left mouse button.
-- `Super+RClick`: When used on a window, this combination starts resising a window. To set the window's size, let go of the right mouse button.
+These controls are defined in event.h, `keysym_callbacks[]`; to change the controls below, modify this file and recompile (make sure to use the `-B` flag to force the recompilation).
+
+Note that there are some shortcuts which are defined by the "current window"; this means the window that the pointer is hovering above, _not_ the currently focused window.
+
+## Desktops ##
+
+- `Super+[`, `Super+]`: Move a client to the previous desktop (`[`) or the next desktop (`]`).
+- `Super+,`, `Super+.`: Switch to the previous desktop (`,`) or the next desktop (`.`).
+- `Super+\`: Sticks/unsticks a window (a _stuck_ window is shown on all desktops).
+
+## Clients ##
+
+- `Super+h`: Iconifies the current client.
+- `Super+m`: Maximizes the current client.
+- `Super+c`, `Super+x`: Closes (`c` requests a close, while `x` forces it) the current client.
+- `Super+Up`, `Super+Down`, `Super+Left`, `Super+Right`: Snaps a window to either the top-half, bottom-half, left-half or right-half of the screen.
+- `Super+PageUp`, `Super+PageDown`: Puts a window on the top or the bottom of other windows.
+- `Super+LClick`: When used on a client, this initiates moving the window. To set the window's position, let go of the left mouse button.
+- `Super+RClick`: When used on a client, this initiates resising a window. To set the window's size, let go of the right mouse button.
+
+## Misc. ##
+
+- `Super+LClick`: When used on the desktop background, this launches a new terminal.
+- `Super+Escape`: Quits SmallWM.
 
 Building
 ========
