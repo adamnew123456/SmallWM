@@ -9,10 +9,9 @@ Improvements over TinyWM
 - Click-To-Focus - SmallWM reimplements an idea from 9wm, keeping the focusing code small.
 - Window Placeholders - SmallWM does not do window resizing and moving directly, because that is a graphically intensive operation. It instead uses placeholder windows that it deletes after moving.
 - Window Borders - Just a simple border to see the extent of a window.
-- Window Refreshing - Windows can be refreshed - this avoids subtle focus issues with applications like Chromium which cause certain issues.
-- Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured in `client.h`.
-- Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops
-- Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or right-half of the screen
+- Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured.
+- Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops.
+- Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or right-half of the screen.
 
 Controls
 ========
@@ -36,7 +35,7 @@ Note that there are some shortcuts which are defined by the "current window"; th
 - `Super+PageUp`, `Super+PageDown`: Increments or decrements the layer of this client.
 - `Super+LClick`: When used on a client, this initiates moving the window. To set the window's position, let go of the left mouse button.
 - `Super+RClick`: When used on a client, this initiates resising a window. To set the window's size, let go of the right mouse button.
-- `Super+1` ... `Super+5` ... `Super+9`: These change the layer to the specified value (1, 5, or 9 respectively)
+- `Super+1` ... `Super+5` ... `Super+9`: These change the layer to the specified value (1, 5, or 9 respectively, in this example)
 
 ## Misc. ##
 
