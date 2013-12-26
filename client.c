@@ -4,15 +4,31 @@
 // Puts a client on top of the stack
 void raise_client(client_t *client)
 {
-    if (client->state == C_VISIBLE)
-        XRaiseWindow(client->wm->display, client->window);
+    if (client->layer == 9)
+        return;
+
+    client->layer++;
+    update_desktop_wm(client->wm);
 }
 
 // Puts a client on the bottom of the stack
 void lower_client(client_t *client)
 {
-    if (client->state == C_VISIBLE)
-        XLowerWindow(client->wm->display, client->window);
+    if (client->layer == 1)
+        return;
+
+    client->layer--;
+    update_desktop_wm(client->wm);
+}
+
+// Sets the layer of the client
+void set_layer_client(client_t *client, int layer)
+{
+    if (layer < 1 || layer > 9 || client->layer == layer)
+        return;
+
+    client->layer = layer;
+    update_desktop_wm(client->wm);
 }
 
 // Requests that a client close without forcing it to close

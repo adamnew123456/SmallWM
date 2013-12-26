@@ -222,11 +222,38 @@ void refocus_wm(smallwm_t *state, Window window)
     } 
 }
 
+// Sending data to the compare_window_layers function to avoid using qsort_r
+smallwm_t *__cmp_wm;
+
+// Helps sort windows by the layers
+int compare_window_layers(const void *windowA, const void* windowB)
+{
+    const Window *a = windowA;
+    const Window *b = windowB;
+
+    // Get the stacking levels of the clients
+    client_t *clientA = get_table(__cmp_wm->clients, *a);
+    client_t *clientB = get_table(__cmp_wm->clients, *b);
+
+    // This is backwards of strcmp, since XRestackWindows takes windows in the opposite order
+    if (clientA->layer < clientB->layer)
+        return 1;
+
+    if (clientA->layer > clientB->layer)
+        return -1;
+
+    return 0;
+}
+
 // Shows/ hides windows that are/aren't visible on the current desktop
 void update_desktop_wm(smallwm_t *state)
 {
     int n_clients;
     void **clients = to_list_table(state->clients, &n_clients);
+
+    // This for setting the stacking order
+    int n_win_idx = 0;
+    Window *windows = malloc(sizeof(Window) * n_clients);
 
     int idx;
     XWindowAttributes attr;
@@ -243,8 +270,22 @@ void update_desktop_wm(smallwm_t *state)
 
         if (attr.map_state == IsViewable && !should_be_viewable)
             XUnmapWindow(state->display, client->window);
+
+        if (should_be_viewable)
+            windows[n_win_idx++] = client->window;
     }
 
+    
+    // Sort the windows by stacking order and then layer them
+    //
+    if (n_win_idx)
+    {
+        __cmp_wm = state;
+        qsort(windows, n_win_idx, sizeof(Window), compare_window_layers);
+        XRestackWindows(state->display, windows, n_win_idx);
+    }
+
+    free(windows);
     free(clients);
 }
 
@@ -271,7 +312,10 @@ void add_client_wm(smallwm_t *state, Window window)
     client->sticky = False;
     client->desktop = 0;
 
+    client->layer = 5;
+
     add_table(state->clients, window, client);
 
     refocus_wm(state, window);
+    update_desktop_wm(state);
 }

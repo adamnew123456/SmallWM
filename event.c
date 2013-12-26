@@ -352,3 +352,20 @@ void do_endwm_event(smallwm_t *wm, XEvent *event)
 {
     exit(0);
 }
+
+// Setting the various windows
+#define SETLAYER_FUNC(layer) void do_setlayer##layer##_event(smallwm_t *wm, XEvent *event) {\
+    client_t *client = get_table(wm->clients, event->xkey.subwindow); \
+    if (!client) return; \
+    set_layer_client(client, layer); \
+}
+
+SETLAYER_FUNC(1);
+SETLAYER_FUNC(2);
+SETLAYER_FUNC(3);
+SETLAYER_FUNC(4);
+SETLAYER_FUNC(5);
+SETLAYER_FUNC(6);
+SETLAYER_FUNC(7);
+SETLAYER_FUNC(8);
+SETLAYER_FUNC(9);

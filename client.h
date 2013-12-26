@@ -10,6 +10,7 @@
 
 void raise_client(client_t *client);
 void lower_client(client_t *client);
+void set_layer_client(client_t *client, int layer);
 void begin_moveresize_client(client_t *client);
 void end_moveresize_client(client_t *client);
 void request_close_client(client_t *client);

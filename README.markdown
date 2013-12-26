@@ -5,7 +5,7 @@ SmallWM is an extended version of TinyWM, made for actual desktop use.
 Improvements over TinyWM
 ========================
 - Window Iconification - Windows can be hidden and placed in little rectangles at the top of the screen. Clicking the rectangles re-opens the client.
-- Window Layering - Windows can be layered, but little policy is actually enforced.
+- Window Layering - Windows can be layered, and layerings are enforced and persistent. Windows are layered in "levels" from 1 to 9; 1 is the lowest level and 9 is the highest level. The default level for all windows is 5.
 - Click-To-Focus - SmallWM reimplements an idea from 9wm, keeping the focusing code small.
 - Window Placeholders - SmallWM does not do window resizing and moving directly, because that is a graphically intensive operation. It instead uses placeholder windows that it deletes after moving.
 - Window Borders - Just a simple border to see the extent of a window.
@@ -33,9 +33,10 @@ Note that there are some shortcuts which are defined by the "current window"; th
 - `Super+m`: Maximizes the current client.
 - `Super+c`, `Super+x`: Closes (`c` requests a close, while `x` forces it) the current client.
 - `Super+Up`, `Super+Down`, `Super+Left`, `Super+Right`: Snaps a window to either the top-half, bottom-half, left-half or right-half of the screen.
-- `Super+PageUp`, `Super+PageDown`: Puts a window on the top or the bottom of other windows.
+- `Super+PageUp`, `Super+PageDown`: Increments or decrements the layer of this client.
 - `Super+LClick`: When used on a client, this initiates moving the window. To set the window's position, let go of the left mouse button.
 - `Super+RClick`: When used on a client, this initiates resising a window. To set the window's size, let go of the right mouse button.
+- `Super+1` ... `Super+5` ... `Super+9`: These change the layer to the specified value (1, 5, or 9 respectively)
 
 ## Misc. ##
 

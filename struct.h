@@ -70,6 +70,9 @@ typedef struct client_s {
     Bool sticky;
     // The desktop that owns this client
     unsigned long long desktop;
+
+    // The layer of the window (from 1 to 9, 1 is the lowest and 9 is the highest)
+    char layer;
 } client_t;
 
 // All information about an icon
