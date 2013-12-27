@@ -345,6 +345,11 @@ void add_client_wm(smallwm_t *state, Window window)
         return;
     }
 
+    // Another way of detecting dialogs is via the WM_TRANSIENT_FOR property
+    Window transient_for;
+    if (XGetTransientForHint(state->display, window, &transient_for) && transient_for != None)
+        add_table(state->dialogs, window, (Window*)window);
+
     // Make sure that this window is not being duplicated
     if (get_table(state->clients, window))
         return;
