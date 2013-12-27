@@ -360,7 +360,7 @@ void add_client_wm(smallwm_t *state, Window window)
     client->state = C_VISIBLE;
 
     client->sticky = False;
-    client->desktop = 0;
+    client->desktop = state->current_desktop;
 
     client->layer = 5;
 
