@@ -91,6 +91,7 @@ smallwm_t *init_wm()
     // Initialize the tables (XRandR has an update event which needs to go inside)
     state->clients = new_table();
     state->icons = new_table();
+    state->dialogs = new_table();
     state->focused_window = None;
 
     // Initialize XRandR
@@ -281,7 +282,6 @@ void update_desktop_wm(smallwm_t *state)
 
     
     // Sort the windows by stacking order and then layer them
-    //
     if (n_win_idx)
     {
         __cmp_wm = state;
@@ -289,8 +289,40 @@ void update_desktop_wm(smallwm_t *state)
         XRestackWindows(state->display, windows, n_win_idx);
     }
 
+    // Then place all the dialogs on top of all the others
+    int n_dialogs = 0;
+    void **dialogs = to_list_table(state->dialogs, &n_dialogs);
+
+    for (idx = 0; idx < n_dialogs; idx++)
+    {
+        Window dialog = (Window)dialogs[idx];
+        XRaiseWindow(state->display, dialog);
+    }
+
+    free(dialogs);
     free(windows);
     free(clients);
+}
+
+// Make sure that SmallWM ignores this window
+void ignore_window_wm(smallwm_t *state, Window window)
+{
+    XClassHint *classhint = XAllocClassHint();
+    classhint->res_class = "SMALLWM_IGNORE";
+    XSetClassHint(state->display, window, classhint);
+    XFree(classhint);
+}
+
+// Ask if a particular window should be ignored
+Bool should_ignore_window_wm(smallwm_t *state, Window window)
+{
+    XClassHint *classhint = XAllocClassHint();
+    XGetClassHint(state->display, window, classhint);
+    Bool should_ignore = (
+        classhint->res_class && !strcmp(classhint->res_class, "SMALLWM_IGNORE"));
+    XFree(classhint);
+
+    return should_ignore;
 }
 
 // Creates a client from a particular window
@@ -301,8 +333,17 @@ void add_client_wm(smallwm_t *state, Window window)
     XWindowAttributes attr;
     XGetWindowAttributes(state->display, window, &attr);
 
-    if (attr.override_redirect)
+    // Ignore windows internal to SmallWM
+    if (should_ignore_window_wm(state, window))
         return;
+
+    if (attr.override_redirect)
+    {
+        // Keep track of this window to stack it properly with the others
+        add_table(state->dialogs, window, (Window*)window);
+        update_desktop_wm(state);
+        return;
+    }
 
     // Make sure that this window is not being duplicated
     if (get_table(state->clients, window))

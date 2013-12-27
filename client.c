@@ -74,6 +74,7 @@ void begin_moveresize_client(client_t *client)
     XSetWindowAttributes set_attr;
     set_attr.override_redirect = True;
     XChangeWindowAttributes(client->wm->display, client->mvresz_placeholder, CWOverrideRedirect, &set_attr);
+    ignore_window_wm(client->wm, client->mvresz_placeholder);
 
     // Put up the window and force the pointer into the window
     XMapWindow(client->wm->display, client->mvresz_placeholder);

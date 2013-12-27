@@ -27,8 +27,8 @@ typedef struct {
     // Information about virtual desktops
     unsigned long long num_desktops, current_desktop;
 
-    // A table of clients and icons (indexed by Window), and the currently focused window
-    table_t *clients, *icons;
+    // A table of clients, icons and dialogs (indexed by Window), and the currently focused window
+    table_t *clients, *icons, *dialogs;
     Window focused_window;
 
     // The event offset to register for XRandR events

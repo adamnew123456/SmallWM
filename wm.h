@@ -17,6 +17,8 @@ void update_icons_wm(smallwm_t *state);
 void refocus_wm(smallwm_t *state, Window window);
 void update_desktop_wm(smallwm_t *state);
 void restack_wm(smallwm_t *state);
+void ignore_window_wm(smallwm_t *state, Window window);
+Bool should_ignore_window_wm(smallwm_t *state, Window window);
 
 void add_client_wm(smallwm_t *wm, Window window);
 #endif

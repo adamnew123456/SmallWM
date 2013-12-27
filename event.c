@@ -192,6 +192,7 @@ void on_destroynotify_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xdestroywindow.window);
     if (!client) return;
 
+    del_table(wm->dialogs, event->xdestroywindow.window);
     destroy_client(client);
 }
 
