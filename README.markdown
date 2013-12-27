@@ -59,6 +59,7 @@ With the rewrite in place, a few things about SmallWM can now be configured:
     desktops=42
     icon_width=75
     icon_height=20
+    border_width=4
 
 These are, respectively:
 
@@ -66,6 +67,7 @@ These are, respectively:
  - The number of desktops (default: 5)
  - The width in pixels of icons (default: 75)
  - The height in pixels of icons (default: 20)
+ - The width of the border of windows(default: 4)
 
 Bugs/Todo
 =========

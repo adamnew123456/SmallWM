@@ -6,7 +6,8 @@
 char *config_shell = NULL,
      *config_num_desktops = NULL,
      *config_icon_width = NULL,
-     *config_icon_height = NULL;
+     *config_icon_height = NULL,
+     *config_border_width = NULL;
 
 #define SET_CONFIG_VAR(key, var) if (!strcmp(name, (key))) {\
         var = strdup(value); \
@@ -22,6 +23,7 @@ static int config_handler(void *user,
         SET_CONFIG_VAR("desktops", config_num_desktops);
         SET_CONFIG_VAR("icon_width", config_icon_width);
         SET_CONFIG_VAR("icon_height", config_icon_height);
+        SET_CONFIG_VAR("border_width", config_border_width);
     }
 }
 #undef SET_CONFIG_VAR
@@ -51,6 +53,7 @@ smallwm_t *init_wm()
     SET_VAR_DEFAULT(config_num_desktops, "5");
     SET_VAR_DEFAULT(config_icon_width, "75");
     SET_VAR_DEFAULT(config_icon_height, "20");
+    SET_VAR_DEFAULT(config_border_width, "4");
 #undef SET_VAR_DEFAULT
 
     // Copy over everything into the WM state structure, doing numeric conversions as necessary
@@ -63,6 +66,7 @@ smallwm_t *init_wm()
     SET_STATE_NUM(state->num_desktops, config_num_desktops, 5);
     SET_STATE_NUM(state->icon_width, config_icon_width, 75);
     SET_STATE_NUM(state->icon_height, config_icon_height, 20);
+    SET_STATE_NUM(state->border_width, config_border_width, 4);
 
     if (state->num_desktops == 0)
         state->num_desktops++;
@@ -313,6 +317,9 @@ void add_client_wm(smallwm_t *state, Window window)
     client->desktop = 0;
 
     client->layer = 5;
+
+    XSetWindowBorder(state->display, window, BlackPixel(state->display, state->screen));
+    XSetWindowBorderWidth(state->display, window, state->border_width);
 
     add_table(state->clients, window, client);
 

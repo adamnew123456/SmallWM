@@ -22,6 +22,7 @@ typedef struct {
     int screen;
     unsigned int width, height;
     unsigned int icon_width, icon_height;
+    unsigned int border_width;
 
     // Information about virtual desktops
     unsigned long long num_desktops, current_desktop;
