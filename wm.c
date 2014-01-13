@@ -339,13 +339,12 @@ void add_client_wm(smallwm_t *state, Window window)
 
     if (attr.override_redirect)
     {
-        // Keep track of this window to stack it properly with the others
-        add_table(state->dialogs, window, (Window*)window);
-        update_desktop_wm(state);
+        // Do not manage these windows - they are things like combo boxes, etc.
+        // which are private to applications.
         return;
     }
 
-    // Another way of detecting dialogs is via the WM_TRANSIENT_FOR property
+    // Detect dialogs is via the WM_TRANSIENT_FOR property
     Window transient_for;
     if (XGetTransientForHint(state->display, window, &transient_for) && transient_for != None)
         add_table(state->dialogs, window, (Window*)window);
