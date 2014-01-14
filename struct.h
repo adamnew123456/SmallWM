@@ -31,6 +31,9 @@ typedef struct {
     table_t *clients, *icons, *dialogs;
     Window focused_window;
 
+    // A table of class actions to run when making a window
+    table_t *classactions;
+
     // The event offset to register for XRandR events
     int xrandr_event_offset;
 
@@ -105,4 +108,25 @@ typedef struct events_s {
     // The key combination event callbacks
     table_t *key_callbacks;
 } events_t;
+
+// All the actions that a window class can have
+typedef enum {
+    ACT_END, // This terminates the list of actions inside classaction_t
+
+    ACT_STICK,
+    ACT_MAXIMIZE,
+    ACT_SETLAYER,
+    ACT_SNAPTOP,
+    ACT_SNAPBOTTOM,
+    ACT_SNAPLEFT,
+    ACT_SNAPRIGHT,
+} action_t;
+
+// Actions for particular window classes
+typedef struct {
+    // The action types
+    action_t *actions;
+    // The layer, if SETLAYER is an action
+    unsigned int layer;
+} classaction_t;
 #endif

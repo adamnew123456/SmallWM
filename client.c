@@ -106,6 +106,51 @@ void end_moveresize_client(client_t *client)
     refocus_wm(client->wm, client->window);
 }
 
+// Do the actions which are stored for a particular window's class
+void do_actions_client(client_t *client)
+{
+    XClassHint *classhint = XAllocClassHint();
+    XGetClassHint(client->wm->display, client->window, classhint);
+    if (!classhint->res_class)
+        goto free_classhint;
+
+    classaction_t *actions = get_table(client->wm->classactions, string_hash(classhint->res_class));
+    if (!actions)
+        goto free_classhint;
+
+    action_t *action_ptr = actions->actions;
+    for (action_ptr = actions->actions; *action_ptr != ACT_END; action_ptr++)
+    {
+        switch (*action_ptr)
+        {
+            case ACT_STICK:
+                client->sticky = !client->sticky;
+                break;
+            case ACT_MAXIMIZE:
+                maximize_client(client);
+                break;
+            case ACT_SNAPLEFT:
+                snap_left_client(client);
+                break;
+            case ACT_SNAPRIGHT:
+                snap_right_client(client);
+                break;
+            case ACT_SNAPTOP:
+                snap_top_client(client);
+                break;
+            case ACT_SNAPBOTTOM:
+                snap_bottom_client(client);
+                break;
+            case ACT_SETLAYER:
+                client->layer = actions->layer;
+                break;
+        }
+    }
+
+free_classhint:
+    XFree(classhint);
+}
+
 /*
  * These are vairous client manipulation routines which were imported from the
  * event module, but now exist here. Their naming scheme should be obvious

@@ -52,7 +52,7 @@ Namely, it has the following interesting targets:
 
 Configuration
 =============
-With the rewrite in place, a few things about SmallWM can now be configured:
+With the rewrite in place, a few things about SmallWM can now be configured. A sample configuration file, located at `$HOME/.config/smallwm`, is shown below.
 
     [smallwm]
     shell=your-preferred-terminal
@@ -60,14 +60,31 @@ With the rewrite in place, a few things about SmallWM can now be configured:
     icon_width=75
     icon_height=20
     border_width=4
+    [actions]
+    stalonetray=stick,layer=9
 
-These are, respectively:
+The options in the `[smallwm]` section are:
 
  - The shell launched by `Super+LClick` (default: xterm)
  - The number of desktops (default: 5)
  - The width in pixels of icons (default: 75)
  - The height in pixels of icons (default: 20)
  - The width of the border of windows(default: 4)
+
+The options in the `[actions]` section are covered next.
+
+Actions
+=======
+
+X has the notion of an application "class" which is supposed to be a unique identifier for a window which belongs to a particular application. For example, there is a popular system tray called `stalonetray` which I use personally to manage status notifiers (like for NetworkManager, Dropbox, and the like).
+
+The example given in the _Configuration_ section shows how to stick any window belonging to stalonetray and layer it on top of all other applictaion windows. Generally speaking, any number of these class actions can be chained together by separating them with commas.
+
+The possibilities for a class action are:
+ - `stick` makes a particular window stick to all the desktops
+ - `maximize` maximizes that window
+ - `Lx` sets the layer of the window to `x` where `x` is a number in the range 1 to 9
+ - `snapleft`, `snapright`, `snaptop`, `snapbottom` snap the window to the relevant side of the screen
 
 Bugs/Todo
 =========

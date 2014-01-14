@@ -6,6 +6,7 @@
 #include "struct.h"
 #include "table.h"
 #include "wm.h"
+#include "util.h"
 #include "x11.h"
 
 void raise_client(client_t *client);

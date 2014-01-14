@@ -7,6 +7,7 @@
 #include "client.h"
 #include "icon.h"
 #include "struct.h"
+#include "table.h"
 #include "wm.h"
 #include "x11.h"
 

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "client.h"
 #include "x11.h"
 #include "struct.h"
 #include "table.h"

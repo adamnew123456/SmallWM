@@ -1,8 +1,8 @@
 /* Routines for managing core window manager state. */
-#include "client.h"
 #include "wm.h"
 
 // A callback for the configuration parser which sets the appropriate config_* variable
+// as well as to build the actions table
 char *config_shell = NULL,
      *config_num_desktops = NULL,
      *config_icon_width = NULL,
@@ -18,19 +18,89 @@ static int config_handler(void *user,
         const char *section,
         const char *name, const char *value)
 {
-    if (STR_EQUAL(section, "smallwm")) {
+    if (STR_EQUAL(section, "smallwm")) 
+    {
         SET_CONFIG_VAR("shell", config_shell);
         SET_CONFIG_VAR("desktops", config_num_desktops);
         SET_CONFIG_VAR("icon_width", config_icon_width);
         SET_CONFIG_VAR("icon_height", config_icon_height);
         SET_CONFIG_VAR("border_width", config_border_width);
+    } 
+    else if (STR_EQUAL(section, "actions")) 
+    {
+        table_t *actions = user;
+        classaction_t *action = malloc(sizeof(classaction_t));
+
+        // Add one to make room for the terminator value
+        unsigned int num_actions = count_occurences(value, ',') + 1;
+        action->actions = malloc(sizeof(action_t) * num_actions);
+
+        int action_idx = 0;
+
+        // strtok() is destructive, so make sure that inih doesn't have to
+        // deal with a butchered string
+        char *copied_value = strdup(value);
+
+        char *option = strtok(copied_value, ",");
+        do
+        {
+            char *stripped = strip_string(option, " \t\r\n");
+
+            if (STR_EQUAL(stripped, "stick"))
+            {
+                action->actions[action_idx] = ACT_STICK;
+                action_idx++;
+            }
+            else if (STR_EQUAL(stripped, "maximize"))
+            {
+                action->actions[action_idx] = ACT_MAXIMIZE;
+                action_idx++;
+            }
+            else if (STR_EQUAL(stripped, "snapleft"))
+            {
+                action->actions[action_idx] = ACT_SNAPLEFT;
+                action_idx++;
+            }
+            else if (STR_EQUAL(stripped, "snapright"))
+            {
+                action->actions[action_idx] = ACT_SNAPRIGHT;
+                action_idx++;
+            }
+            else if (STR_EQUAL(stripped, "snaptop"))
+            {
+                action->actions[action_idx] = ACT_SNAPTOP;
+                action_idx++;
+            }
+            else if (STR_EQUAL(stripped, "snapbottom"))
+            {
+                action->actions[action_idx] = ACT_SNAPBOTTOM;
+                action_idx++;
+            }
+            else if (stripped[0] == 'L')
+            {
+                status_t convert_status;
+                action->layer = string_to_long(stripped + 1, &convert_status);
+                if (convert_status == SUCCESS)
+                {
+                    action->actions[action_idx] = ACT_SETLAYER;
+                    action_idx++;
+                }
+            }
+
+            free(stripped);
+        } while (option = strtok(NULL, ","));
+
+        action->actions[action_idx] = ACT_END;
+        add_table(actions, string_hash(name), action);
+
+        free(copied_value);
     }
 }
 #undef SET_CONFIG_VAR
 
 /* Initializes the window manager state:
  *
- *  - Loads configuration file information (shell program, number of desktops)
+ *  - Loads configuration file information (shell program, number of desktops, etc)
  *  - Opens the display, loads the root window
  *  - Sets up the event, client, and icon tables
  *  - Initializes XRandR
@@ -42,10 +112,12 @@ smallwm_t *init_wm()
 {
     smallwm_t *state = malloc(sizeof(smallwm_t));
 
+    state->classactions = new_table();
+
     // Loads the configuration file via the inih API
     char *path = malloc(strlen(getenv("HOME")) + strlen("/.config/smallwm"));
     sprintf(path, "%s/.config/smallwm", getenv("HOME"));
-    ini_parse(path, config_handler, NULL);
+    ini_parse(path, config_handler, state->classactions);
 
     // Set defaults for values which are not in the configuration file
 #define SET_VAR_DEFAULT(var, defval) if (!var) var = (defval)
@@ -345,9 +417,14 @@ void add_client_wm(smallwm_t *state, Window window)
     }
 
     // Detect dialogs is via the WM_TRANSIENT_FOR property
+    Bool is_transient = False;
+
     Window transient_for;
     if (XGetTransientForHint(state->display, window, &transient_for) && transient_for != None)
+    {
         add_table(state->dialogs, window, (Window*)window);
+        is_transient = True;
+    }
 
     // Make sure that this window is not being duplicated
     if (get_table(state->clients, window))
@@ -367,6 +444,10 @@ void add_client_wm(smallwm_t *state, Window window)
     XSetWindowBorderWidth(state->display, window, state->border_width);
 
     add_table(state->clients, window, client);
+    
+    // Run all the window class actions, unless a window is a dialog
+    if (!is_transient)
+        do_actions_client(client);
 
     refocus_wm(state, window);
     update_desktop_wm(state);
