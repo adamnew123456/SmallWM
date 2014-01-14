@@ -25,9 +25,9 @@ table_linkednode_t *final_node_table(table_t *table, int key)
 }
 
 // Adds an element to the table
-void add_table(table_t *table, int key, void *value)
+void add_table(table_t *table, unsigned int key, void *value)
 {
-    int idx = key % TABLE_SIZE;
+    unsigned int idx = key % TABLE_SIZE;
 
     table_linkednode_t *node = malloc(sizeof(table_linkednode_t));
     node->key = key;
@@ -45,9 +45,9 @@ void add_table(table_t *table, int key, void *value)
 }
 
 // Gets an element from the table
-void *get_table(table_t *table, int key)
+void *get_table(table_t *table, unsigned int key)
 {
-    int idx = key % TABLE_SIZE;
+    unsigned int idx = key % TABLE_SIZE;
 
     table_linkednode_t *node = table[idx];
     while (node && node->key != key)
@@ -60,9 +60,9 @@ void *get_table(table_t *table, int key)
 }
 
 // Removes an element from the table and returns it
-void *del_table(table_t *table, int key)
+void *del_table(table_t *table, unsigned int key)
 {
-    int idx = key % TABLE_SIZE;
+    unsigned int idx = key % TABLE_SIZE;
 
     table_linkednode_t *previous = NULL;
     table_linkednode_t *node = table[idx];

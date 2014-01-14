@@ -18,8 +18,8 @@ typedef table_linkednode_t* table_t;
 #define TABLE_SIZE 1021
 
 table_t *new_table();
-void add_table(table_t *table, int key, void *value);
-void *get_table(table_t *table, int key);
-void *del_table(table_t *table, int key);
+void add_table(table_t *table, unsigned int key, void *value);
+void *get_table(table_t *table, unsigned int key);
+void *del_table(table_t *table, unsigned int key);
 void **to_list_table(table_t *table, int *n_elems);
 #endif
