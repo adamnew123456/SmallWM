@@ -106,6 +106,46 @@ void end_moveresize_client(client_t *client)
     refocus_wm(client->wm, client->window);
 }
 
+/*
+ * These are vairous client manipulation routines which were imported from the
+ * event module, but now exist here. Their naming scheme should be obvious
+ * enough, so they are not annotated.
+*/
+
+void maximize_client(client_t *client)
+{
+    XMoveResizeWindow(client->wm->display, client->window, 
+            0, client->wm->icon_height, 
+            client->wm->width, client->wm->height - client->wm->icon_height);
+}
+
+void snap_left_client(client_t *client)
+{
+    XMoveResizeWindow(client->wm->display, client->window, 
+            0, client->wm->icon_height, 
+            client->wm->width / 2, client->wm->height - client->wm->icon_height);
+}
+
+void snap_right_client(client_t *client)
+{
+    XMoveResizeWindow(client->wm->display, client->window, 
+            client->wm->width / 2, client->wm->icon_height, 
+            client->wm->width / 2, client->wm->height - client->wm->icon_height);
+}
+
+void snap_top_client(client_t *client)
+{
+    XMoveResizeWindow(client->wm->display, client->window, 
+            0, client->wm->icon_height, client->wm->width, 
+            (client->wm->height / 2) - client->wm->icon_height);
+}
+
+void snap_bottom_client(client_t *client)
+{
+    XMoveResizeWindow(client->wm->display, client->window, 
+            0, client->wm->height / 2, client->wm->width, client->wm->height / 2);
+}
+
 // Removes a client once the window closes
 void destroy_client(client_t *client)
 {

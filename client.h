@@ -14,6 +14,12 @@ void set_layer_client(client_t *client, int layer);
 void begin_moveresize_client(client_t *client);
 void end_moveresize_client(client_t *client);
 void request_close_client(client_t *client);
+void do_actions_client(client_t *client);
+void maximize_client(client_t *client);
+void snap_left_client(client_t *client);
+void snap_right_client(client_t *client);
+void snap_top_client(client_t *client);
+void snap_bottom_client(client_t *client);
 void destroy_client(client_t *client);
 
 #endif

@@ -220,7 +220,7 @@ void do_maximize_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xkey.subwindow);
     if (!client) return;
 
-    XMoveResizeWindow(wm->display, client->window, 0, wm->icon_height, wm->width, wm->height - wm->icon_height);
+    maximize_client(client);
 }
 
 // Request a client to close
@@ -318,7 +318,7 @@ void do_snapleft_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xkey.subwindow);
     if (!client) return;
 
-    XMoveResizeWindow(wm->display, client->window, 0, wm->icon_height, wm->width / 2, wm->height - wm->icon_height);
+    snap_left_client(client);
 }
 
 // Snap a client to the right side of the screen
@@ -327,7 +327,7 @@ void do_snapright_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xkey.subwindow);
     if (!client) return;
 
-    XMoveResizeWindow(wm->display, client->window, wm->width / 2, wm->icon_height, wm->width / 2, wm->height - wm->icon_height);
+    snap_right_client(client);
 }
 
 // Snap a client to the top of the screen
@@ -336,7 +336,7 @@ void do_snapup_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xkey.subwindow);
     if (!client) return;
 
-    XMoveResizeWindow(wm->display, client->window, 0, wm->icon_height, wm->width, (wm->height / 2) - wm->icon_height);
+    snap_top_client(client);
 }
 
 // Snap a client to the bottom of the screen
@@ -345,7 +345,7 @@ void do_snapdown_event(smallwm_t *wm, XEvent *event)
     client_t *client = get_table(wm->clients, event->xkey.subwindow);
     if (!client) return;
 
-    XMoveResizeWindow(wm->display, client->window, 0, wm->height / 2, wm->width, wm->height / 2);
+    snap_bottom_client(client);
 }
 
 // Kill SmallWM and all children
