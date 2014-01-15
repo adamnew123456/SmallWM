@@ -12,6 +12,7 @@ Improvements over TinyWM
 - Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured.
 - Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops.
 - Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or right-half of the screen.
+- Class Actions - SmallWM can apply certain transformations on a client depending upon what class it is
 
 Controls
 ========
@@ -61,7 +62,7 @@ With the rewrite in place, a few things about SmallWM can now be configured. A s
     icon_height=20
     border_width=4
     [actions]
-    stalonetray=stick,layer=9
+    stalonetray=stick,L9
 
 The options in the `[smallwm]` section are:
 
@@ -76,7 +77,7 @@ The options in the `[actions]` section are covered next.
 Actions
 =======
 
-X has the notion of an application "class" which is supposed to be a unique identifier for a window which belongs to a particular application. For example, there is a popular system tray called `stalonetray` which I use personally to manage status notifiers (like for NetworkManager, Dropbox, and the like).
+X has the notion of an application "class" which is supposed to be a unique identifier for a window which belongs to a particular application. For example, there is a popular system tray called `stalonetray` which I use personally to manage status notifiers (like for NetworkManager, Dropbox, and the like). A quick `xprop` of the window shows that its class name is `stalonetray`.
 
 The example given in the _Configuration_ section shows how to stick any window belonging to stalonetray and layer it on top of all other applictaion windows. Generally speaking, any number of these class actions can be chained together by separating them with commas.
 
