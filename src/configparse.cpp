@@ -1,3 +1,4 @@
+/** @file */
 #include "configparse.h"
 
 /**

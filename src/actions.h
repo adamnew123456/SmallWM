@@ -1,15 +1,21 @@
+/** @file */
 #ifndef __SMALLWM_ACTIONS__
 #define __SMALLWM_ACTIONS__
 
 #include "common.h"
 
-/// All the types of class actions, for use as bit flags
+/// Indicates that an action will stick a window
 const unsigned int ACT_STICK = 1 << 0,
+    /// Indicates that an action will maximize a window
       ACT_MAXIMIZE = 1 << 1,
+    /// Indicates that an action will set the layer of a window
       ACT_SETLAYER = 1 << 2,
+    /// Indicates that an action will snap the window to the screen's edge
       ACT_SNAP = 1 << 3;
 
-/// The side of the screen to snap a window to. 
+/** 
+ * The side of the screen to snap a window to. 
+ */
 enum SnapDir
 {
     SNAP_NONE,

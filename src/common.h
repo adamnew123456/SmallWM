@@ -1,3 +1,4 @@
+/** @file */
 #ifndef __SMALLWM_COMMON__
 #define __SMALLWM_COMMON__
 
@@ -8,9 +9,13 @@
 
 #include <tuple>
 
+/// A size of some kind
 typedef unsigned int Dimension;
+/// The extend of some window or other surface
 typedef std::tuple<Dimension,Dimension> Dimension2D;
+/// The desktop number
 typedef unsigned long long Desktop;
+/// The z-layer of a window (1 to 9)
 typedef unsigned char Layer;
 
 #endif

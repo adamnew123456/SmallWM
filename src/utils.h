@@ -1,3 +1,4 @@
+/** @file */
 #ifndef __SMALLWM_UTILS__
 #define __SMALLWM_UTILS__
 

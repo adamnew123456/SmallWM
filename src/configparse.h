@@ -1,3 +1,4 @@
+/** @file */
 #ifndef __SMALLWM_CONFIG__
 #define __SMALLWM_CONFIG__
 
@@ -16,7 +17,7 @@
 class WMConfig
 {
 public:
-    // Loads a couple of defaults for the WMConfig
+    /// Loads a couple of defaults for the WMConfig
     WMConfig() : shell("/usr/bin/xterm"), num_desktops(5), 
         icon_width(75), icon_height(20), border_width(2) {};
     
