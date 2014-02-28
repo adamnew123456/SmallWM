@@ -1,49 +1,28 @@
-all: smallwm-release
+CC=/usr/bin/clang
+CFLAGS=-g
+CXX=/usr/bin/clang++
+CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 --std=c++11 -Itest -Iinih -Isrc
+BINS=bin/test_configparse
 
-ini.o: inih/ini.c
-	gcc -c inih/ini.c
+all: ${BINS}
 
-client.o: client.c
-	gcc -c client.c
+doc:
+	doxygen
 
-event.o: event.c
-	gcc -c event.c
+obj:
+	mkdir obj
 
-icon.o: icon.c
-	gcc -c icon.c
+obj/ini.o: inih/ini.c obj
+	${CC} ${CFLAGS} -c inih/ini.c -o obj/ini.o
 
-table.o: table.c
-	gcc -c table.c
+obj/configparse.o: obj/ini.o obj/utils.o src/configparse.cpp
+	${CXX} ${CXXFLAGS} -c src/configparse.cpp -o obj/configparse.o
 
-util.o: util.c
-	gcc -c util.c
+obj/utils.o: src/utils.cpp
+	${CXX} ${CXXFLAGS} -c src/utils.cpp -o obj/utils.o
 
-wm.o: wm.c
-	gcc -c wm.c
-
-smallwm-release: client.o event.o icon.o table.o util.o wm.o ini.o
-	gcc -O3 client.o event.o icon.o table.o util.o wm.o ini.o smallwm.c -o smallwm-release -lX11 -lXrandr
-
-client-debug.o: client.c
-	gcc -g -c client.c -o client-debug.o
-
-event-debug.o: event.c
-	gcc -g -c event.c -o event-debug.o
-
-icon-debug.o: icon.c
-	gcc -g -c icon.c -o icon-debug.o
-
-table-debug.o: table.c
-	gcc -g -c table.c -o table-debug.o
-
-util-debug.o: util.c
-	gcc -g -c util.c -o util-debug.o
-
-wm-debug.o: wm.c
-	gcc -g -c wm.c -o wm-debug.o
-
-smallwm-debug: client-debug.o event-debug.o icon-debug.o table-debug.o util-debug.o wm-debug.o ini.o
-	gcc -g client-debug.o event-debug.o icon-debug.o table-debug.o util-debug.o wm-debug.o ini.o smallwm.c -o smallwm-debug -lX11 -lXrandr
+bin/test_configparse: obj/ini.o obj/utils.o obj/configparse.o
+	${CXX} ${CXXFLAGS} obj/ini.o obj/utils.o obj/configparse.o test/test_configparse.cpp -o bin/test_configparse
 
 clean:
-	rm -f *.o smallwm-*
+	rm -rf obj doc ${BINS}
