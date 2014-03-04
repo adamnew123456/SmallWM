@@ -17,26 +17,27 @@
 class WMConfig
 {
 public:
-    /// Loads a couple of defaults for the WMConfig
+    /// Loads a couple of defaults for the WMConfig.
     WMConfig() : shell("/usr/bin/xterm"), num_desktops(5), 
         icon_width(75), icon_height(20), border_width(2) {};
     
     void load();
     
-    /// The shell to run 
+    /// The shell to run.
     std::string shell;
 
-    /// The number of available desktops
+    /// The number of available desktops.
     Desktop num_desktops;
 
-    /// The width and height of hidden icons
+    /// The width of hidden icons.
     Dimension icon_width, 
+    /// The height of the hidden icons.
               icon_height;
 
-    /// The width of the window border
+    /// The width of the window border.
     Dimension border_width;
 
-    /// Handles all the configured class actions
+    /// Handles all the configured class actions.
     std::map<std::string, ClassActions> classactions;
 
 protected:

@@ -5,6 +5,6 @@
 #include <cstdlib>
 #include <cstring>
 
-void strip_string(const char *text, const char *remove, char *bufer);
+void strip_string(const char *text, const char *remove, char *buffer);
 
 #endif

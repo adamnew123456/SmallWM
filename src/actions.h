@@ -4,13 +4,13 @@
 
 #include "common.h"
 
-/// Indicates that an action will stick a window
+/// Indicates that an action will stick a window.
 const unsigned int ACT_STICK = 1 << 0,
-    /// Indicates that an action will maximize a window
+    /// Indicates that an action will maximize a window.
       ACT_MAXIMIZE = 1 << 1,
-    /// Indicates that an action will set the layer of a window
+    /// Indicates that an action will set the layer of a window.
       ACT_SETLAYER = 1 << 2,
-    /// Indicates that an action will snap the window to the screen's edge
+    /// Indicates that an action will snap the window to the screen's edge.
       ACT_SNAP = 1 << 3;
 
 /** 
@@ -18,8 +18,7 @@ const unsigned int ACT_STICK = 1 << 0,
  */
 enum SnapDir
 {
-    SNAP_NONE,
-    SNAP_TOP, 
+    SNAP_TOP = 1, 
     SNAP_BOTTOM,
     SNAP_LEFT,
     SNAP_RIGHT,
@@ -32,15 +31,16 @@ enum SnapDir
  */
 struct ClassActions
 {
-    ClassActions() : actions(0), snap(SNAP_NONE), layer(0) {}
+    /// Initialize a blank ClassAction, with a few defaults.
+    ClassActions() : actions(0), snap(SNAP_TOP), layer(0) {}
     
-    /// All the actions which are applied; the flags are the values of ACT_*
+    /// All the actions which are applied; the flags are the values of ACT_*.
     unsigned int actions;
 
-    /// The direction to snap a window
+    /// The direction to snap a window.
     SnapDir snap;
 
-    /// The layer to place the client on
+    /// The layer to place the client on.
     Layer layer;
 };
 

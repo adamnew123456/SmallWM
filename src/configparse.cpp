@@ -27,10 +27,10 @@ std::string WMConfig::get_config_path()
  * A callback for the inih library, which handles a singular key-value pair.
  *
  * @param user The WMConfig object this parser belongs to (necessary because
- *             this API has to be called from C)
- * @param c_section The section name the option is found under
- * @param c_name The name of the configuration option
- * @param c_value The value of the configuration option
+ *             this API has to be called from C).
+ * @param c_section The section name the option is found under.
+ * @param c_name The name of the configuration option.
+ * @param c_value The value of the configuration option.
  */
 int WMConfig::config_parser(void *user, const char *c_section, 
         const char *c_name, const char *c_value)

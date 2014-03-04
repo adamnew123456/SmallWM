@@ -4,9 +4,9 @@
 /**
  * Removes leading and trailing characters from a string.
  *
- * @param text The text to remove from
- * @param remove A list of all characters to remove from the text
- * @param buffer The loctaion to put the output (must be at least as long as the input)
+ * @param text The text to remove from.
+ * @param remove A list of all characters to remove from the text.
+ * @param buffer The loctaion to put the output (must be at least as long as the input).
  */
 void strip_string(const char *text, const char *remove, char *buffer)
 {
