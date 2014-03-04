@@ -14,7 +14,7 @@
 class TestWMConfig : public WMConfig
 {
 protected:
-    virtual std::string get_config_path();
+    virtual std::string get_config_path() const;
 };
 
 #endif

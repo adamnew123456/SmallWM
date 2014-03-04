@@ -41,7 +41,7 @@ public:
     std::map<std::string, ClassActions> classactions;
 
 protected:
-    virtual std::string get_config_path();
+    virtual std::string get_config_path() const;
 
 private:
     static int config_parser(void *user, const char *c_section, const char *c_name, const char *c_value);

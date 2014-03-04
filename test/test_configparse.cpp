@@ -6,7 +6,7 @@
  *
  * @return The path to the sample configuration file
  */
-std::string TestWMConfig::get_config_path()
+std::string TestWMConfig::get_config_path() const
 {
     return std::string("./sample.conf");
 }

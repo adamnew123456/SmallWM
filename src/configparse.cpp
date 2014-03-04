@@ -16,7 +16,7 @@ void WMConfig::load()
  * Gets the path to the configuration file. This is a virtual method so that
  * unit tests can override this to present a dummy configuration file.
  */
-std::string WMConfig::get_config_path()
+std::string WMConfig::get_config_path() const
 {
     std::string homedir(std::getenv("HOME"));
     homedir += "/.config/smallwm";
