@@ -15,7 +15,19 @@ typedef unsigned int Dimension;
 typedef std::tuple<Dimension,Dimension> Dimension2D;
 /// The desktop number.
 typedef unsigned long long Desktop;
-/// The z-layer of a window (1 to 9).
+/// The z-layer of a window.
 typedef unsigned char Layer;
+
+/// The maximum layer of any non-dialog window.
+const Layer MAX_LAYER = 9,
+      /// The lowest layer for any window.
+      MIN_LAYER = 1,
+      /// The layer of dialogs, which are on top of everything else.
+      DIALOG_LAYER = 10,
+      /// The default layer assigned to all windows.
+      DEF_LAYER = 5;
+    
+/// A value indicating that the current desktop value should be used.
+const Desktop THIS_DESKTOP = -1;
 
 #endif
