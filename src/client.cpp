@@ -135,9 +135,6 @@ void Client::close()
  */
 void Client::destroy()
 {
-    MoveResizeManager &mvr = m_manager.moveresize();
-    FocusManager &focus = m_manager.focus();
-
     XDestroyWindow(m_shared.display, m_window);
 }
 
@@ -306,16 +303,29 @@ void DesktopManager::flip_sticky_flag(ClientRef client)
 }
 
 /**
- * Changes the current desktop to another desktop.
- * @param desktop The desktop to change to.
+ * Move the user to the next desktop.
  */
-void DesktopManager::change_desktop(Desktop desktop)
+void DesktopManager::show_next_desktop()
 {
-    if (m_current_desktop != desktop)
-    {
-        m_current_desktop = desktop;
-        redraw_clients();
-    }
+    if (m_current_desktop == m_shared.max_desktops)
+        m_current_desktop = 1;
+    else
+        m_current_desktop++;
+
+    redraw_clients();
+}
+
+/**
+ * Move the user to the prevous desktop.
+ */
+void DesktopManager::show_next_desktop()
+{
+    if (m_current_desktop == 1)
+        m_current_desktop = m_shared.max_desktops;
+    else
+        m_current_desktop--;
+
+    redraw_clients();
 }
 
 /**
@@ -323,6 +333,11 @@ void DesktopManager::change_desktop(Desktop desktop)
  */
 void DesktopManager::redraw_clients()
 {
+    // Needed to revert the focus so that way a window on a different 
+    // desktop does not have the keyboard focus.
+    const FocusManager &focus = m_manager.focus();
+    Window focused = focus.get_focused();
+    
     XWindowAttributes attr;
     for (std::map<ClientRef, Desktop>::iterator client_iter = m_desktops.begin();
             client_iter != m_desktops.end();
@@ -340,7 +355,18 @@ void DesktopManager::redraw_clients()
             XMapWindow(m_shared.display, client_win);
 
         if (is_visible && attr.map_state == IsViewable)
+        {
             XUnmapWindow(m_shared.display, client_win);
+
+            if (focused == client_win)
+            {
+                focus.unfocus();
+
+                // Since there is only one focused window, it makes no sense to
+                // check each loop iteration.
+                focused = None;
+            }
+        }
     }
 }
 

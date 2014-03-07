@@ -104,7 +104,8 @@ public:
     void prev_desktop(ClientRef);
 
     void flip_sticky_flag(ClientRef);
-    void change_desktop(Desktop);
+    void show_next_desktop();
+    void show_prev_desktop();
     void redraw_clients();
 
     void remove(ClientRef);
@@ -124,8 +125,6 @@ private:
     /// The owner of this DesktopManager.
     ClientManager &m_manager;
 };
-
-// TODO: This is where I stopped, and where I must start again next time
 
 /**
  * Manages how clients are moved and resized.
