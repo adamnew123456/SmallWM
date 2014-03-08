@@ -12,6 +12,8 @@ Client::Client(const WMShared &shared, ClientManager &manager,
     XSetWindowBorder(m_shared.display, m_window,
             WhitePixel(m_shared.display, m_shared.screen));
     XSetWindowBorderWidth(m_shared.display, m_window, shared.border_width);
+
+    activate();
 }
 
 /**
@@ -38,6 +40,9 @@ Window Client::window() const
  */
 void Client::snap(SnapDir side)
 {   
+    if (!m_active)
+        return;
+
     Dimension x, y, w, h;
     Dimension icon_height = std::get<1>(m_shared.icon_size);
     Dimension screen_width = std::get<0>(m_shared.screen_size),
@@ -78,6 +83,9 @@ void Client::snap(SnapDir side)
  */
 void Client::maximize()
 {
+    if (!m_active)
+        return;
+
     Dimension icon_height = std::get<1>(m_shared.icon_size);
     Dimension screen_width = std::get<0>(m_shared.screen_size),
               screen_height = std::get<1>(m_shared.screen_size) - icon_height;
@@ -109,6 +117,9 @@ void Client::run_actions(ClientRef self)
  */
 void Client::close()
 {
+    if (!m_active)
+        return;
+    
     // Being nice like this allows programs to show their typical closure dialogs
     XEvent close_event;
     XClientMessageEvent client_close = {
@@ -135,7 +146,26 @@ void Client::close()
  */
 void Client::destroy()
 {
+    if (!m_active)
+        return;
+
     XDestroyWindow(m_shared.display, m_window);
+}
+
+/**
+ * Activates a client and allows it to be manipulated.
+ */
+void Client::activate()
+{
+    m_active = true;
+}
+
+/**
+ * Deactivates a client and prevents it from being manipulated.
+ */
+void Client::deactivate()
+{
+    m_active = false;
 }
 
 /**
@@ -388,12 +418,15 @@ void DesktopManager::remove(ClientRef client)
  */
 void MoveResizeManager::begin_move(ClientRef client, Dimension ptr_x, Dimension ptr_y)
 {
+    client->deactivate();
     if (m_state != MVR_NONE)
         return;
 
     m_state = MVR_MOVE;
     m_ptr_loc = Dimension2D(ptr_x, ptr_y);
     m_client = client;
+
+    m_client->deactivate();
 
     XWindowAttributes attr;
     XGetWindowAttributes(m_shared.display, client->window(), &attr);
@@ -416,6 +449,8 @@ void MoveResizeManager::begin_resize(ClientRef client, Dimension ptr_x, Dimensio
     m_state = MVR_RESIZE;
     m_ptr_loc = Dimension2D(ptr_x, ptr_y);
     m_client = client;
+
+    m_client->deactivate();
 
     XWindowAttributes attr;
     XGetWindowAttributes(m_shared.display, client->window(), &attr);
@@ -478,6 +513,9 @@ void MoveResizeManager::end_move_resize()
     XMapWindow(m_shared.display, m_client->window());
     XMoveResizeWindow(m_shared.display, m_client->window(), 
             attr.x, attr.y, attr.width, attr.height);
+
+    m_client->activate();
+    m_client = ClientRef(NULL);
 }
 
 /**

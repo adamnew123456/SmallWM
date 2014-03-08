@@ -42,6 +42,9 @@ public:
     void close();
     void destroy();
 
+    void activate();
+    void deactivate();
+
 private:
     /// The ClientManager that owns this window.
     ClientManager &m_manager;
@@ -54,6 +57,9 @@ private:
 
     /// The X11 window of this client.
     Window m_window;
+
+    /// Whether or not this client can be interacted with or not.
+    bool m_active;
 };
 
 /// A shorter way of referring to a client managed via the ClientManager.
