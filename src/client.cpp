@@ -97,16 +97,16 @@ void Client::maximize()
  * Does all the actions specified by this client's ClassActions.
  * @param self The representation of this object that the ClientManager holds.
  */
-void Client::run_actions(ClientRef self)
+void Client::run_actions()
 {
     if (m_actions.actions & static_cast<unsigned int>(ACT_STICK))
-        m_manager.desktops().flip_sticky_flag(self);
+        m_manager.desktops().flip_sticky_flag(this);
 
     if (m_actions.actions & static_cast<unsigned int>(ACT_MAXIMIZE))
         maximize();
 
     if (m_actions.actions & static_cast<unsigned int>(ACT_SETLAYER))
-        m_manager.layers().set_layer(self, m_actions.layer);
+        m_manager.layers().set_layer(this, m_actions.layer);
 
     if (m_actions.actions & static_cast<unsigned int>(ACT_SNAP))
         snap(m_actions.snap);
@@ -173,7 +173,7 @@ void Client::deactivate()
  * @param client The client to set the layer of
  * @param layer The layer to put the client on
  */
-void LayerManager::set_layer(ClientRef client, Layer layer)
+void LayerManager::set_layer(Client* client, Layer layer)
 {
     if (m_layers[client] != DIALOG_LAYER)
         m_layers[client] = layer;
@@ -183,7 +183,7 @@ void LayerManager::set_layer(ClientRef client, Layer layer)
  * Moves a client up to the next layer.
  * @param client The client to move up.
  */
-void LayerManager::move_up(ClientRef client)
+void LayerManager::move_up(Client* client)
 {
     if (m_layers[client] != DIALOG_LAYER &&
             m_layers[client] != MAX_LAYER)
@@ -194,7 +194,7 @@ void LayerManager::move_up(ClientRef client)
  * Moves a client down to the previous layer.
  * @param client The client to move down.
  */
-void LayerManager::move_down(ClientRef client)
+void LayerManager::move_down(Client* client)
 {
     if (m_layers[client] != DIALOG_LAYER &&
             m_layers[client] != MIN_LAYER)
@@ -205,7 +205,7 @@ void LayerManager::move_down(ClientRef client)
  * Configures a client as a dialog.
  * @param client The client to set as a dialog.
  */
-void LayerManager::set_as_dialog(ClientRef client)
+void LayerManager::set_as_dialog(Client* client)
 {
     m_layers[client] = DIALOG_LAYER;
 }
@@ -218,7 +218,7 @@ void LayerManager::set_as_dialog(ClientRef client)
 class ClientLayerSorter {
 public:
     /// Initialize the client-to-layers mapping.
-    ClientLayerSorter(const std::map<ClientRef, Layer> &layers) :
+    ClientLayerSorter(const std::map<Client*, Layer> &layers) :
         m_layers(layers)
     {};
 
@@ -230,7 +230,7 @@ public:
      * @param b The second client.
      * @return Whether or not the first client is above the second.
      */
-    bool operator()(ClientRef a, ClientRef b)
+    bool operator()(Client* a, Client* b)
     {
         Layer a_layer = m_layers.at(a);
         Layer b_layer = m_layers.at(b);
@@ -238,7 +238,7 @@ public:
     };
 
 private:
-    const std::map<ClientRef, Layer> &m_layers;
+    const std::map<Client*, Layer> &m_layers;
 };
 
 /**
@@ -246,8 +246,8 @@ private:
  */
 void LayerManager::relayer_clients()
 {
-    std::vector<ClientRef> client_stacking;
-    for (std::map<ClientRef,Layer>::iterator client_iter = m_layers.begin();
+    std::vector<Client*> client_stacking;
+    for (std::map<Client*,Layer>::iterator client_iter = m_layers.begin();
             client_iter != m_layers.end();
             client_iter++)
     {
@@ -258,11 +258,12 @@ void LayerManager::relayer_clients()
     std::sort(client_stacking.begin(), client_stacking.end(), sorter);
 
     std::vector<Window> window_stacking;
-    for (std::vector<ClientRef>::iterator client_iter = client_stacking.begin();
+    for (std::vector<Client*>::iterator client_iter = client_stacking.begin();
             client_iter != client_stacking.end();
             client_iter++)
     {
-        window_stacking.push_back(client_iter->get()->window());
+        Client *the_client = *client_iter;
+        window_stacking.push_back(the_client->window());
     }
 
     XRestackWindows(m_shared.display, &window_stacking[0], window_stacking.size());
@@ -279,7 +280,7 @@ void LayerManager::relayer_clients()
  * Removes a client from this manager.
  * @param client The client to remove.
  */
-void LayerManager::remove(ClientRef client)
+void LayerManager::remove(Client* client)
 {
     m_layers.erase(client);
 }
@@ -289,7 +290,7 @@ void LayerManager::remove(ClientRef client)
  * @param client The client to move.
  * @param desktop The desktop to move the client to.
  */
-void DesktopManager::set_desktop(ClientRef client, Desktop desktop)
+void DesktopManager::set_desktop(Client* client, Desktop desktop)
 {
     if (desktop == THIS_DESKTOP)
         m_desktops[client] = m_current_desktop;
@@ -302,7 +303,7 @@ void DesktopManager::set_desktop(ClientRef client, Desktop desktop)
  * Moves a client to the desktop after its current one.
  * @param client The client to move.
  */
-void DesktopManager::next_desktop(ClientRef client)
+void DesktopManager::next_desktop(Client* client)
 {
     if (m_desktops[client] == m_shared.max_desktops)
         m_desktops[client] = 1;
@@ -316,7 +317,7 @@ void DesktopManager::next_desktop(ClientRef client)
  * Moves a client to the desktop before its current one.
  * @param client The client to move.
  */
-void DesktopManager::prev_desktop(ClientRef client)
+void DesktopManager::prev_desktop(Client* client)
 {
     if (m_desktops[client] == 1)
         m_desktops[client] = m_shared.max_desktops;
@@ -330,7 +331,7 @@ void DesktopManager::prev_desktop(ClientRef client)
  * Unsticks a sticky client, or sticks an unsticky client.
  * @param client The client to (un)stick.
  */
-void DesktopManager::flip_sticky_flag(ClientRef client)
+void DesktopManager::flip_sticky_flag(Client* client)
 {
     m_stickies[client] = !m_stickies[client];
 }
@@ -372,11 +373,11 @@ void DesktopManager::redraw_clients()
     Window focused = focus.get_focused();
     
     XWindowAttributes attr;
-    for (std::map<ClientRef, Desktop>::iterator client_iter = m_desktops.begin();
+    for (std::map<Client*, Desktop>::iterator client_iter = m_desktops.begin();
             client_iter != m_desktops.end();
             client_iter++)
     {
-        ClientRef client_ref = client_iter->first;
+        Client* client_ref = client_iter->first;
         Window client_win = client_ref->window();
         XGetWindowAttributes(m_shared.display, client_win, &attr);
 
@@ -407,7 +408,7 @@ void DesktopManager::redraw_clients()
  * Removes a client from this manager.
  * @param client The client to remove.
  */
-void DesktopManager::remove(ClientRef client)
+void DesktopManager::remove(Client* client)
 {
     m_desktops.erase(client);
     m_stickies.erase(client);
@@ -419,7 +420,7 @@ void DesktopManager::remove(ClientRef client)
  * @param ptr_x The absolute x position of the mouse pointer.
  * @param ptr_y The absolute y position of the mouse pointer.
  */
-void MoveResizeManager::begin_move(ClientRef client, Dimension ptr_x, Dimension ptr_y)
+void MoveResizeManager::begin_move(Client* client, Dimension ptr_x, Dimension ptr_y)
 {
     client->deactivate();
     if (m_state != MVR_NONE)
@@ -444,7 +445,7 @@ void MoveResizeManager::begin_move(ClientRef client, Dimension ptr_x, Dimension 
  * @param ptr_x The absolute x position of the mouse pointer.
  * @param ptr_y The absolute y position of the mouse pointer.
  */
-void MoveResizeManager::begin_resize(ClientRef client, Dimension ptr_x, Dimension ptr_y)
+void MoveResizeManager::begin_resize(Client* client, Dimension ptr_x, Dimension ptr_y)
 {
     if (m_state != MVR_NONE)
         return;
@@ -520,7 +521,7 @@ void MoveResizeManager::end_move_resize()
             attr.x, attr.y, attr.width, attr.height);
 
     m_client->activate();
-    m_client = ClientRef(NULL);
+    m_client = NULL;
 }
 
 /**
@@ -647,7 +648,7 @@ Window FocusManager::get_focused() const
  * Creates an icon from a particular client and shows it.
  * @param client The client to create an icon for.
  */
-void IconManager::to_icon(ClientRef client)
+void IconManager::to_icon(Client* client)
 {
     client->deactivate();
 
@@ -709,7 +710,7 @@ void IconManager::to_icon(ClientRef client)
 void IconManager::from_icon(Window win)
 {
     Icon *icon = m_icon_wins[win];
-    ClientRef client = m_icons[icon];
+    Client* client = m_icons[icon];
 
     XMapWindow(m_shared.display, client->window());
     client->activate();
@@ -734,7 +735,7 @@ void IconManager::from_icon(Window win)
 void IconManager::redraw_icon(Window window)
 {
     Icon *icon = m_icon_wins[window];
-    ClientRef client = m_icons[icon];
+    Client* client = m_icons[icon];
 
     /* Try to get the icon title in two ways - either using the intended icon
      * title, or the title of the original client window. */
@@ -769,7 +770,7 @@ void IconManager::redraw_icon(Window window)
  */
 void IconManager::relayer_icons()
 {
-    for (std::map<Icon*,ClientRef>::iterator icon_iter = m_icons.begin();
+    for (std::map<Icon*,Client*>::iterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {
@@ -786,7 +787,7 @@ void IconManager::reflow_icons()
 {
     Dimension x = 0, y = 0;
         
-    for (std::map<Icon*,ClientRef>::iterator icon_iter = m_icons.begin();
+    for (std::map<Icon*,Client*>::iterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {
@@ -819,10 +820,10 @@ bool IconManager::is_iconified(Window window)
  * Removes a client from the icon pool, as well as its icon.
  * @param client The client to remove any icons for.
  */
-void IconManager::remove(ClientRef client)
+void IconManager::remove(Client* client)
 {
     Icon *the_icon = NULL;
-    for (std::map<Icon*,ClientRef>::iterator icon_iter = m_icons.begin();
+    for (std::map<Icon*,Client*>::iterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {
@@ -915,20 +916,19 @@ void ClientManager::create_client(Window window)
     XFree(classhint);
 
     Client *client = new Client(m_shared, *this, m_actions[client_class], window);
-    ClientRef cliref = ClientRef(client);
-    m_clients[window] = cliref;
+    m_clients[window] = client;
 
     // Register the new client with all of the submanagers
-    m_layers.set_layer(cliref, is_transient ? DIALOG_LAYER : DEF_LAYER);
-    m_desktops.set_desktop(cliref, THIS_DESKTOP);
+    m_layers.set_layer(client, is_transient ? DIALOG_LAYER : DEF_LAYER);
+    m_desktops.set_desktop(client, THIS_DESKTOP);
 
     if (is_transient)
-        m_layers.set_as_dialog(cliref);
+        m_layers.set_as_dialog(client);
 
     // Do all the things that this client needs to do when it is created, except
     // if it is a dialog (since not all actions apply to dialogs).
     if (is_transient)
-        client->run_actions(cliref);
+        client->run_actions();
 
     // Now, relayer the clients and focus this window.
     m_layers.relayer_clients();
@@ -938,9 +938,9 @@ void ClientManager::create_client(Window window)
 /**
  * Gets a client based on the X11 window.
  * @param window The window that a client manages.
- * @return A ClientRef which references either a Client or NULL.
+ * @return A Client* which references either a Client or NULL.
  */
-ClientRef ClientManager::get_client(Window window)
+Client* ClientManager::get_client(Window window)
 {
     return m_clients[window];
 }
@@ -957,10 +957,11 @@ void ClientManager::remove_client(Window window)
     if (m_moveresize.is_being_moved(window))
         m_moveresize.end_move_resize();
 
-    ClientRef client = get_client(window);
+    Client* client = get_client(window);
     m_desktops.remove(client);
     m_layers.remove(client);
     m_icons.remove(client);
 
     m_clients.erase(window);
+    delete client;
 }

@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <functional>
 #include <map>
-#include <memory>
 #include <string>
 
 #include "actions.h"
@@ -38,7 +37,7 @@ public:
     Window window() const;
     void snap(SnapDir);
     void maximize();
-    void run_actions(std::shared_ptr<Client>);
+    void run_actions();
     void close();
     void destroy();
 
@@ -62,9 +61,6 @@ private:
     bool m_active;
 };
 
-/// A shorter way of referring to a client managed via the ClientManager.
-typedef std::shared_ptr<Client> ClientRef;
-
 /**
  * Manages how clients are layered on top of each other.
  */
@@ -75,17 +71,17 @@ public:
         m_manager(manager), m_shared(shared)
     {};
 
-    void set_layer(ClientRef, Layer);
-    void move_up(ClientRef);
-    void move_down(ClientRef);
+    void set_layer(Client*, Layer);
+    void move_up(Client*);
+    void move_down(Client*);
     
-    void set_as_dialog(ClientRef);
+    void set_as_dialog(Client*);
     void relayer_clients();
 
-    void remove(ClientRef);
+    void remove(Client*);
 private:
     /// A relation between each client and its layer.
-    std::map<ClientRef, Layer> m_layers;
+    std::map<Client*, Layer> m_layers;
 
     /// Shared window-manager data.
     WMShared &m_shared;
@@ -105,22 +101,22 @@ public:
         m_manager(manager), m_shared(shared)
     {}
 
-    void set_desktop(ClientRef, Desktop);
-    void next_desktop(ClientRef);
-    void prev_desktop(ClientRef);
+    void set_desktop(Client*, Desktop);
+    void next_desktop(Client*);
+    void prev_desktop(Client*);
 
-    void flip_sticky_flag(ClientRef);
+    void flip_sticky_flag(Client*);
     void show_next_desktop();
     void show_prev_desktop();
     void redraw_clients();
 
-    void remove(ClientRef);
+    void remove(Client*);
 private:
     /// A relation between each client and its desktop.
-    std::map<ClientRef, Desktop> m_desktops;
+    std::map<Client*, Desktop> m_desktops;
 
     /// An relation between each client and its stickiness.
-    std::map<ClientRef, bool> m_stickies;
+    std::map<Client*, bool> m_stickies;
 
     /// The current desktop which is being viewed.
     Desktop m_current_desktop;
@@ -142,8 +138,8 @@ public:
         m_manager(manager), m_shared(shared), m_state(MVR_NONE)
     {};
 
-    void begin_move(ClientRef, Dimension, Dimension);
-    void begin_resize(ClientRef, Dimension, Dimension);
+    void begin_move(Client*, Dimension, Dimension);
+    void begin_resize(Client*, Dimension, Dimension);
     void handle_motion_event(const XEvent&);
     void end_move_resize();
 
@@ -163,7 +159,7 @@ private:
     Dimension2D m_old_params;
 
     /// The client whose window is currently being moved.
-    ClientRef m_client;
+    Client* m_client;
 
     /// The placeholder which is displayed instead of the client.
     Window m_placeholder;
@@ -229,7 +225,7 @@ public:
         m_manager(manager), m_shared(shared)
     {};
 
-    void to_icon(ClientRef);
+    void to_icon(Client*);
     void from_icon(Window);
 
     void redraw_icon(Window);
@@ -238,10 +234,10 @@ public:
 
     // TODO: Start here
     bool is_iconified(Window);
-    void remove(ClientRef);
+    void remove(Client*);
 private:
     /// Relates each icon to its client.
-    std::map<Icon*,ClientRef> m_icons;
+    std::map<Icon*,Client*> m_icons;
 
     /// Relates each icon window to its icon.
     std::map<Window,Icon*> m_icon_wins;
@@ -270,7 +266,7 @@ public:
     void register_classaction(std::string, ClassActions);
 
     void create_client(Window);
-    ClientRef get_client(Window);
+    Client* get_client(Window);
     void remove_client(Window);
 
     /// Gets the DesktopManager assigned to this instance.
@@ -301,12 +297,12 @@ private:
     std::map<std::string, ClassActions> m_actions;
 
     /// An association between an X11 window and its client.
-    std::map<Window, ClientRef> m_clients;
+    std::map<Window, Client*> m_clients;
 
-    /// A collection which holds the desktop and stickiness of each ClientRef.
+    /// A collection which holds the desktop and stickiness of each Client*.
     DesktopManager m_desktops;
 
-    /// A collection which holds the layer of each ClientRef.
+    /// A collection which holds the layer of each Client*.
     LayerManager m_layers;
 
     /// A layer which handles how clients are moved and resized.
