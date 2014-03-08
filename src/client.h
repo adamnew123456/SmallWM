@@ -24,7 +24,7 @@ enum MoveResizeState {
     MVR_NONE,
 };
 
-// Clients need to know their manager to make redraw requests.
+// Clients and sub-managers need to know their manager to make redraw requests.
 class ClientManager;
 
 /**
@@ -202,6 +202,60 @@ private:
 };
 
 /**
+ * A single icon, which is used as a proxy for a single client when it is hidden.
+ */
+struct Icon {
+    /// The window used for drawing the icon.
+    Window window;
+
+    /// The graphics context used to draw the pixmap and icon text.
+    GC gc;
+
+    /// Whether or not this icon has a graphical portion.
+    bool has_pixmap;
+    /// The graphical icon itself, if this has one.
+    Pixmap pixmap;
+    /// The dimensions of the pixmap;
+    Dimension2D pixmap_size;
+};
+
+/**
+ * Manages hiding clients, unhiding them, and repainting their icons.
+ */
+class IconManager {
+public:
+    /// Initialize the manager.
+    IconManager(WMShared &shared, ClientManager &manager) :
+        m_manager(manager), m_shared(shared)
+    {};
+
+    void to_icon(ClientRef);
+    void from_icon(Window);
+
+    void redraw_icon(Window);
+    void relayer_icons();
+    void reflow_icons();
+
+    // TODO: Start here
+    bool is_iconified(Window);
+    void remove(ClientRef);
+private:
+    /// Relates each icon to its client.
+    std::map<Icon*,ClientRef> m_icons;
+
+    /// Relates each icon window to its icon.
+    std::map<Window,Icon*> m_icon_wins;
+
+    /// Relates each 
+
+    /// Shared window-manager data.
+    WMShared &m_shared;
+
+    /// The owner of this IconManager.
+    ClientManager &m_manager;
+};
+
+/**
  * A single entity which manages all the current client windows, as well as all dialogs.
  */
 class ClientManager {
@@ -210,7 +264,7 @@ public:
     ClientManager(WMShared &shared) : 
         m_shared(shared), m_desktops(shared, *this),
         m_layers(shared, *this), m_moveresize(shared, *this),
-        m_focus(shared, *this)
+        m_focus(shared, *this), m_icons(shared, *this)
     {};
 
     void register_classaction(std::string, ClassActions);
@@ -235,6 +289,10 @@ public:
     FocusManager &focus()
         { return m_focus; };
 
+    /// Gets the IconManager assigned to this instance. 
+    IconManager &icons()
+        { return m_icons; }
+
 private:
     /// The shared state owned by the window manager.
     WMShared &m_shared;
@@ -256,5 +314,8 @@ private:
 
     /// A layer which handles which client is focused.
     FocusManager m_focus;
+
+    /// A layer which handles how icons are shown and interacted with.
+    IconManager m_icons;
 };
 #endif

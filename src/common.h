@@ -7,6 +7,7 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrandr.h>
 
+#include <cstring>
 #include <tuple>
 
 /// A size of some kind.

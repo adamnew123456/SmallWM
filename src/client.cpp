@@ -267,6 +267,9 @@ void LayerManager::relayer_clients()
 
     XRestackWindows(m_shared.display, &window_stacking[0], window_stacking.size());
 
+    // Make sure that none of the windows obscure the icons.
+    m_manager.icons().relayer_icons();
+
     // Ensure that, if a window is being moved/resized, its placeholder is not
     // obscured by other windows
     m_manager.moveresize().raise_placeholder();
@@ -348,7 +351,7 @@ void DesktopManager::show_next_desktop()
 /**
  * Move the user to the prevous desktop.
  */
-void DesktopManager::show_next_desktop()
+void DesktopManager::show_prev_desktop()
 {
     if (m_current_desktop == 1)
         m_current_desktop = m_shared.max_desktops;
@@ -365,7 +368,7 @@ void DesktopManager::redraw_clients()
 {
     // Needed to revert the focus so that way a window on a different 
     // desktop does not have the keyboard focus.
-    const FocusManager &focus = m_manager.focus();
+    FocusManager &focus = m_manager.focus();
     Window focused = focus.get_focused();
     
     XWindowAttributes attr;
@@ -475,6 +478,8 @@ void MoveResizeManager::handle_motion_event(const XEvent &event)
     Dimension xdiff = latest.xmotion.x_root - DIM2D_X(m_ptr_loc),
               ydiff = latest.xmotion.y_root - DIM2D_Y(m_ptr_loc);
 
+    // Eschew convienence macros here since what exactly these contain is up to
+    // the movement/resizing state.
     Dimension new_x = xdiff + std::get<0>(m_old_params),
             new_y = ydiff + std::get<1>(m_old_params);
 
@@ -639,6 +644,214 @@ Window FocusManager::get_focused() const
 }
 
 /**
+ * Creates an icon from a particular client and shows it.
+ * @param client The client to create an icon for.
+ */
+void IconManager::to_icon(ClientRef client)
+{
+    client->deactivate();
+
+    Icon *icon = new Icon;
+    icon->window = XCreateSimpleWindow(m_shared.display, m_shared.root,
+            // Put the icon somewhere offscreen until it can be repositioned
+            -200, -200, DIM2D_WIDTH(m_shared.icon_size), 
+            DIM2D_HEIGHT(m_shared.icon_size),
+            1, BlackPixel(m_shared.display, m_shared.screen), 
+            WhitePixel(m_shared.display, m_shared.screen));
+
+    // Inform other parts of the window manager that this is not a client
+    XSetWindowAttributes attr;
+    attr.override_redirect = true;
+    XChangeWindowAttributes(m_shared.display, icon->window, 
+            CWOverrideRedirect, &attr);
+
+    // Hook into the click and redraw events for this icon
+    XSelectInput(m_shared.display, icon->window,
+            ButtonPressMask | ButtonReleaseMask | ExposureMask);
+    XMapWindow(m_shared.display, icon->window);
+
+    icon->gc = XCreateGC(m_shared.display, icon->window, 0, NULL);
+
+    // Get the icon's pixmap, if it exists
+    XWMHints *hints = XGetWMHints(m_shared.display, icon->window);
+    {
+        if (hints && hints->flags & IconPixmapHint)
+        {
+            icon->has_pixmap = true;
+            icon->pixmap = hints->icon_pixmap;
+
+            // Get the pixmap's size
+            Window _u1;
+            int _u2;
+            unsigned int _u3;
+
+            Dimension pix_width, pix_height;
+            XGetGeometry(m_shared.display, icon->pixmap, &_u1, &_u2, &_u2,
+                    &pix_width, &pix_height, &_u3, &_u3);
+
+            icon->pixmap_size = Dimension2D(pix_width, pix_height);
+        }
+        else
+            icon->has_pixmap = false;
+    }
+    XFree(hints);
+
+    XUnmapWindow(m_shared.display, client->window());
+
+    m_icons[icon] = client;
+    m_icon_wins[icon->window] = icon;
+}
+
+/**
+ * Unhides an icon, given the icon window itself.
+ * @param win The window that belongs to the icon.
+ */
+void IconManager::from_icon(Window win)
+{
+    Icon *icon = m_icon_wins[win];
+    ClientRef client = m_icons[icon];
+
+    XMapWindow(m_shared.display, client->window());
+    client->activate();
+
+    XDestroyWindow(m_shared.display, icon->window);
+    XFreeGC(m_shared.display, icon->gc);
+    m_icons.erase(icon);
+    m_icon_wins.erase(icon->window);
+    delete icon;
+
+    // Shift all the other icons back to fill the empty slot
+    reflow_icons();
+
+    // Make sure the new client is stacked properly
+    m_manager.layers().relayer_clients();
+}
+
+/**
+ * Redraws an icon window.
+ * @param window The window belonging to the icon to redraw.
+ */
+void IconManager::redraw_icon(Window window)
+{
+    Icon *icon = m_icon_wins[window];
+    ClientRef client = m_icons[icon];
+
+    /* Try to get the icon title in two ways - either using the intended icon
+     * title, or the title of the original client window. */
+    char *title;
+    {
+        XGetIconName(m_shared.display, client->window(), &title);
+        if (!title)
+            XFetchName(m_shared.display, client->window(), &title);
+
+        // The text should be right of the icon, if there is one
+        int text_offset = (icon->has_pixmap ?
+                DIM2D_WIDTH(icon->pixmap_size) :
+                0);
+
+        XClearWindow(m_shared.display, icon->window);
+
+        if (title)
+            XDrawString(m_shared.display, icon->window, icon->gc, text_offset,
+                    DIM2D_HEIGHT(icon->pixmap_size), title, std::strlen(title));
+        
+        if (icon->has_pixmap)
+            XCopyArea(m_shared.display, icon->pixmap, icon->window, icon->gc,
+                    0, 0, 
+                    DIM2D_WIDTH(icon->pixmap_size), DIM2D_HEIGHT(icon->pixmap_size), 
+                    0, 0);
+    }
+    XFree(title);
+}
+
+/**
+ * Moves all icons on top of every other window.
+ */
+void IconManager::relayer_icons()
+{
+    for (std::map<Icon*,ClientRef>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        Icon *icon = icon_iter->first;
+        XRaiseWindow(m_shared.display, icon->window);
+    }
+}
+
+/**
+ * Moves all the icons to their proper positions, starting at the top of the screen
+ * and working down.
+ */
+void IconManager::reflow_icons()
+{
+    Dimension x = 0, y = 0;
+        
+    for (std::map<Icon*,ClientRef>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        if (x + DIM2D_WIDTH(m_shared.icon_size) > DIM2D_WIDTH(m_shared.screen_size))
+        {
+            x = 0;
+            y += DIM2D_HEIGHT(m_shared.icon_size);
+        }
+
+        Icon *icon = icon_iter->first;
+
+        redraw_icon(icon->window);
+        XMoveWindow(m_shared.display, icon->window, x, y);
+
+        x += DIM2D_WIDTH(m_shared.icon_size);
+    }
+}
+
+/**
+ * Queries whether or not a particular Window belongs to an icon.
+ * @param window The window to check for icons.
+ * @return Whether or not window is actually an icon.
+ */
+bool IconManager::is_iconified(Window window)
+{
+    return (m_icon_wins.count(window) > 0);
+}
+
+/**
+ * Removes a client from the icon pool, as well as its icon.
+ * @param client The client to remove any icons for.
+ */
+void IconManager::remove(ClientRef client)
+{
+    Icon *the_icon = NULL;
+    for (std::map<Icon*,ClientRef>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        if (icon_iter->second == client)
+        {
+            the_icon = icon_iter->first;
+            break;
+        }
+    }
+
+    if (!the_icon)
+        return;
+
+    // Since IconManager::remove is only called when the window is destroyed,
+    // then there is no need to redisplay the window since it doesn't exist.
+    // Thus, we skip the XMapWindow(...) call and the client->activate() call
+    // found in IconManager::from_icon()
+    
+    XDestroyWindow(m_shared.display, the_icon->window);
+    XFreeGC(m_shared.display, the_icon->gc);
+    m_icons.erase(the_icon);
+    m_icon_wins.erase(the_icon->window);
+    delete the_icon;
+
+    // Shift all the other icons back to fill the empty slot
+    reflow_icons();
+}
+
+/**
  * Associates a ClassActions from the config file to a named window class.
  * @param cls The X11 class to apply the actions to.
  * @param actions The actions themselves.
@@ -747,6 +960,7 @@ void ClientManager::remove_client(Window window)
     ClientRef client = get_client(window);
     m_desktops.remove(client);
     m_layers.remove(client);
+    m_icons.remove(client);
 
     m_clients.erase(window);
 }
