@@ -24,6 +24,21 @@ std::string WMConfig::get_config_path() const
 }
 
 /**
+ * Converts a key name into a KeySym, or returns the default.
+ * @param key The name of the key as a string.
+ * @param default_key The default KeySym to return if conversion fails.
+ * @return Either the key as a KeySym, or the default.
+ */
+KeySym string_to_keysym(std::string key, KeySym default_key)
+{
+    KeySym result = XStringToKeysym(key.c_str());
+    if (result == NoSymbol)
+        return default_key;
+    else
+        return result;
+}
+
+/**
  * A callback for the inih library, which handles a singular key-value pair.
  *
  * @param user The WMConfig object this parser belongs to (necessary because
@@ -140,7 +155,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
             if (!strncmp(stripped, "layer:", 6))
             {
                 Layer layer = strtoul(stripped + 6, NULL, 0);
-                if (layer > 0)
+                if (layer >= 1 && layer <= 9)
                 {
                     action.actions |= ACT_SETLAYER;
                     action.layer = layer;
@@ -151,6 +166,83 @@ int WMConfig::config_parser(void *user, const char *c_section,
         } while((option = strtok(NULL, ",")));
 
         self->classactions[name] = action;
+    }
+
+    // All of the keyboard bindings are hanled here - see configparse.h, and
+    // more specifically KeyboardConfig.
+    if (section == std::string("keyboard"))
+    {
+        if (name == std::string("client-next-desktop"))
+            self->key_commands.client_next_desktop =
+                string_to_keysym(value, XK_bracketright);
+
+        if (name == std::string("client-prev-desktop"))
+            self->key_commands.client_prev_desktop =
+                string_to_keysym(value, XK_bracketleft);
+
+        if (name == std::string("next-desktop"))
+            self->key_commands.next_desktop =
+                string_to_keysym(value, XK_period);
+
+        if (name == std::string("prev-desktop"))
+            self->key_commands.prev_desktop =
+                string_to_keysym(value, XK_comma);
+
+        if (name == std::string("toggle-stick"))
+            self->key_commands.toggle_stick =
+                string_to_keysym(value, XK_backslash);
+
+        if (name == std::string("iconify"))
+            self->key_commands.iconify =
+                string_to_keysym(value, XK_h);
+
+        if (name == std::string("maximize"))
+            self->key_commands.maximize =
+                string_to_keysym(value, XK_m);
+
+        if (name == std::string("request-close"))
+            self->key_commands.request_close =
+                string_to_keysym(value, XK_c);
+
+        if (name == std::string("force-close"))
+            self->key_commands.force_close =
+                string_to_keysym(value, XK_x);
+
+        if (name == std::string("snap-top"))
+            self->key_commands.snap_top = 
+                string_to_keysym(value, XK_Up);
+
+        if (name == std::string("snap-bottom"))
+            self->key_commands.snap_bottom =
+                string_to_keysym(value, XK_Down);
+
+        if (name == std::string("snap-left"))
+            self->key_commands.snap_left =
+                string_to_keysym(value, XK_Left);
+
+        if (name == std::string("snap-right"))
+            self->key_commands.snap_right =
+                string_to_keysym(value, XK_Right);
+
+        if (name == std::string("layer-above"))
+            self->key_commands.layer_above = 
+                string_to_keysym(value, XK_Page_Up);
+
+        if (name == std::string("layer-below"))
+            self->key_commands.layer_below =
+                string_to_keysym(value, XK_Page_Down);
+
+        if (name == std::string("layer-top"))
+            self->key_commands.layer_top =
+                string_to_keysym(value, XK_Home);
+
+        if (name == std::string("layer-bottom"))
+            self->key_commands.layer_bottom =
+                string_to_keysym(value, XK_End);
+
+        if (name == std::string("exit-wm"))
+            self->key_commands.exit_wm =
+                string_to_keysym(value, XK_Escape);
     }
 
     return 0;
