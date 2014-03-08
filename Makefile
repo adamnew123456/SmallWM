@@ -1,7 +1,7 @@
 CC=/usr/bin/clang
 CFLAGS=-g
 CXX=/usr/bin/clang++
-CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 --std=c++11 -Itest -Iinih -Isrc
+CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 --std=c++11 -Itest -Iinih -Isrc -lX11
 BINS=bin/test_configparse
 
 all: ${BINS}
