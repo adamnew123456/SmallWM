@@ -44,9 +44,9 @@ void Client::snap(SnapDir side)
         return;
 
     Dimension x, y, w, h;
-    Dimension icon_height = std::get<1>(m_shared.icon_size);
-    Dimension screen_width = std::get<0>(m_shared.screen_size),
-              screen_height = std::get<1>(m_shared.screen_size) - icon_height;
+    Dimension icon_height = DIM2D_HEIGHT(m_shared.icon_size);
+    Dimension screen_width = DIM2D_WIDTH(m_shared.screen_size),
+              screen_height = DIM2D_HEIGHT(m_shared.screen_size) - icon_height;
     switch (side)
     {
         case SNAP_TOP:
@@ -86,9 +86,9 @@ void Client::maximize()
     if (!m_active)
         return;
 
-    Dimension icon_height = std::get<1>(m_shared.icon_size);
-    Dimension screen_width = std::get<0>(m_shared.screen_size),
-              screen_height = std::get<1>(m_shared.screen_size) - icon_height;
+    Dimension icon_height = DIM2D_HEIGHT(m_shared.icon_size);
+    Dimension screen_width = DIM2D_WIDTH(m_shared.screen_size),
+              screen_height = DIM2D_HEIGHT(m_shared.screen_size) - icon_height;
     
     XMoveResizeWindow(m_shared.display, m_window, 0, icon_height, screen_width, screen_height);
 }
@@ -472,8 +472,8 @@ void MoveResizeManager::handle_motion_event(const XEvent &event)
     while (XCheckTypedEvent(m_shared.display, MotionNotify, &latest));
 
     // Figure out where the pointer is now, compared to where it originally was
-    Dimension xdiff = latest.xmotion.x_root - std::get<0>(m_ptr_loc),
-              ydiff = latest.xmotion.y_root - std::get<1>(m_ptr_loc);
+    Dimension xdiff = latest.xmotion.x_root - DIM2D_X(m_ptr_loc),
+              ydiff = latest.xmotion.y_root - DIM2D_Y(m_ptr_loc);
 
     Dimension new_x = xdiff + std::get<0>(m_old_params),
             new_y = ydiff + std::get<1>(m_old_params);

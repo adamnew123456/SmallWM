@@ -13,6 +13,14 @@
 typedef unsigned int Dimension;
 /// The extend of some window or other surface.
 typedef std::tuple<Dimension,Dimension> Dimension2D;
+
+// Some convienence wrappers for accessing width-height pairs
+#define DIM2D_WIDTH(dim2d) (std::get<0>((dim2d)))
+#define DIM2D_HEIGHT(dim2d) (std::get<1>((dim2d)))
+// More convienence wrappers for accessing x-y pairs
+#define DIM2D_X(dim2d) (std::get<0>((dim2d)))
+#define DIM2D_Y(dim2d) (std::get<1>((dim2d)))
+
 /// The desktop number.
 typedef unsigned long long Desktop;
 /// The z-layer of a window.
