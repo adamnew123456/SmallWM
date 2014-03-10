@@ -134,8 +134,8 @@ private:
 class MoveResizeManager {
 public:
     /// Initialize the manager.
-    MoveResizeManager(WMShared &shared, ClientManager &manager) :
-        m_manager(manager), m_shared(shared), m_state(MVR_NONE)
+    MoveResizeManager(WMShared &shared) :
+        m_shared(shared), m_state(MVR_NONE)
     {};
 
     void begin_move(Client*, Dimension, Dimension);
@@ -166,9 +166,6 @@ private:
 
     /// Shared window-manager data.
     WMShared &m_shared;
-
-    /// The owner of this MoveResizeManager.
-    ClientManager &m_manager;
 };
 
 /**
@@ -177,9 +174,8 @@ private:
 class FocusManager {
 public:
     /// Initialize the manager
-    FocusManager(WMShared &shared, ClientManager &manager) :
-        m_manager(manager), m_shared(shared),
-        m_focused(None)
+    FocusManager(WMShared &shared) :
+        m_shared(shared), m_focused(None)
     {};
 
     void change_focus(Window);
@@ -192,9 +188,6 @@ private:
     
     /// Shared window-manager data.
     WMShared &m_shared;
-
-    /// The owner of this FocusManager.
-    ClientManager &m_manager;
 };
 
 /**
@@ -259,8 +252,8 @@ public:
     /// Initialize some variables
     ClientManager(WMShared &shared) : 
         m_shared(shared), m_desktops(shared, *this),
-        m_layers(shared, *this), m_moveresize(shared, *this),
-        m_focus(shared, *this), m_icons(shared, *this)
+        m_layers(shared, *this), m_moveresize(shared),
+        m_focus(shared), m_icons(shared, *this)
     {};
 
     void register_classaction(std::string, ClassActions);
