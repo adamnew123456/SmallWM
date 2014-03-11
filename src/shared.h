@@ -27,6 +27,9 @@ struct WMShared {
 
     /// The width of the window border - required for clients to decorate their windows.
     Dimension border_width;
+
+    /// The shell to launch
+    std::string shell;
 };
 
 #endif
