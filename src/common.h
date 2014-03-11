@@ -7,8 +7,11 @@
 #include <X11/Xutil.h>
 #include <X11/extensions/Xrandr.h>
 
+#include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <tuple>
+#include <unistd.h>
 
 /// A size of some kind.
 typedef unsigned int Dimension;
@@ -38,5 +41,14 @@ const Layer MAX_LAYER = 9,
     
 /// A value indicating that the current desktop value should be used.
 const Desktop THIS_DESKTOP = -1;
+
+/// The button to click to launch a terminal
+const int LAUNCH_BUTTON = 1,
+      /// The button to click to move a client
+      MOVE_BUTTON = 1,
+      /// The button to click to resize a client
+      RESIZE_BUTTON = 3,
+      /// The key to hold to activate window manager functions
+      BUTTON_MASK = Mod4Mask;
 
 #endif
