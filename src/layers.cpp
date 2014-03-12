@@ -1,3 +1,4 @@
+/** @file */
 #include "clientmanager.h"
 
 /**
@@ -6,6 +7,9 @@
  */
 void ClientManager::raise_layer(Window window)
 {
+    if (!is_client(window))
+        return;
+
     Layer current = m_layers[current];
     if (current < MAX_LAYER)
     {
@@ -20,6 +24,9 @@ void ClientManager::raise_layer(Window window)
  */
 void ClientManager::lower_layer(Window window)
 {
+    if (!is_client(window))
+        return;
+
     Layer current = m_layers[current];
     if (current > MIN_LAYER)
     {
@@ -35,6 +42,9 @@ void ClientManager::lower_layer(Window window)
  */
 void ClientManager::set_layer(Window window, Layer layer)
 {
+    if (!is_client(window))
+        return;
+
     m_layers[window] = layer;
     relayer();
 }
