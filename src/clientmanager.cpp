@@ -82,7 +82,7 @@ void ClientManager::handle_motion(const XEvent &event)
 
 /**
  * Transitions from one state to another, given a client window.
- * @param window The client to transition.
+ * @param window The client to transition (or, possibly an icon window)
  * @param new_state The new state to attempt to transition to.
  */
 void ClientManager::state_transition(Window window, ClientState new_state)
@@ -238,6 +238,12 @@ void ClientManager::create(Window window)
     XSetWindowBorderWidth(m_shared.display, window, m_shared.border_width);
 
     focus(window);
+    m_layers[window] = is_transient ? 5 : DIALOG_LAYER;
+    m_sticky[window] = false;
+    m_desktops[window] = m_current_desktop;
+
+    relayer();
+    update_desktop();
 }
 
 /**
