@@ -2,7 +2,9 @@
 #ifndef __SMALLWM_CLIENTMANAGER__
 #define __SMALLWM_CLIENTMANAGER__
 
+#include <algorithm>
 #include <map>
+#include <vector>
 
 #include "actions.h"
 #include "common.h"
@@ -134,7 +136,7 @@ public:
 
     void raise_layer(Window);
     void lower_layer(Window);
-    void set_layer(Window);
+    void set_layer(Window, Layer);
     void relayer();
 
     void flip_sticky_flag(Window);

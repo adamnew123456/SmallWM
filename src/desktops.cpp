@@ -1,3 +1,4 @@
+/** @file */
 #include "clientmanager.h"
 
 /**
@@ -18,6 +19,9 @@ void ClientManager::flip_sticky_flag(Window window)
  */
 void ClientManager::to_next_desktop(Window window)
 {
+    if (!is_client(window))
+        return;
+
     if (m_desktops[window] == m_shared.max_desktops)
         m_desktops[window] = 1;
     else
@@ -32,6 +36,9 @@ void ClientManager::to_next_desktop(Window window)
  */
 void ClientManager::to_prev_desktop(Window window)
 {
+    if (!is_client(window))
+        return;
+
     if (m_desktops[window] == 1)
         m_desktops[window] = m_shared.max_desktops;
     else
