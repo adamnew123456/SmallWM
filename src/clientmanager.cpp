@@ -1,3 +1,4 @@
+/** @file */
 #include "clientmanager.h"
 
 /**
