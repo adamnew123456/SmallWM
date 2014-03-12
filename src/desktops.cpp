@@ -1,6 +1,18 @@
 #include "clientmanager.h"
 
 /**
+ * Makes a sticky client unsticky, and an unsticky client sticky.
+ * @param window The client window to stick/unstick.
+ */
+void ClientManager::flip_sticky_flag(Window window)
+{
+    if (!is_client(window))
+        return;
+
+    m_sticky[window] = !m_sticky[window];
+}
+
+/**
  * Moves a client to the desktop after its current one.
  * @param window The client window to relocate.
  */

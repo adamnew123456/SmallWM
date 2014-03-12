@@ -137,8 +137,7 @@ public:
     void set_layer(Window);
     void relayer();
 
-    // TODO: Start here
-
+    void flip_sticky_flag(Window);
     void to_next_desktop(Window);
     void to_prev_desktop(Window);
     void update_desktop();
