@@ -283,8 +283,6 @@ void ClientManager::create(Window window)
             transient_for != None)
         is_transient = true;
 
-    XSetWindowBorder(m_shared.display, window, 
-            WhitePixel(m_shared.display, m_shared.screen));
     XSetWindowBorderWidth(m_shared.display, window, m_shared.border_width);
 
     set_state(window, CS_VISIBLE);
@@ -371,6 +369,8 @@ void ClientManager::focus(Window window)
         }
         else
         {
+            XSetWindowBorder(m_shared.display, window, 
+                    BlackPixel(m_shared.display, m_shared.screen));
             set_state(window, CS_ACTIVE);
         }
     }
@@ -382,6 +382,8 @@ void ClientManager::focus(Window window)
  */
 void ClientManager::unfocus(Window window)
 {
+    XSetWindowBorder(m_shared.display, window, 
+            WhitePixel(m_shared.display, m_shared.screen));
     XGrabButton(m_shared.display, AnyButton, AnyModifier, window, false,
             ButtonPressMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync,
             None, None);
