@@ -126,6 +126,8 @@ public:
     bool is_client(Window);
     Icon *get_icon(Window);
 
+    void register_action(std::string, ClassActions);
+
     ClientState get_state(Window);
     void handle_motion(const XEvent&);
     void state_transition(Window, ClientState);
@@ -133,6 +135,9 @@ public:
     void create(Window);
     void destroy(Window);
     void close(Window);
+
+    void snap(Window, SnapDir);
+    void maximize(Window);
 
     void raise_layer(Window);
     void lower_layer(Window);
@@ -148,6 +153,8 @@ public:
     void prev_desktop();
 
 private:
+    void apply_actions(Window);
+
     void map(Window);
     void unmap(Window);
         
@@ -167,6 +174,9 @@ private:
 
     /// Shared window manager data
     WMShared &m_shared;
+
+    /// All the registered ClassActions
+    std::map<std::string, ClassActions> m_actions;
 
     /// A relation between each client window and its current state
     std::map<Window,ClientState> m_clients;

@@ -30,6 +30,16 @@ Icon *ClientManager::get_icon(Window window)
 }
 
 /**
+ * Registers a group of actions with a particular X11 class.
+ * @param x_class The window class to associate with
+ * @param actions The ClassActions to run for that window
+ */
+void ClientManager::register_action(std::string x_class, ClassActions actions)
+{
+    m_actions[x_class] = actions;
+}
+
+/**
  * Gets the state of a particular client.
  * @param window The window of the client.
  * @return The state of the client which owns the window.
@@ -245,6 +255,7 @@ void ClientManager::create(Window window)
 
     relayer();
     update_desktop();
+    apply_actions(window);
 }
 
 /**
@@ -339,6 +350,35 @@ void ClientManager::unfocus(Window window)
 }
 
 /**
+ * Applies the actions in a ClassActions.
+ * @param window The client window to apply the actions to.
+ */
+void ClientManager::apply_actions(Window window)
+{
+
+    XClassHint *classhint = XAllocClassHint();
+    XGetClassHint(m_shared.display, window, classhint);
+
+    std::string win_class;
+    if (!classhint->res_class)
+        win_class = std::string(classhint->res_class);
+    else
+        win_class = "";
+
+    ClassActions actions = m_actions[win_class];
+    if (actions.actions & ACT_STICK)
+        flip_sticky_flag(window);
+    if (actions.actions & ACT_MAXIMIZE)
+        maximize(window);
+    if (actions.actions & ACT_SETLAYER)
+        set_layer(window, actions.layer);
+    if (actions.actions & ACT_SNAP)
+        snap(window, actions.snap);
+
+    XFree(classhint);
+}
+
+/**
  * Maps a window onto the screen, making it visible.
  * @param window The client window to show.
  */
@@ -354,4 +394,67 @@ void ClientManager::map(Window window)
 void ClientManager::unmap(Window window)
 {
     XUnmapWindow(m_shared.display, window);
+}
+
+/**
+ * Snaps a window to a particular side of the screen.
+ * @param window The client window to snap
+ * @param side The side of the window to snap to
+ */
+void ClientManager::snap(Window window, SnapDir side)
+{
+    if (!is_client(window))
+        return;
+
+    Dimension icon_height = DIM2D_HEIGHT(m_shared.icon_size);
+    Dimension screen_width = DIM2D_WIDTH(m_shared.screen_size),
+              screen_height = DIM2D_HEIGHT(m_shared.screen_size) - icon_height;
+
+    Dimension x, y, w, h;
+    switch (side)
+    {
+        case SNAP_TOP:
+            x = 0;
+            y = icon_height;
+            w = screen_width;
+            h = screen_height / 2;
+            break;
+        case SNAP_BOTTOM:
+            x = 0;
+            y = (screen_height / 2) + icon_height;
+            w = screen_width;
+            h = screen_height / 2;
+            break;
+        case SNAP_LEFT:
+            x = 0;
+            y = icon_height;
+            w = screen_width / 2;
+            h = screen_height;
+            break;
+        case SNAP_RIGHT:
+            x = screen_width / 2;
+            y = icon_height;
+            w = screen_width / 2;
+            h = screen_height;
+            break;
+    }
+
+    XMoveResizeWindow(m_shared.display, window, x, y, w, h);
+}
+
+/**
+ * Maximizes a window, showing only the icon bar.
+ * @param window The client window to maximize
+ */
+void ClientManager::maximize(Window window)
+{
+    if (!is_client(window))
+        return;
+
+    Dimension icon_height = DIM2D_HEIGHT(m_shared.icon_size);
+    Dimension screen_width = DIM2D_WIDTH(m_shared.screen_size),
+              screen_height = DIM2D_HEIGHT(m_shared.screen_size) - icon_height;
+
+    XMoveResizeWindow(m_shared.display, window, 0, icon_height, 
+            screen_width, screen_height);
 }
