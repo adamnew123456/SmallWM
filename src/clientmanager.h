@@ -139,7 +139,8 @@ public:
 
     bool is_client(Window);
     bool is_visible(Window);
-    Icon *get_icon(Window);
+    Icon *get_icon_of_client(Window);
+    Icon *get_icon_of_icon(Window);
     Window get_from_placeholder(Window);
 
     void register_action(std::string, ClassActions);

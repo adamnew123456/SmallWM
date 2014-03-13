@@ -192,9 +192,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
 
     if (old_state == CS_ICON)
     {
-        Icon *icon = get_icon(window);
-        // Save this, since the icon will become invalid later
-        Window client = icon->client;
+        Icon *icon = get_icon_of_client(window);
 
         if (!icon)
         {
@@ -204,8 +202,8 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_ACTIVE)
         {
             delete_icon(icon);
-            map(client);
-            focus(client);
+            map(window);
+            focus(window);
             return;
         }
         if (new_state == CS_DESTROY)

@@ -183,7 +183,7 @@ void XEvents::handle_buttonpress()
     if (m_clients.is_client(m_event.xbutton.subwindow))
         is_client = true;
 
-    Icon *icon = m_clients.get_icon(m_event.xbutton.subwindow);
+    Icon *icon = m_clients.get_icon_of_icon(m_event.xbutton.window);
 
     //  Click on the root window - launch a terminal
     if (!(is_client|| icon) && m_event.xbutton.button == LAUNCH_BUTTON 

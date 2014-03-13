@@ -6,21 +6,27 @@
  * @param window The window to find.
  * @return Either hte owning Icon, or NULL.
  */
-Icon *ClientManager::get_icon(Window window)
+Icon *ClientManager::get_icon_of_client(Window window)
 {
-    Icon *result = NULL;
     for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {
         if (icon_iter->second && icon_iter->second->client == window)
-        {
-            result = icon_iter->second;
-            break;
-        }
+            return icon_iter->second;
     }
 
-    return result;
+    return NULL;
+}
+
+/**
+ * Gets an icon from the icon's window.
+ * @param window The icon window.
+ * @return An Icon*, or NULL.
+ */
+Icon *ClientManager::get_icon_of_icon(Window window)
+{
+    return m_icons[window];
 }
 
 /**
@@ -70,6 +76,7 @@ void ClientManager::make_icon(Window window)
     {
         icon->has_pixmap = false;
     }
+
     XFree(hints);
 
     m_icons[icon->window] = icon;
