@@ -76,6 +76,11 @@ enum ClientState {
  */
 struct MoveResize
 {
+    /// Initialize everything to zero
+    MoveResize() :
+        window(None), client(None), ptr_loc(0, 0)
+    {};
+
     /// The placeholder window which the user manipulates
     Window window;
 
@@ -91,6 +96,15 @@ struct MoveResize
  */
 struct Icon
 {
+    /// Initialize everything to zero
+    Icon() :
+        window(None), client(None), gc(0),
+        has_pixmap(false), pixmap(0),
+        pixmap_size(0, 0)
+    {};
+
+    std::string to_string();
+        
     /// The window that the icon is drawn upon
     Window window;
 
@@ -113,18 +127,20 @@ struct Icon
 
 /**
  * A container and 'state manager' for all of the clients. It manages how clients
- * transition between ClientStates, by rejecting invalid states and performing
+* transition between ClientStates, by rejecting invalid states and performing
  * the appropriate operations on valid state transitions.
  */
 class ClientManager
 {
 public:
     ClientManager(WMShared &shared) :
-        m_shared(shared), m_current_desktop(0)
+        m_shared(shared), m_current_desktop(1)
     {};
 
     bool is_client(Window);
+    bool is_visible(Window);
     Icon *get_icon(Window);
+    Window get_from_placeholder(Window);
 
     void register_action(std::string, ClassActions);
 
@@ -138,6 +154,8 @@ public:
 
     void snap(Window, SnapDir);
     void maximize(Window);
+
+    void redraw_icon(Window);
 
     void raise_layer(Window);
     void lower_layer(Window);
@@ -153,6 +171,7 @@ public:
     void prev_desktop();
 
 private:
+    void set_state(Window, ClientState);
     void apply_actions(Window);
 
     void map(Window);
@@ -164,7 +183,7 @@ private:
 
     void make_icon(Window);
     void reflow_icons();
-    void delete_icon(Window);
+    void delete_icon(Icon*);
 
     void create_placeholder(const XWindowAttributes&);
     void begin_moving(Window, const XWindowAttributes&);

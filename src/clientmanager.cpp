@@ -12,21 +12,14 @@ bool ClientManager::is_client(Window window)
 }
 
 /**
- * Gets the icon structure which is owns the given window.
- * @param window The window to find.
- * @return Either hte owning Icon, or NULL.
+ * Make sure that a client is mapped onto the display.
+ * @param window The client window to check.
+ * @return Whether the client window is visible or not.
  */
-Icon *ClientManager::get_icon(Window window)
+bool ClientManager::is_visible(Window window)
 {
-    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
-            icon_iter != m_icons.end();
-            icon_iter++)
-    {
-        if (icon_iter->second->window == window)
-            return icon_iter->second;
-    }
-
-    return NULL;
+    ClientState state = get_state(window);
+    return (state == CS_ACTIVE) || (state == CS_VISIBLE);
 }
 
 /**
@@ -49,6 +42,16 @@ ClientState ClientManager::get_state(Window window)
     return m_clients[window];
 }
 
+/**
+ * Sets the state of the window.
+ * @param window The window of the client
+ * @param state The state to set
+ */
+void ClientManager::set_state(Window window, ClientState state)
+{
+    m_clients[window] = state;
+}
+
 /** 
  * Handle a motion event, which updates the client which is currently being
  * moved or resized.
@@ -59,7 +62,7 @@ void ClientManager::handle_motion(const XEvent &event)
     if (m_mvr.client == None)
         return;
 
-    ClientState state = m_clients[m_mvr.client];
+    ClientState state = get_state(m_mvr.client);
 
     // Get the most recent event, to skip needless updates
     XEvent latest = event;
@@ -93,20 +96,21 @@ void ClientManager::handle_motion(const XEvent &event)
 
 /**
  * Transitions from one state to another, given a client window.
- * @param window The client to transition (or, possibly an icon window)
+ * @param window The client to transition (or the icon window)
  * @param new_state The new state to attempt to transition to.
  */
 void ClientManager::state_transition(Window window, ClientState new_state)
 {   
     if (!is_client(window))
+    {
         return;
+    }
 
     // Save the current window's attributes, should any transition need them
     XWindowAttributes attr;
     XGetWindowAttributes(m_shared.display, window, &attr);
 
-    ClientState old_state = m_clients[window];
-
+    ClientState old_state = get_state(window);
     if (old_state == CS_ACTIVE)
     {
         if (new_state == CS_ICON)
@@ -114,33 +118,40 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             unfocus(window);
             unmap(window);
             make_icon(window);
+            return;
         }
         if (new_state == CS_VISIBLE)
         {
             unfocus(window);
-            m_clients[window] = CS_VISIBLE;
+            set_state(window, CS_VISIBLE);
+            return;
         }
         if (new_state == CS_INVISIBLE)
         {
             unfocus(window);
             unmap(window);
-            m_clients[window] = CS_INVISIBLE;
+            set_state(window, CS_INVISIBLE);
+            return;
         }
         if (new_state == CS_MOVING)
         {
             unfocus(window);
             unmap(window);
             begin_moving(window, attr);
+            return;
         }
         if (new_state == CS_RESIZING)
         {
             unfocus(window);
             unmap(window);
             begin_resizing(window, attr);
+            return;
         }
         if (new_state == CS_DESTROY)
         {
+            unfocus(window);
             destroy(window);
+            return;
         }
     }
 
@@ -149,15 +160,18 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_ACTIVE)
         {
             focus(window);
+            return;
         }
         if (new_state == CS_INVISIBLE)
         {
             unmap(window);
-            m_clients[window] = CS_INVISIBLE;
+            set_state(window, CS_INVISIBLE);
+            return;
         }
         if (new_state == CS_DESTROY)
         {
             destroy(window);
+            return;
         }
     }
 
@@ -166,28 +180,39 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_VISIBLE)
         {
             map(window);
-            m_clients[window] = CS_VISIBLE;
+            set_state(window, CS_VISIBLE);
+            return;
         }
         if (new_state == CS_DESTROY)
         {
             destroy(window);
+            return;
         }
     }
 
     if (old_state == CS_ICON)
     {
         Icon *icon = get_icon(window);
+        // Save this, since the icon will become invalid later
+        Window client = icon->client;
+
+        if (!icon)
+        {
+            return;
+        }
 
         if (new_state == CS_ACTIVE)
         {
-            delete_icon(icon->window);
-            map(window);
-            focus(window);
+            delete_icon(icon);
+            map(client);
+            focus(client);
+            return;
         }
         if (new_state == CS_DESTROY)
         {
-            delete_icon(icon->window);
+            delete_icon(icon);
             destroy(window);
+            return;
         }
     }
 
@@ -198,11 +223,13 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             map(window);
             end_move_resize();
             focus(window);
+            return;
         }
         if (new_state == CS_DESTROY)
         {
             end_move_resize_unsafe();
             destroy(window);
+            return;
         }
     }
 
@@ -213,11 +240,13 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             map(window);
             end_move_resize();
             focus(window);
+            return;
         }
         if (new_state == CS_DESTROY)
         {
             end_move_resize_unsafe();
             destroy(window);
+            return;
         }
     }
 }
@@ -248,7 +277,7 @@ void ClientManager::create(Window window)
             WhitePixel(m_shared.display, m_shared.screen));
     XSetWindowBorderWidth(m_shared.display, window, m_shared.border_width);
 
-    focus(window);
+    set_state(window, CS_VISIBLE);
     m_layers[window] = is_transient ? 5 : DIALOG_LAYER;
     m_sticky[window] = false;
     m_desktops[window] = m_current_desktop;
@@ -256,6 +285,7 @@ void ClientManager::create(Window window)
     relayer();
     update_desktop();
     apply_actions(window);
+    focus(window);
 }
 
 /**
@@ -264,6 +294,7 @@ void ClientManager::create(Window window)
  */
 void ClientManager::destroy(Window window)
 {
+
     m_layers.erase(window);
     m_desktops.erase(window);
     m_sticky.erase(window);
@@ -277,16 +308,13 @@ void ClientManager::destroy(Window window)
 void ClientManager::close(Window window)
 {
     XEvent close_event;
-    XClientMessageEvent client_close = {
-        .type = ClientMessage,
-        .window = window,
-        .message_type = XInternAtom(m_shared.display, "WM_PROTOCOLS", false),
-        .format = 32,
-        .data = {
-            .l = static_cast<long>
-                (XInternAtom(m_shared.display, "WM_DELETE_WINDOW", false),CurrentTime)
-        }
-    };
+    XClientMessageEvent client_close;
+    client_close.type = ClientMessage;
+    client_close.window = window;
+    client_close.message_type = XInternAtom(m_shared.display, "WM_PROTOCOLS", false);
+    client_close.format = 32;
+    client_close.data.l[0] = XInternAtom(m_shared.display, "WM_DELETE_WINDOW", false);
+    client_close.data.l[1] = CurrentTime;
 
     close_event.xclient = client_close;
     XSendEvent(m_shared.display, window, False, NoEventMask, &close_event);
@@ -306,7 +334,7 @@ void ClientManager::focus(Window window)
         if (client_iter->second == CS_ACTIVE)
         {
             // Make sure to unfocus this client before moving on
-            state_transition(window, CS_VISIBLE);
+            state_transition(client_iter->first, CS_VISIBLE);
             break;
         }
     }
@@ -329,11 +357,11 @@ void ClientManager::focus(Window window)
         if (new_focus != window)
         {
             unfocus(window);
-            m_clients[window] = CS_VISIBLE;
+            set_state(window, CS_VISIBLE);
         }
         else
         {
-            m_clients[window] = CS_ACTIVE;
+            set_state(window, CS_ACTIVE);
         }
     }
 }
@@ -360,7 +388,7 @@ void ClientManager::apply_actions(Window window)
     XGetClassHint(m_shared.display, window, classhint);
 
     std::string win_class;
-    if (!classhint->res_class)
+    if (classhint->res_class)
         win_class = std::string(classhint->res_class);
     else
         win_class = "";
@@ -385,6 +413,7 @@ void ClientManager::apply_actions(Window window)
 void ClientManager::map(Window window)
 {
     XMapWindow(m_shared.display, window);
+    relayer();
 }
 
 /**
@@ -403,7 +432,7 @@ void ClientManager::unmap(Window window)
  */
 void ClientManager::snap(Window window, SnapDir side)
 {
-    if (!is_client(window))
+    if (!is_client(window) || !is_visible(window))
         return;
 
     Dimension icon_height = DIM2D_HEIGHT(m_shared.icon_size);
@@ -448,7 +477,7 @@ void ClientManager::snap(Window window, SnapDir side)
  */
 void ClientManager::maximize(Window window)
 {
-    if (!is_client(window))
+    if (!is_client(window) || !is_visible(window))
         return;
 
     Dimension icon_height = DIM2D_HEIGHT(m_shared.icon_size);

@@ -2,13 +2,33 @@
 #include "clientmanager.h"
 
 /**
+ * Gets the icon structure which is owns the given window.
+ * @param window The window to find.
+ * @return Either hte owning Icon, or NULL.
+ */
+Icon *ClientManager::get_icon(Window window)
+{
+    Icon *result = NULL;
+    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        if (icon_iter->second && icon_iter->second->client == window)
+        {
+            result = icon_iter->second;
+            break;
+        }
+    }
+
+    return result;
+}
+
+/**
  * Creates a new icon window, and then reorganizes all the icons.
  * @param window The client window to make an icon for.
  */
 void ClientManager::make_icon(Window window)
 {
-    XUnmapWindow(m_shared.display, window);
-
     Icon *icon = new Icon;
     icon->window = XCreateSimpleWindow(m_shared.display, m_shared.root,
             -200, -200, DIM2D_WIDTH(m_shared.icon_size), 
@@ -52,8 +72,8 @@ void ClientManager::make_icon(Window window)
     }
     XFree(hints);
 
-    m_clients[window] = CS_ICON;
-    m_icons[window] = icon;
+    m_icons[icon->window] = icon;
+    set_state(icon->client, CS_ICON);
 
     // Move all the icons into the proper location
     reflow_icons();
@@ -73,6 +93,9 @@ void ClientManager::reflow_icons()
             icon_iter != m_icons.end();
             icon_iter++)
     {
+        if (!icon_iter->second)
+            continue;
+
         if (x + icon_width > screen_width)
         {
             x = 0;
@@ -85,16 +108,51 @@ void ClientManager::reflow_icons()
 }
 
 /**
+ * Redraws an individual icon window.
+ * @param window The icon window to redraw.
+ */
+void ClientManager::redraw_icon(Window window)
+{
+
+    Icon *icon = m_icons[window];
+    if (!icon)
+        return;
+
+    // Find out the client's request icon name, or use the name of the client itself
+    char *title;
+
+    XGetIconName(m_shared.display, icon->client, &title);
+    if (!title)
+        XFetchName(m_shared.display, icon->client, &title);
+
+    int text_offset = (icon->has_pixmap ? 
+            DIM2D_WIDTH(icon->pixmap_size) :
+            0);
+
+    XClearWindow(m_shared.display, window);
+    if (title)
+        XDrawString(m_shared.display, window, icon->gc, text_offset,
+                DIM2D_HEIGHT(m_shared.icon_size), title, std::strlen(title));
+    
+    if (icon->has_pixmap)
+        XCopyArea(m_shared.display, icon->pixmap, window, icon->gc, 0, 0,
+                DIM2D_WIDTH(icon->pixmap_size), DIM2D_HEIGHT(icon->pixmap_size),
+                0, 0);
+
+    XFree(title);
+}
+
+/**
  * Removes an icon from the icon row and reflows all the icons.
  * @param window The window representing the icon itself
  */
-void ClientManager::delete_icon(Window window)
+void ClientManager::delete_icon(Icon *icon)
 {
-    Icon *icon = m_icons[window];
-    XDestroyWindow(m_shared.display, window);
+    XUnmapWindow(m_shared.display, icon->window);
+    XDestroyWindow(m_shared.display, icon->window);
     XFreeGC(m_shared.display, icon->gc);
-    m_icons.erase(window);
-    free(icon);
+    m_icons.erase(icon->window);
+    delete icon;
 
     reflow_icons();
 }

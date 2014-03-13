@@ -75,6 +75,9 @@ void ClientManager::relayer()
             icon_iter != m_icons.end();
             icon_iter++)
     {
+        if (!icon_iter->second)
+            continue;
+
         XRaiseWindow(m_shared.display, icon_iter->first);
     }
 

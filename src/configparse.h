@@ -36,7 +36,9 @@ struct KeyboardConfig
         layer_below(XK_Page_Down),
         layer_top(XK_Home),
         layer_bottom(XK_End),
-        exit_wm(XK_Escape)
+        exit_wm(XK_Escape),
+        layer1(XK_1), layer2(XK_2), layer3(XK_3), layer4(XK_4), layer5(XK_5),
+        layer6(XK_6), layer7(XK_7), layer8(XK_8), layer9(XK_9)
     {};
 
     /// Moves the client to the desktop after its curreont one.
@@ -74,7 +76,18 @@ struct KeyboardConfig
         /// Puts a client onto the very bottom layer.
         layer_bottom,
         /// Exits the window manager.
-        exit_wm;
+        exit_wm,
+        
+        // Set the layers directly
+        layer1,
+        layer2,
+        layer3,
+        layer4,
+        layer5,
+        layer6,
+        layer7,
+        layer8,
+        layer9;
 };
 
 /**

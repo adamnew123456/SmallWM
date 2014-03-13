@@ -57,8 +57,14 @@ void ClientManager::update_desktop()
             client_iter++)
     {
         bool sticky = m_sticky[client_iter->first];
+        ClientState state = get_state(client_iter->first);
+
         if (sticky || client_iter->second == m_current_desktop)
-            state_transition(client_iter->first, CS_VISIBLE);
+        {
+            // Make sure that the focused window stays focused
+            if (state != CS_ACTIVE)
+                state_transition(client_iter->first, CS_VISIBLE);
+        }
         else
             state_transition(client_iter->first, CS_INVISIBLE);
     }

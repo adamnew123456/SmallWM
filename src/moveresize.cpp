@@ -2,6 +2,19 @@
 #include "clientmanager.h"
 
 /**
+ * Gets the client window corresponding to a placeholder.
+ * @param window The placeholder window
+ * @return The client window, or None
+ */
+Window ClientManager::get_from_placeholder(Window window)
+{
+    if (m_mvr.window == window)
+        return m_mvr.client;
+    else
+        return None;
+}
+
+/**
  * Creates placeholders for ClientManager::begin_moving and 
  * ClientManager::begin_resizing.
  * @param attr The attributes to give the window.
@@ -51,7 +64,7 @@ void ClientManager::begin_moving(Window window, const XWindowAttributes &attr)
             &_u2, &_u2, &_u3);
     
     m_mvr.ptr_loc = Dimension2D((Dimension)ptr_x, (Dimension)ptr_y);
-    m_clients[window] = CS_MOVING;
+    set_state(window, CS_MOVING);
 }
 
 /**
@@ -75,7 +88,7 @@ void ClientManager::begin_resizing(Window window, const XWindowAttributes &attr)
             &_u2, &_u2, &_u3);
     
     m_mvr.ptr_loc = Dimension2D(ptr_x, ptr_y);
-    m_clients[window] = CS_RESIZING;
+    set_state(window, CS_RESIZING);
 }
 
 /**

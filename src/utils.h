@@ -30,9 +30,9 @@ public:
     bool operator()(Key a, Key b)
     {
         if (!m_reversed)
-            return a < b;
+            return m_map[a] < m_map[b];
         else
-            return a > b;
+            return m_map[a] > m_map[b];
     };
 
 private:
