@@ -168,6 +168,18 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             set_state(window, CS_INVISIBLE);
             return;
         }
+        if (new_state == CS_MOVING)
+        {
+            unmap(window);
+            begin_moving(window, attr);
+            return;
+        }
+        if (new_state == CS_RESIZING)
+        {
+            unmap(window);
+            begin_resizing(window, attr);
+            return;
+        }
         if (new_state == CS_DESTROY)
         {
             destroy(window);
