@@ -4,8 +4,12 @@ CXX=/usr/bin/clang++
 CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 --std=c++11 -Itest -Iinih -Isrc
 LINKERFLAGS=-lXrandr -lX11
 BINS=bin/test_configparse
+OBJS=obj/ini.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/icons.o obj/layers.o obj/moveresize.o obj/utils.o
 
 all: ${BINS}
+
+# Used to probe for compiler errors, without linking everything
+check: ${OBJS}
 
 doc:
 	doxygen
