@@ -274,6 +274,9 @@ void ClientManager::create(Window window)
     if (attr.override_redirect)
         return;
 
+    if (is_client(window))
+        return;
+
     // Transient is the ICCCM term for a window which is a dialog of
     // another client.
     bool is_transient = false;
@@ -286,7 +289,7 @@ void ClientManager::create(Window window)
     XSetWindowBorderWidth(m_shared.display, window, m_shared.border_width);
 
     set_state(window, CS_VISIBLE);
-    m_layers[window] = is_transient ? 5 : DIALOG_LAYER;
+    m_layers[window] = is_transient ? DIALOG_LAYER : 5;
     m_sticky[window] = false;
     m_desktops[window] = m_current_desktop;
 
