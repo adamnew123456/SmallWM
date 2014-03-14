@@ -216,6 +216,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             delete_icon(icon);
             map(window);
             focus(window);
+            m_desktops[window] = m_current_desktop;
             return;
         }
         if (new_state == CS_DESTROY)
