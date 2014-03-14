@@ -1,25 +1,25 @@
 What is SmallWM?
 ================
 SmallWM is an extended version of TinyWM, made for actual desktop use.
+This is the newest version, rewritten in C++ - you can checkout the `legacy` branch if you want to use the old C version.
 
 Improvements over TinyWM
 ========================
-- Window Iconification - Windows can be hidden and placed in little rectangles at the top of the screen. Clicking the rectangles re-opens the client.
-- Window Layering - Windows can be layered, and layerings are enforced and persistent. Windows are layered in "levels" from 1 to 9; 1 is the lowest level and 9 is the highest level. The default level for all windows is 5.
-- Click-To-Focus - SmallWM reimplements an idea from 9wm, keeping the focusing code small.
-- Window Placeholders - SmallWM does not do window resizing and moving directly, because that is a graphically intensive operation. It instead uses placeholder windows that it deletes after moving.
-- Window Borders - Just a simple border to see the extent of a window.
-- Multiple Desktops - SmallWM can handle multiple desktops - they are rotated circularly, and their number can be configured.
-- Window Sticking - Along with multiple desktops, windows can be stuck to all the desktops.
-- Window Snapping - Windows can be moved to the top-half, bottom-half, left-half, or right-half of the screen.
-- Class Actions - SmallWM can apply certain transformations on a client depending upon what class it is
+- Window Iconification
+- Window Layering
+- Click-To-Focus (Focus Is Indicated By Colored Borders)
+- Moving/Resizing Placeholders
+- Multiple Virtual Desktops (With Window Sticking)
+- Window Snapping
+- Class Actions
 
 Controls
 ========
 
-These controls are defined in event.h, `keysym_callbacks[]`; to change the controls below, modify this file and recompile (make sure to use the `-B` flag to force the recompilation).
-
-Note that there are some shortcuts which are defined by the "current window"; this means the window that the pointer is hovering above, _not_ the currently focused window.
+Note that these are the default controls - one of the improvements of the C++ 
+port is that it SmallWM now supports configurable keybindings. See the __Configuration__
+for details on how to setup keybindings. The only unconfigurable key bindings are the
+ones that involve cliking the mouse, and the `Super+1` ... `Super+9` bindings.
 
 ## Desktops ##
 
@@ -45,15 +45,24 @@ Note that there are some shortcuts which are defined by the "current window"; th
 
 Building
 ========
-The Makefile contains everything you need to build and test SmallWM.
+As a dependency, you'll need to have acess to the headers for Xlib and XRandR.
+You should be able to easily obtain these via your package manager. You'll also
+need a C++ compiler which has C++11 support (although all it _really_ needs to
+support is std::tuple). A recent version of GNU G++ or clang should compile
+SmallWM with no problems.
 
-Namely, it has the following interesting targets:
- - `make smallwm-debug` compiles a version with symbols useful for debugging
- - `make smallwm-release` compiles an optimized version useful for daily use
+Other than the dependencies, the Makefile contains everything you need to build and test SmallWM.
+
+ - `make` compiles a version with symbols useful for debugging. Note that there is no optimized build - if you want open, open the Makefile and change `-g` to `-O3` in `CXXFLAGS`.
+
+For modifying SmallWM, the other target that you should be aware of is `make check` 
+which compiles everything but does no linking. This is useful for incremental building
+to track compiler errors in source files.
 
 Configuration
 =============
-With the rewrite in place, a few things about SmallWM can now be configured. A sample configuration file, located at `$HOME/.config/smallwm`, is shown below.
+
+The C++ version follows a similar configuration file format
 
     [smallwm]
     shell=your-preferred-terminal
@@ -62,30 +71,71 @@ With the rewrite in place, a few things about SmallWM can now be configured. A s
     icon_height=20
     border_width=4
     [actions]
-    stalonetray=stick,L9
+    stalonetray=stick,layer:9
+    [keyboard]
+    toggle-stick=asciitilde
+    snap-top=w
+    snap-bottom=s
+    snap-left=a
+    snap-right=d
 
 The options in the `[smallwm]` section are:
 
- - The shell launched by `Super+LClick` (default: xterm)
+ - The shell launched by `Super+LClick` (default: xterm). This can be any syntax supported by /bin/sh.
  - The number of desktops (default: 5)
  - The width in pixels of icons (default: 75)
  - The height in pixels of icons (default: 20)
  - The width of the border of windows(default: 4)
 
-The options in the `[actions]` section are covered next.
+The options in the `[actions]` section are covered next, and then the 
+`[keyboard]` section after that.
 
 Actions
 =======
 
-X has the notion of an application "class" which is supposed to be a unique identifier for a window which belongs to a particular application. For example, there is a popular system tray called `stalonetray` which I use personally to manage status notifiers (like for NetworkManager, Dropbox, and the like). A quick `xprop` of the window shows that its class name is `stalonetray`.
+X has the notion of an application "class" which is supposed to be a unique 
+identifier for a window which belongs to a particular application. For example, 
+there is a popular system tray called `stalonetray` which I use personally to 
+manage status notifiers (like for NetworkManager, Dropbox, and the like). A 
+quick `xprop` of the window shows that its class name is `stalonetray`.
 
-The example given in the _Configuration_ section shows how to stick any window belonging to stalonetray and layer it on top of all other applictaion windows. Generally speaking, any number of these class actions can be chained together by separating them with commas.
+The example given in the _Configuration_ section shows how to stick any window 
+belonging to stalonetray and layer it on top of all other applictaion windows. 
+Generally speaking, any number of these class actions can be chained together 
+by separating them with commas.
 
 The possibilities for a class action are:
  - `stick` makes a particular window stick to all the desktops
  - `maximize` maximizes that window
- - `Lx` sets the layer of the window to `x` where `x` is a number in the range 1 to 9
- - `snapleft`, `snapright`, `snaptop`, `snapbottom` snap the window to the relevant side of the screen
+ - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 1 to 9
+ - `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen
+
+Keyboard Bindings
+=================
+
+Starting with the C++ rewrite, keyboard bindings in SmallWM are almost entirely 
+(except for `Super+1` ... `Super+9`) configurable. The mechanism isn't that
+sophisticated, however, so make sure that you have a copy of /usr/include/X11/keysymdef.h
+or an equivalent file open.
+
+In order to bind a key, you first have to know the name of the "keysym" that the
+key uses. To do this, search keysymdef.h for your key - the keysym name is the first 
+word after the `#define`. The text that you put in the configuration file is the
+keysym name but with the leading `XK_` removed.
+
+The following options can be set under the `[keyboard]` section to configure SmallWM's
+keyboard bindings. Their meanings _should_ be fairly obvious.
+
+ - `client-next-desktop`, `client-prev-desktop`
+ - `next-desktop`, `prev-desktop`
+ - `toggle-stick`
+ - `iconify`
+ - `maximize`
+ - `request-close`
+ - `force-close`
+ - `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
+ - `layer-above`, `layer-below`, `layer-top`, `layer-bottom`
+ - `exit-wm` 
 
 Bugs/Todo
 =========
