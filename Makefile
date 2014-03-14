@@ -1,12 +1,12 @@
 CC=/usr/bin/gcc
-CFLAGS=-g
+CFLAGS=-O3
 CXX=/usr/bin/g++
 CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 --std=c++11 -Itest -Iinih -Isrc
 LINKERFLAGS=-lX11 -lXrandr
 BINS=bin/test_configparse bin/smallwm
 OBJS=obj/ini.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icons.o obj/layers.o obj/moveresize.o obj/smallwm.o obj/utils.o
 
-all: ${BINS}
+all: bin/smallwm
 
 # Used to probe for compiler errors, without linking everything
 check: ${OBJS}
