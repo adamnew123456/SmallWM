@@ -68,6 +68,10 @@ void ClientManager::update_desktop()
         else
             state_transition(client_iter->first, CS_INVISIBLE);
     }
+
+    // Since clients are mapped onto the screen in an arbitrary order,
+    // they have to be relayered to make sure they stack properly.
+    relayer();
 }
 
 /**

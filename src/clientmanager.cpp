@@ -294,7 +294,6 @@ void ClientManager::create(Window window)
     m_sticky[window] = false;
     m_desktops[window] = m_current_desktop;
 
-    relayer();
     update_desktop();
     apply_actions(window);
     focus(window);
