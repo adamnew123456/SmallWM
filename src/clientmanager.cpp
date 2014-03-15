@@ -193,6 +193,9 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         {
             map(window);
             set_state(window, CS_VISIBLE);
+            // Don't explicitly relayer, since only desktop changes will trigger
+            // this transition, and the desktop change function does the
+            // relayering itself.
             return;
         }
         if (new_state == CS_DESTROY)
@@ -217,6 +220,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             map(window);
             focus(window);
             m_desktops[window] = m_current_desktop;
+            relayer();
             return;
         }
         if (new_state == CS_DESTROY)
@@ -234,6 +238,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             map(window);
             end_move_resize();
             focus(window);
+            relayer();
             return;
         }
         if (new_state == CS_DESTROY)
@@ -251,6 +256,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             map(window);
             end_move_resize();
             focus(window);
+            relayer();
             return;
         }
         if (new_state == CS_DESTROY)
@@ -428,7 +434,6 @@ void ClientManager::apply_actions(Window window)
 void ClientManager::map(Window window)
 {
     XMapWindow(m_shared.display, window);
-    relayer();
 }
 
 /**
