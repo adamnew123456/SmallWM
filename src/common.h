@@ -10,20 +10,20 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <tuple>
+#include <utility>
 #include <unistd.h>
 
 /// A size of some kind.
 typedef unsigned int Dimension;
 /// The extend of some window or other surface.
-typedef std::tuple<Dimension,Dimension> Dimension2D;
+typedef std::pair<Dimension,Dimension> Dimension2D;
 
-// Some convienence wrappers for accessing width-height pairs
-#define DIM2D_WIDTH(dim2d) (std::get<0>((dim2d)))
-#define DIM2D_HEIGHT(dim2d) (std::get<1>((dim2d)))
-// More convienence wrappers for accessing x-y pairs
-#define DIM2D_X(dim2d) (std::get<0>((dim2d)))
-#define DIM2D_Y(dim2d) (std::get<1>((dim2d)))
+// Some convenience wrappers for accessing width-height pairs
+#define DIM2D_WIDTH(dim2d) ((dim2d).first)
+#define DIM2D_HEIGHT(dim2d) ((dim2d).second)
+// More convenience wrappers for accessing x-y pairs
+#define DIM2D_X(dim2d) ((dim2d).first)
+#define DIM2D_Y(dim2d) ((dim2d).second)
 
 /// The desktop number.
 typedef unsigned long long Desktop;
@@ -39,9 +39,6 @@ const Layer MAX_LAYER = 9,
       /// The default layer assigned to all windows.
       DEF_LAYER = 5;
     
-/// A value indicating that the current desktop value should be used.
-const Desktop THIS_DESKTOP = -1;
-
 /// The button to click to launch a terminal
 const int LAUNCH_BUTTON = 1,
       /// The button to click to move a client
