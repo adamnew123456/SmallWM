@@ -41,7 +41,7 @@ struct KeyboardConfig
         layer6(XK_6), layer7(XK_7), layer8(XK_8), layer9(XK_9)
     {};
 
-    /// Moves the client to the desktop after its curreont one.
+    /// Moves the client to the desktop after its current one.
     KeySym client_next_desktop,
         /// Moves the client to the desktop before its current one.
         client_prev_desktop,

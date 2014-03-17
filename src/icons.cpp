@@ -4,7 +4,7 @@
 /**
  * Gets the icon structure which is owns the given window.
  * @param window The window to find.
- * @return Either hte owning Icon, or NULL.
+ * @return Either the owning Icon, or NULL.
  */
 Icon *ClientManager::get_icon_of_client(Window window)
 {

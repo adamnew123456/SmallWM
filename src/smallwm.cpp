@@ -1,3 +1,4 @@
+/** @file */
 #include <csignal>
 #include <iostream>
 #include <sys/types.h>
@@ -11,7 +12,7 @@
 #include "shared.h"
 
 /**
- * Registers to recieve RandR events, and returns the offset at which RandR 
+ * Registers to receive RandR events, and returns the offset at which RandR 
  * events start.
  *
  * @return The RandR event offset
@@ -42,7 +43,8 @@ int register_xrandr(WMShared &shared)
 
         // Register the event hook to update the screen information later
         XRRSelectInput(shared.display, shared.root,
-                RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask | RROutputChangeNotifyMask | RROutputPropertyNotifyMask);
+                RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask 
+                | RROutputChangeNotifyMask | RROutputPropertyNotifyMask);
     }
     
     return xrandr_evt_base;
@@ -83,7 +85,7 @@ void reap_child(int signal)
 
 /**
  * Prints out X errors to enable diagnosis, but doesn't kill us.
- * @param display The display the error occured on
+ * @param display The display the error occurred on
  * @param event The error event that happened
  */
 int x_error_handler(Display *display, XErrorEvent *event)
@@ -92,13 +94,17 @@ int x_error_handler(Display *display, XErrorEvent *event)
     XGetErrorText(display, event->error_code, err_desc, 500);
 
     std::cout << "X Error\n";
-/**
+/*
+ * If you want diagnostics, then go ahead and uncomment this. However, SmallWM
+ * will trigger X errors that aren't fatal, and much of the output will be
+ * garbage.
+ *
     std::cout << "X Error: {\n\tdisplay = " << XDisplayName(NULL) 
         << "\n\tserial = " << event->serial
         << "\n\terror = '" << err_desc 
         << "'\n\trequest = " << (int)event->request_code 
         << "\n\tminor = " << (int)event->minor_code << "\n}\n";
-**/
+*/
 
     return 0;
 }

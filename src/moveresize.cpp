@@ -70,7 +70,7 @@ void ClientManager::begin_moving(Window window, const XWindowAttributes &attr)
 /**
  * Begins resizing a client.
  * @param window The client window to start resizing.
- * @param attr The attributes the cliet window had most recently.
+ * @param attr The attributes the client window had most recently.
  */
 void ClientManager::begin_resizing(Window window, const XWindowAttributes &attr)
 {

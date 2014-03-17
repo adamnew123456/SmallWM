@@ -23,10 +23,16 @@ template<typename Key, typename Value>
 class MappedVectorSorter 
 {
 public:
+    /// Initializes the builtin map and other parameters
     MappedVectorSorter(std::map<Key, Value> &map, bool reversed) :
         m_map(map), m_reversed(reversed)
     {};
 
+    /** Sorts to keys in the map according to their values.
+     * @param a The first key value.
+     * @param b The second key value.
+     * @return true if map[a] < map[b], otherwise false
+     */
     bool operator()(Key a, Key b)
     {
         if (!m_reversed)

@@ -63,7 +63,19 @@ int WMConfig::config_parser(void *user, const char *c_section,
         }
         if (name == std::string("desktops"))
         {
-            // Save the default value in case something goes wrong here
+            /* This example here is a general template for how all of these
+             * works:
+             *
+             *========================================
+             * type old_value = self->attribute;
+             *
+             * self->attribute = some_conversion();
+             * if (self->attribute is invalid)
+             * {
+             *     self->attribute = old_value;
+             * }
+             * =======================================
+             */
             Desktop old_value = self->num_desktops;
 
             self->num_desktops = strtoul(value.c_str(), NULL, 0);
@@ -120,7 +132,8 @@ int WMConfig::config_parser(void *user, const char *c_section,
         int opt_length;
         do
         {
-            int opt_length = std::strlen(option);
+            opt_length = std::strlen(option);
+
             stripped = new char[opt_length];
             strip_string(option, " \n\r\t", stripped);
 
@@ -168,81 +181,45 @@ int WMConfig::config_parser(void *user, const char *c_section,
         self->classactions[name] = action;
     }
 
-    // All of the keyboard bindings are hanled here - see configparse.h, and
+    // All of the keyboard bindings are handled here - see configparse.h, and
     // more specifically KeyboardConfig.
     if (section == std::string("keyboard"))
     {
-        if (name == std::string("client-next-desktop"))
-            self->key_commands.client_next_desktop =
-                string_to_keysym(value, XK_bracketright);
+/// A common template for all key binding declarations
+#define GET_KEY_BINDING(opt_name, attr, def_value) do { \
+        if (name == std::string(opt_name)) \
+            self->key_commands.attr = \
+                string_to_keysym(value, def_value); \
+    } while (0);
 
-        if (name == std::string("client-prev-desktop"))
-            self->key_commands.client_prev_desktop =
-                string_to_keysym(value, XK_bracketleft);
+        GET_KEY_BINDING("client-next-desktop", client_next_desktop, 
+                XK_bracketright);
+        GET_KEY_BINDING("client-prev-desktop", client_prev_desktop,
+                XK_bracketleft);
 
-        if (name == std::string("next-desktop"))
-            self->key_commands.next_desktop =
-                string_to_keysym(value, XK_period);
+        GET_KEY_BINDING("next-desktop", next_desktop, XK_period);
+        GET_KEY_BINDING("prev-desktop", prev_desktop, XK_comma);
+        GET_KEY_BINDING("toggle-stick", toggle_stick, XK_backslash);
 
-        if (name == std::string("prev-desktop"))
-            self->key_commands.prev_desktop =
-                string_to_keysym(value, XK_comma);
+        GET_KEY_BINDING("iconify", iconify, XK_h);
 
-        if (name == std::string("toggle-stick"))
-            self->key_commands.toggle_stick =
-                string_to_keysym(value, XK_backslash);
+        GET_KEY_BINDING("maximize", maximize, XK_m);
 
-        if (name == std::string("iconify"))
-            self->key_commands.iconify =
-                string_to_keysym(value, XK_h);
+        GET_KEY_BINDING("request-close", request_close, XK_c);
+        GET_KEY_BINDING("force-close", force_close, XK_x);
 
-        if (name == std::string("maximize"))
-            self->key_commands.maximize =
-                string_to_keysym(value, XK_m);
+        GET_KEY_BINDING("snap-top", snap_top, XK_Up);
+        GET_KEY_BINDING("snap-bottom", snap_bottom, XK_Down);
+        GET_KEY_BINDING("snap-left", snap_left, XK_Left);
+        GET_KEY_BINDING("snap-right", snap_right, XK_Right);
 
-        if (name == std::string("request-close"))
-            self->key_commands.request_close =
-                string_to_keysym(value, XK_c);
+        GET_KEY_BINDING("layer-above", layer_above, XK_Page_Up);
+        GET_KEY_BINDING("layer-below", layer_below, XK_Page_Down);
+        GET_KEY_BINDING("layer-top", layer_top, XK_Home);
+        GET_KEY_BINDING("layer-bottom", layer_bottom, XK_End);
 
-        if (name == std::string("force-close"))
-            self->key_commands.force_close =
-                string_to_keysym(value, XK_x);
-
-        if (name == std::string("snap-top"))
-            self->key_commands.snap_top = 
-                string_to_keysym(value, XK_Up);
-
-        if (name == std::string("snap-bottom"))
-            self->key_commands.snap_bottom =
-                string_to_keysym(value, XK_Down);
-
-        if (name == std::string("snap-left"))
-            self->key_commands.snap_left =
-                string_to_keysym(value, XK_Left);
-
-        if (name == std::string("snap-right"))
-            self->key_commands.snap_right =
-                string_to_keysym(value, XK_Right);
-
-        if (name == std::string("layer-above"))
-            self->key_commands.layer_above = 
-                string_to_keysym(value, XK_Page_Up);
-
-        if (name == std::string("layer-below"))
-            self->key_commands.layer_below =
-                string_to_keysym(value, XK_Page_Down);
-
-        if (name == std::string("layer-top"))
-            self->key_commands.layer_top =
-                string_to_keysym(value, XK_Home);
-
-        if (name == std::string("layer-bottom"))
-            self->key_commands.layer_bottom =
-                string_to_keysym(value, XK_End);
-
-        if (name == std::string("exit-wm"))
-            self->key_commands.exit_wm =
-                string_to_keysym(value, XK_Escape);
+        GET_KEY_BINDING("exit-wm", exit_wm, XK_Escape);
+#undef GET_KEY_BINDING
     }
 
     return 0;

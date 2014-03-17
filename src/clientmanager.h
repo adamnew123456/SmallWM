@@ -15,42 +15,8 @@
  * A complete listing of all the possible states that each client is capable of
  * being in.
  *
- * @dot
- * digraph ClientStates {
- *     active;
- *     visible;
- *     invisible;
- *     icon;
- *     moving;
- *     resizing;
- *     destroy;
- *
- *     active -> visible [label = "unfocus"];
- *     active -> invislbe [label = "unfocus,hide"];
- *     active -> icon [label = "unfocus,hide,make-icon"];
- *     active -> moving [label = "unfocus,hide,make-placeholder"];
- *     active -> resizing [label = "unfocus,hide,make-placeholder"];
- *     active -> destroy [label = "unfocus*,delete"];
- *
- *     visible -> active [label = "focus"];
- *     visible -> invisible [label = "hide"];
- *     visible -> destroy [label = "delete"];
- *
- *     invisible -> visible [label = "show"];
- *     invisible -> destroy [label = "delete"];
- *
- *     icon -> active [label = "delete-icon,show,focus"];
- *     icon -> destroy [label = "delete-icon,delete"];
- *
- *     moving -> moving [label = "update"];
- *     moving -> active [label = "delete-placeholder,show,focus"];
- *     moving -> destroy [label = "delete-placeholder"];
- *
- *     resizing -> resizing [label = "update"];
- *     resizing -> active [label = "delete-placeholder,show,focus"];
- *     resizing -> destroy [label = "delete-placeholder"];
- * }
- * @enddot
+ * Keeping an explicit FSM in the code makes it _much_ easier to modify. The FSM
+ * itself is implemented in ClientManager::state_transition
  */
 enum ClientState {
     /// Active clients are visible to the user and can be interacted with
@@ -103,8 +69,6 @@ struct Icon
         pixmap_size(0, 0)
     {};
 
-    std::string to_string();
-        
     /// The window that the icon is drawn upon
     Window window;
 
@@ -129,10 +93,15 @@ struct Icon
  * A container and 'state manager' for all of the clients. It manages how clients
 * transition between ClientStates, by rejecting invalid states and performing
  * the appropriate operations on valid state transitions.
+ *
+ * It is currently a bit large - perhaps I'll refactor it soon, but until then
+ * keeping the members spread across different source file keeps the code
+ * readable.
  */
 class ClientManager
 {
 public:
+    /// Initialize the share data and the current desktop
     ClientManager(WMShared &shared) :
         m_shared(shared), m_current_desktop(1)
     {};
@@ -207,7 +176,7 @@ private:
     /// Data used to manage moving/resizing clients
     MoveResize m_mvr;
 
-    /// A relation between each client and its curernt layer
+    /// A relation between each client and its current layer
     std::map<Window, Layer> m_layers;
 
     /// The current desktop the user is viewing

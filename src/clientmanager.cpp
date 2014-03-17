@@ -96,7 +96,7 @@ void ClientManager::handle_motion(const XEvent &event)
 
 /**
  * Transitions from one state to another, given a client window.
- * @param window The client to transition (or the icon window)
+ * @param window The client to transition.
  * @param new_state The new state to attempt to transition to.
  */
 void ClientManager::state_transition(Window window, ClientState new_state)
@@ -111,6 +111,17 @@ void ClientManager::state_transition(Window window, ClientState new_state)
     XGetWindowAttributes(m_shared.display, window, &attr);
 
     ClientState old_state = get_state(window);
+    
+    /*
+     * An active (i.e. focused) window can do anything:
+     *
+     *  active  -> icon
+     *          -> visible
+     *          -> invisible
+     *          -> moving
+     *          -> resizing
+     *          -> destroy
+     */
     if (old_state == CS_ACTIVE)
     {
         if (new_state == CS_ICON)
@@ -155,8 +166,24 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
     }
 
+    /*
+     * Visible (unfocused, but viewable) windows can also do anything:
+     *
+     *  visible     -> icon
+     *              -> active
+     *              -> invisible
+     *              -> moving
+     *              -> resizing
+     *              -> destroy
+     */
     if (old_state == CS_VISIBLE)
     {
+        if (new_state == CS_ICON)
+        {
+            unmap(window);
+            make_icon(window);
+            return;
+        }
         if (new_state == CS_ACTIVE)
         {
             focus(window);
@@ -187,6 +214,12 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
     }
 
+    /*
+     * Invisible windows (those on other desktops) can only be made visible.
+     *
+     * invisible    -> visible
+     *              -> destroy
+     */
     if (old_state == CS_INVISIBLE)
     {
         if (new_state == CS_VISIBLE)
@@ -205,8 +238,16 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
     }
 
+    /*
+     * Iconified windows can only be unhidden, which automatically focuses them.
+     * 
+     * icon -> active
+     *      -> destroy
+     */
     if (old_state == CS_ICON)
     {
+        // state_transition is required to take a client window, so the icon
+        // also needs to be retrieved.
         Icon *icon = get_icon_of_client(window);
 
         if (!icon)
@@ -231,6 +272,13 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
     }
 
+    /*
+     * Windows which are currently being moved by the user can only become
+     * active again.
+     *
+     * moving   -> active
+     *          -> destroy
+     */
     if (old_state == CS_MOVING)
     {
         if (new_state == CS_ACTIVE)
@@ -249,6 +297,12 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
     }
 
+    /*
+     * Windows which are being resized by the user can only become active again.
+     *
+     * resizing -> active
+     *          -> destroy
+     */
     if (old_state == CS_RESIZING)
     {
         if (new_state == CS_ACTIVE)
@@ -274,18 +328,19 @@ void ClientManager::state_transition(Window window, ClientState new_state)
  */
 void ClientManager::create(Window window)
 {
-    // Ignore any non-managable windows
+    // Ignore any windows which cannot be managed
     XWindowAttributes attr;
     XGetWindowAttributes(m_shared.display, window, &attr);
 
     if (attr.override_redirect)
         return;
 
+    // Avoid double-creating clients
     if (is_client(window))
         return;
 
     // Transient is the ICCCM term for a window which is a dialog of
-    // another client.
+    // another client
     bool is_transient = false;
 
     Window transient_for;
@@ -306,8 +361,8 @@ void ClientManager::create(Window window)
 }
 
 /**
- * Removes a now non-existant client from the registry.
- * @param window The now non-existant window to delete.
+ * Removes a now non-existent client from the registry.
+ * @param window The now non-existent window to delete.
  */
 void ClientManager::destroy(Window window)
 {
@@ -324,6 +379,8 @@ void ClientManager::destroy(Window window)
  */
 void ClientManager::close(Window window)
 {
+    // Although it would be nice to use C style constructors, GNU C++ doesn't
+    // allow me to compile them when they are nested
     XEvent close_event;
     XClientMessageEvent client_close;
     client_close.type = ClientMessage;
@@ -352,6 +409,8 @@ void ClientManager::focus(Window window)
         {
             // Make sure to unfocus this client before moving on
             state_transition(client_iter->first, CS_VISIBLE);
+
+            // Only window can be focused at once, so this is the only one
             break;
         }
     }
