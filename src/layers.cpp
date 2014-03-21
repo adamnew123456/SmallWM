@@ -10,10 +10,10 @@ void ClientManager::raise_layer(Window window)
     if (!is_client(window))
         return;
 
-    Layer current = m_layers[current];
+    Layer current = m_layers[window];
     if (current < MAX_LAYER)
     {
-        m_layers[current]++;
+        m_layers[window]++;
         relayer();
     }
 }
@@ -27,10 +27,10 @@ void ClientManager::lower_layer(Window window)
     if (!is_client(window))
         return;
 
-    Layer current = m_layers[current];
+    Layer current = m_layers[window];
     if (current > MIN_LAYER)
     {
-        m_layers[current]--;
+        m_layers[window]--;
         relayer();
     }
 }
