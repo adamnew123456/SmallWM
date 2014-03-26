@@ -131,7 +131,8 @@ int main()
     shared.root = DefaultRootWindow(shared.display);
     shared.screen = DefaultScreen(shared.display);
 
-    XSelectInput(shared.display, shared.root, PointerMotionMask | SubstructureNotifyMask);
+    XSelectInput(shared.display, shared.root, 
+            PointerMotionMask | StructureNotifyMask | SubstructureNotifyMask);
 
     Window _unused1;
     Window *children;

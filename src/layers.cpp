@@ -84,4 +84,9 @@ void ClientManager::relayer()
     // Finally, put the placeholder on the top, if there is one
     if (m_mvr.window != None)
         XRaiseWindow(m_shared.display, m_mvr.window);
+
+    // We just generated a lot of ConfigureNotify events. We need to get rid of
+    // them so that we don't trigger anything recursive
+    XEvent _;
+    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
 }

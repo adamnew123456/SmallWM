@@ -69,6 +69,9 @@ void XEvents::run()
         if (m_event.type == Expose)
             handle_expose();
 
+        if (m_event.type == ConfigureNotify)
+            handle_configurenotify();
+
         if (m_event.type == DestroyNotify)
             handle_destroynotify();
     }
@@ -268,6 +271,19 @@ void XEvents::handle_mapnotify()
 void XEvents::handle_expose()
 {
     m_clients.redraw_icon(m_event.xexpose.window);
+}
+
+/**
+ * ConfigureNotify has _a lot_ of uses - the one we care about is that a window
+ * has tried to raise itself. We don't want that to happen, since we need to
+ * keep the layers of everything consistent.
+ */
+void XEvents::handle_configurenotify()
+{
+    // If we're not managing this window, then don't trigger any updates in
+    // response to it
+    if (!m_event.xconfigure.override_redirect)
+        m_clients.relayer();
 }
 
 /**

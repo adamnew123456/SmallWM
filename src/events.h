@@ -22,6 +22,7 @@ public:
     void handle_motionnotify();
     void handle_mapnotify();
     void handle_expose();
+    void handle_configurenotify();
     void handle_destroynotify();
 
     void handle_rrnotify();

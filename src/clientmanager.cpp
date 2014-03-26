@@ -339,6 +339,10 @@ void ClientManager::create(Window window)
     if (is_client(window))
         return;
 
+    // Track ConfigureNotify events, so that way client-initiated relayering
+    // can be undone
+    XSelectInput(m_shared.display, window, StructureNotifyMask);
+
     // Transient is the ICCCM term for a window which is a dialog of
     // another client
     bool is_transient = false;
@@ -358,6 +362,11 @@ void ClientManager::create(Window window)
     update_desktop();
     apply_actions(window);
     focus(window);
+
+    // If anything modifications to the new client generated ConfigureNotify
+    // events, then make sure to get rid of them
+    XEvent _;
+    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
 }
 
 /**

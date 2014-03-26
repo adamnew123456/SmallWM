@@ -102,6 +102,10 @@ void ClientManager::end_move_resize()
     end_move_resize_unsafe();
 
     XMoveResizeWindow(m_shared.display, m_mvr.client, attr.x, attr.y, attr.width, attr.height);
+
+    // Moving/resizing a window generates ConfigureNotify events - dump them
+    XEvent _;
+    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
 }
 
 /**
