@@ -58,7 +58,7 @@ void ClientManager::make_icon(Window window)
     // Gets the pixmap for this icon, if one actually exists, as well as its
     // dimensions
     XWMHints *hints = XGetWMHints(m_shared.display, icon->client);
-    if (hints && hints->flags & IconPixmapHint)
+    if (m_shared.show_icons && hints && hints->flags & IconPixmapHint)
     {
         icon->has_pixmap = true;
         icon->pixmap = hints->icon_pixmap;

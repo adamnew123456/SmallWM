@@ -63,6 +63,7 @@ void copy_config(WMConfig &config, WMShared &shared, ClientManager &clients)
     shared.icon_size = Dimension2D(config.icon_width, config.icon_height);
     shared.border_width = config.border_width;
     shared.max_desktops = config.num_desktops;
+    shared.show_icons = config.show_icons;
 
     for (std::map<std::string,ClassActions>::iterator actions_iter 
             = config.classactions.begin();

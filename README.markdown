@@ -74,9 +74,10 @@ version, but with some extended options. For example:
     [smallwm]
     shell=your-preferred-terminal
     desktops=42
-    icon_width=75
-    icon_height=20
-    border_width=4
+    icon-width=75
+    icon-height=20
+    border-width=4
+    icon-icons=0
     [actions]
     stalonetray=stick,layer:9
     [keyboard]
@@ -86,13 +87,14 @@ version, but with some extended options. For example:
     snap-left=a
     snap-right=d
 
-The options in the `[smallwm]` section are:
+The options in the `[smallwm]` section are (in order):
 
  - The shell launched by `Super+LClick` (default: xterm). This can be any syntax supported by /bin/sh.
  - The number of desktops (default: 5)
  - The width in pixels of icons (default: 75)
  - The height in pixels of icons (default: 20)
- - The width of the border of windows(default: 4)
+ - The width of the border of windows (default: 4)
+ - Whether to (1) or not to (0) show application icons inside icon windows. (default: 1)
 
 The options in the `[actions]` section are covered next, and then the 
 `[keyboard]` section after that.

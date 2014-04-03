@@ -114,6 +114,20 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 self->border_width = old_value;
             }
         }
+        if (name == std::string("icon-icons"))
+        {
+            bool old_value = self->show_icons;
+
+            unsigned long as_long = strtoul(value.c_str(), NULL, -1);
+            if (as_long != 0 && as_long != 1)
+            {
+                self->show_icons = old_value;
+            }
+            else
+            {
+                self->show_icons = as_long == 1 ? true : false;
+            }
+        }
     }
 
     if (section == std::string("actions"))

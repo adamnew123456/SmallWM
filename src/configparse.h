@@ -98,7 +98,8 @@ class WMConfig
 public:
     /// Loads a couple of defaults for the WMConfig.
     WMConfig() : shell("/usr/bin/xterm"), num_desktops(5), 
-        icon_width(75), icon_height(20), border_width(2) {};
+        icon_width(75), icon_height(20), border_width(2),
+        show_icons(true) {};
     
     void load();
     
@@ -121,6 +122,9 @@ public:
 
     /// Handles all the configured class actions.
     std::map<std::string, ClassActions> classactions;
+
+    /// Whether or not to show images inside icons for hidden windows
+    bool show_icons;
 
 protected:
     virtual std::string get_config_path() const;

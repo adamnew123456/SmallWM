@@ -30,6 +30,9 @@ struct WMShared {
 
     /// The shell to launch
     std::string shell;
+
+    /// Whether or not to show application icons inside icon windows
+    bool show_icons;
 };
 
 #endif
