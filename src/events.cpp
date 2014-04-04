@@ -87,6 +87,9 @@ void XEvents::handle_keypress()
     keysym = XGetKeyboardMapping(m_shared.display, m_event.xkey.keycode, 1, &nkeys);
 
     Window client = m_event.xkey.subwindow;
+    if (client == None)
+        client = m_event.xkey.window;
+
     if (*keysym == m_keyboard.client_next_desktop)
         m_clients.to_next_desktop(client);
 
@@ -114,7 +117,13 @@ void XEvents::handle_keypress()
     // Note that m_clients.destroy() is not usable here, since it must be called
     // _after_ the window has been removed
     if (*keysym == m_keyboard.force_close)
+    {
+        // Make sure that the window isn't an icon before we nuke it
+        if (m_clients.get_icon_of_icon(client))
+            return;
+
         XDestroyWindow(m_shared.display, client);
+    }
 
     if (*keysym == m_keyboard.snap_top)
         m_clients.snap(client, SNAP_TOP);
