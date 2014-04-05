@@ -8,7 +8,9 @@
  */
 bool ClientManager::is_client(Window window)
 {
-    return m_clients.count(window) > 0;
+    // Fixes a strange bug, where the state of a window would be set to 0 for
+    // no apparent reason, even though the window was destroyed.
+    return m_clients[window] != 0;
 }
 
 /**
