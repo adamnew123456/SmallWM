@@ -7,34 +7,12 @@
 #include <vector>
 
 #include "actions.h"
+#include "clients.h"
 #include "common.h"
+#include "layers.h"
 #include "shared.h"
 #include "utils.h"
 
-/**
- * A complete listing of all the possible states that each client is capable of
- * being in.
- *
- * Keeping an explicit FSM in the code makes it _much_ easier to modify. The FSM
- * itself is implemented in ClientManager::state_transition
- */
-enum ClientState {
-    /// Active clients are visible to the user and can be interacted with
-    CS_ACTIVE = 1,
-    /// Visible clients are visible but do not have the input focused
-    CS_VISIBLE,
-    /// Iconified clients are not visible, but have an icon on the top of the screen
-    CS_ICON,
-    /// Invisible clients are on a different desktop from the one the user is 
-    /// currently on
-    CS_INVISIBLE,
-    /// Clients which are currently being moved by the user
-    CS_MOVING,
-    /// Clients which are currently being resized by the user
-    CS_RESIZING,
-    /// A client has already been destroyed
-    CS_DESTROY,
-};
 
 /**
  * Data which is used to manage a window which is currently being moved or
@@ -98,23 +76,28 @@ struct Icon
  * keeping the members spread across different source file keeps the code
  * readable.
  */
-class ClientManager
+class ClientManager : 
+    protected ClientContainer, public LayerManager
 {
 public:
     /// Initialize the share data and the current desktop
     ClientManager(WMShared &shared) :
+        LayerManager::LayerManager((ClientContainer*)this, shared),
         m_shared(shared), m_current_desktop(1)
     {};
 
-    bool is_client(Window);
-    bool is_visible(Window);
+    using ClientContainer::is_client;
+    using ClientContainer::is_visible;
+    using ClientContainer::clients_begin;
+    using ClientContainer::clients_end;
+    using ClientContainer::get_state;
+
     Icon *get_icon_of_client(Window);
     Icon *get_icon_of_icon(Window);
     Window get_from_placeholder(Window);
 
     void register_action(std::string, ClassActions);
 
-    ClientState get_state(Window);
     void handle_motion(const XEvent&);
     void state_transition(Window, ClientState);
 
@@ -127,9 +110,6 @@ public:
 
     void redraw_icon(Window);
 
-    void raise_layer(Window);
-    void lower_layer(Window);
-    void set_layer(Window, Layer);
     void relayer();
 
     void flip_sticky_flag(Window);
@@ -141,7 +121,6 @@ public:
     void prev_desktop();
 
 private:
-    void set_state(Window, ClientState);
     void apply_actions(Window);
 
     void map(Window);
@@ -175,9 +154,6 @@ private:
 
     /// Data used to manage moving/resizing clients
     MoveResize m_mvr;
-
-    /// A relation between each client and its current layer
-    std::map<Window, Layer> m_layers;
 
     /// The current desktop the user is viewing
     Desktop m_current_desktop;

@@ -2,29 +2,6 @@
 #include "clientmanager.h"
 
 /**
- * Check to see if a window is a registered client window.
- * @param window The window to check.
- * @return Whether or not the window represents a client.
- */
-bool ClientManager::is_client(Window window)
-{
-    // Fixes a strange bug, where the state of a window would be set to 0 for
-    // no apparent reason, even though the window was destroyed.
-    return m_clients[window] != 0;
-}
-
-/**
- * Make sure that a client is mapped onto the display.
- * @param window The client window to check.
- * @return Whether the client window is visible or not.
- */
-bool ClientManager::is_visible(Window window)
-{
-    ClientState state = get_state(window);
-    return (state == CS_ACTIVE) || (state == CS_VISIBLE);
-}
-
-/**
  * Registers a group of actions with a particular X11 class.
  * @param x_class The window class to associate with
  * @param actions The ClassActions to run for that window
@@ -35,23 +12,32 @@ void ClientManager::register_action(std::string x_class, ClassActions actions)
 }
 
 /**
- * Gets the state of a particular client.
- * @param window The window of the client.
- * @return The state of the client which owns the window.
+ * Adjusts the layer of everything - first the clients, then the icons, and
+ * finally the currently moving window
  */
-ClientState ClientManager::get_state(Window window)
+void ClientManager::relayer()
 {
-    return m_clients[window];
-}
+    relayer_clients();
 
-/**
- * Sets the state of the window.
- * @param window The window of the client
- * @param state The state to set
- */
-void ClientManager::set_state(Window window, ClientState state)
-{
-    m_clients[window] = state;
+    // Now, go back and put all of the icons on the top
+    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        if (!icon_iter->second)
+            continue;
+
+        XRaiseWindow(m_shared.display, icon_iter->first);
+    }
+
+    // Finally, put the placeholder on the top, if there is one
+    if (m_mvr.window != None)
+        XRaiseWindow(m_shared.display, m_mvr.window);
+
+    // We just generated a lot of ConfigureNotify events. We need to get rid of
+    // them so that we don't trigger anything recursive
+    XEvent _;
+    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
 }
 
 /** 
@@ -84,9 +70,10 @@ void ClientManager::handle_motion(const XEvent &event)
     switch (state)
     {
         case CS_MOVING:
+        {
             XMoveWindow(m_shared.display, m_mvr.window, 
                     attr.x + xdiff, attr.y + ydiff);
-            break;
+        } break;
         case CS_RESIZING:
         {
             Dimension width = std::max<Dimension>(attr.width + xdiff, 1),
@@ -357,7 +344,7 @@ void ClientManager::create(Window window)
     XSetWindowBorderWidth(m_shared.display, window, m_shared.border_width);
 
     set_state(window, CS_VISIBLE);
-    m_layers[window] = is_transient ? DIALOG_LAYER : 5;
+    set_layer(window, is_transient ? DIALOG_LAYER : 5);
     m_sticky[window] = false;
     m_desktops[window] = m_current_desktop;
 
@@ -377,11 +364,10 @@ void ClientManager::create(Window window)
  */
 void ClientManager::destroy(Window window)
 {
-
-    m_layers.erase(window);
+    delete_layer(window);
     m_desktops.erase(window);
     m_sticky.erase(window);
-    m_clients.erase(window);
+    delete_state(window);
 }
 
 /**
@@ -412,8 +398,8 @@ void ClientManager::close(Window window)
 void ClientManager::focus(Window window)
 {
     // Find the currently focused window
-    for (std::map<Window,ClientState>::iterator client_iter = m_clients.begin();
-            client_iter != m_clients.end();
+    for (std::map<Window,ClientState>::iterator client_iter = clients_begin();
+            client_iter != clients_end();
             client_iter++)
     {
         if (client_iter->second == CS_ACTIVE)

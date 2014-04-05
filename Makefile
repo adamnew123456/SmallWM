@@ -1,17 +1,19 @@
 CC=/usr/bin/gcc
 CFLAGS=-O3
-CXX=/usr/bin/g++
+CXX=/usr/bin/clang++
 CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 -Itest -Iinih -Isrc
 LINKERFLAGS=-lX11 -lXrandr
 BINS=bin/test_configparse bin/smallwm
-OBJS=obj/ini.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icons.o obj/layers.o obj/moveresize.o obj/smallwm.o obj/utils.o
+OBJS=obj/ini.o obj/clients.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icons.o obj/layers.o obj/moveresize.o obj/smallwm.o obj/utils.o
+HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/events.h src/layers.h src/shared.h src/utils.h
+SRCS=src/clients.cpp src/clientmanager.cpp src/configparse.cpp src/desktops.cpp src/events.cpp src/icons.cpp src/layers.cpp src/moveresize.cpp src/smallwm.cpp src/utils.cpp
 
 all: bin/smallwm
 
 # Used to probe for compiler errors, without linking everything
 check: ${OBJS}
 
-doc:
+doc: ${HEADERS} ${SRCS}
 	doxygen
 
 obj:
@@ -19,6 +21,9 @@ obj:
 
 obj/ini.o: obj inih/ini.c
 	${CC} ${CFLAGS} -c inih/ini.c -o obj/ini.o
+
+obj/clients.o: obj src/clients.cpp
+	${CXX} ${CXXFLAGS} -c src/clients.cpp -o obj/clients.o
 
 obj/configparse.o: obj src/configparse.cpp
 	${CXX} ${CXXFLAGS} -c src/configparse.cpp -o obj/configparse.o
