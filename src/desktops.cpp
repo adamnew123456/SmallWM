@@ -5,21 +5,50 @@
  * Makes a sticky client unsticky, and an unsticky client sticky.
  * @param window The client window to stick/unstick.
  */
-void ClientManager::flip_sticky_flag(Window window)
+void DesktopManager::flip_sticky_flag(Window window)
 {
-    if (!is_client(window))
+    if (!m_clients->is_client(window))
         return;
 
     m_sticky[window] = !m_sticky[window];
 }
 
 /**
+ * Puts a client onto the current desktop.
+ * @param window The client to move.
+ */
+void DesktopManager::reset_desktop(Window window)
+{
+    m_desktops[window] = m_current_desktop;
+}
+
+/**
+ * Sets the desktop of a client to the current desktop.
+ * @param window The client to initialize.
+ */
+void DesktopManager::add_desktop(Window window)
+{
+    reset_desktop(window);
+    m_sticky[window] = false;
+}
+
+/**
+ * Sets the current desktop of a client.
+ * @param window The client.
+ * @param desktop The desktop to put the client on.
+ */
+void DesktopManager::set_desktop(Window window, Desktop desktop)
+{
+    m_desktops[window] = desktop;
+}
+
+/**
  * Moves a client to the desktop after its current one.
  * @param window The client window to relocate.
  */
-void ClientManager::to_next_desktop(Window window)
+void DesktopManager::to_next_desktop(Window window)
 {
-    if (!is_client(window))
+    if (!m_clients->is_client(window))
         return;
 
     if (m_desktops[window] == m_shared.max_desktops)
@@ -27,16 +56,16 @@ void ClientManager::to_next_desktop(Window window)
     else
         m_desktops[window]++;
 
-    update_desktop();
+    m_clients->redesktop();
 }
 
 /**
  * Moves a client to the desktop before its current one.
  * @param window The client window to relocate.
  */
-void ClientManager::to_prev_desktop(Window window)
+void DesktopManager::to_prev_desktop(Window window)
 {
-    if (!is_client(window))
+    if (!m_clients->is_client(window))
         return;
 
     if (m_desktops[window] == 1)
@@ -44,58 +73,64 @@ void ClientManager::to_prev_desktop(Window window)
     else
         m_desktops[window]--;
 
-    update_desktop();
+    m_clients->redesktop();
+}
+
+/**
+ * Removes a client from the desktop/sticky list.
+ * @param window The client to remove.
+ */
+void DesktopManager::delete_desktop(Window window)
+{
+    m_desktops.erase(window);
+    m_sticky.erase(window);
 }
 
 /**
  * Shows/hides the clients which should/should not be visible on the current desktop.
  */
-void ClientManager::update_desktop()
+void DesktopManager::update_desktop()
 {
     for (std::map<Window,Desktop>::iterator client_iter = m_desktops.begin();
             client_iter != m_desktops.end();
             client_iter++)
     {
         bool sticky = m_sticky[client_iter->first];
-        ClientState state = get_state(client_iter->first);
+        ClientState state = m_clients->get_state(client_iter->first);
 
         if (sticky || client_iter->second == m_current_desktop)
         {
             // Make sure that the focused window stays focused
             if (state != CS_ACTIVE)
-                state_transition(client_iter->first, CS_VISIBLE);
+                m_clients->state_transition(client_iter->first, CS_VISIBLE);
         }
         else
-            state_transition(client_iter->first, CS_INVISIBLE);
+            m_clients->state_transition(client_iter->first, CS_INVISIBLE);
     }
-
-    // Since clients are mapped onto the screen in an arbitrary order,
-    // they have to be relayered to make sure they stack properly.
-    relayer();
 }
 
 /**
  * Switches the user's viewport to the next desktop.
  */
-void ClientManager::next_desktop()
+void DesktopManager::next_desktop()
 {
     if (m_current_desktop == m_shared.max_desktops)
         m_current_desktop = 1;
     else
         m_current_desktop++;
 
-    update_desktop();
+    m_clients->redesktop();
 }
 
 /**
  * Switches a user's viewport to the previous desktop.
  */
-void ClientManager::prev_desktop()
+void DesktopManager::prev_desktop()
 {
     if (m_current_desktop == 1)
         m_current_desktop = m_shared.max_desktops;
     else
         m_current_desktop--;
 
-    update_desktop();
+    m_clients->redesktop();
 }

@@ -40,6 +40,15 @@ void ClientManager::relayer()
     while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
 }
 
+/**
+ * A wrapper around DesktopManager::update_desktop which does relayering.
+ */
+void ClientManager::redesktop()
+{
+    update_desktop();
+    relayer();
+}
+
 /** 
  * Handle a motion event, which updates the client which is currently being
  * moved or resized.
@@ -249,7 +258,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             delete_icon(icon);
             map(window);
             focus(window);
-            m_desktops[window] = m_current_desktop;
+            reset_desktop(window);
             relayer();
             return;
         }
@@ -345,10 +354,9 @@ void ClientManager::create(Window window)
 
     set_state(window, CS_VISIBLE);
     set_layer(window, is_transient ? DIALOG_LAYER : 5);
-    m_sticky[window] = false;
-    m_desktops[window] = m_current_desktop;
+    add_desktop(window);
 
-    update_desktop();
+    redesktop();
     apply_actions(window);
     focus(window);
 
@@ -365,8 +373,7 @@ void ClientManager::create(Window window)
 void ClientManager::destroy(Window window)
 {
     delete_layer(window);
-    m_desktops.erase(window);
-    m_sticky.erase(window);
+    delete_desktop(window);
     delete_state(window);
 }
 

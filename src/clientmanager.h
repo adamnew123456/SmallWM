@@ -9,6 +9,7 @@
 #include "actions.h"
 #include "clients.h"
 #include "common.h"
+#include "desktops.h"
 #include "layers.h"
 #include "shared.h"
 #include "utils.h"
@@ -77,13 +78,15 @@ struct Icon
  * readable.
  */
 class ClientManager : 
-    protected ClientContainer, public LayerManager
+    protected ClientContainer, protected LayerManager,
+    protected DesktopManager
 {
 public:
     /// Initialize the share data and the current desktop
     ClientManager(WMShared &shared) :
         LayerManager::LayerManager((ClientContainer*)this, shared),
-        m_shared(shared), m_current_desktop(1)
+        DesktopManager::DesktopManager((ClientContainer*)this, shared),
+        m_shared(shared)
     {};
 
     using ClientContainer::is_client;
@@ -92,6 +95,17 @@ public:
     using ClientContainer::clients_end;
     using ClientContainer::get_state;
 
+    using LayerManager::raise_layer;
+    using LayerManager::lower_layer;
+    using LayerManager::set_layer;
+
+    using DesktopManager::flip_sticky_flag;
+    using DesktopManager::set_desktop;
+    using DesktopManager::to_next_desktop;
+    using DesktopManager::to_prev_desktop;
+    using DesktopManager::next_desktop;
+    using DesktopManager::prev_desktop;
+
     Icon *get_icon_of_client(Window);
     Icon *get_icon_of_icon(Window);
     Window get_from_placeholder(Window);
@@ -99,7 +113,7 @@ public:
     void register_action(std::string, ClassActions);
 
     void handle_motion(const XEvent&);
-    void state_transition(Window, ClientState);
+    virtual void state_transition(Window, ClientState);
 
     void create(Window);
     void destroy(Window);
@@ -110,15 +124,8 @@ public:
 
     void redraw_icon(Window);
 
-    void relayer();
-
-    void flip_sticky_flag(Window);
-    void to_next_desktop(Window);
-    void to_prev_desktop(Window);
-    void update_desktop();
-
-    void next_desktop();
-    void prev_desktop();
+    virtual void relayer();
+    virtual void redesktop();
 
 private:
     void apply_actions(Window);
@@ -154,14 +161,5 @@ private:
 
     /// Data used to manage moving/resizing clients
     MoveResize m_mvr;
-
-    /// The current desktop the user is viewing
-    Desktop m_current_desktop;
-
-    /// A relation between each client and its desktop
-    std::map<Window, Desktop> m_desktops;
-
-    /// A relation between each client and its stickiness
-    std::map<Window, bool> m_sticky;
 };
 #endif

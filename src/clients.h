@@ -44,6 +44,14 @@ public:
     std::map<Window,ClientState>::iterator clients_end();
 
     ClientState get_state(Window);
+
+    // Yes, this is a horrible hack that lets the interface of the base
+    // class leak through. It is probably not a good idea, design wise,
+    // but it's better than the overall design its replacing.
+    virtual void state_transition(Window, ClientState) = 0;
+    virtual void relayer() = 0;
+    virtual void redesktop() = 0;
+
 protected:
     void set_state(Window, ClientState);
     void delete_state(Window);

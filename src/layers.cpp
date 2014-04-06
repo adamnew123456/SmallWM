@@ -14,7 +14,7 @@ void LayerManager::raise_layer(Window window)
     if (current < MAX_LAYER)
     {
         m_layers[window]++;
-        relayer_clients();
+        m_clients->relayer();
     }
 }
 
@@ -31,7 +31,7 @@ void LayerManager::lower_layer(Window window)
     if (current > MIN_LAYER)
     {
         m_layers[window]--;
-        relayer_clients();
+        m_clients->relayer();
     }
 }
 
@@ -46,7 +46,7 @@ void LayerManager::set_layer(Window window, Layer layer)
         return;
 
     m_layers[window] = layer;
-    relayer_clients();
+    m_clients->relayer();
 }
 
 /**
@@ -67,12 +67,12 @@ void LayerManager::relayer_clients()
 {
     // First, only layer the 'normal' windows which are not icons or placeholders.
     std::vector<Window> clients;
-    for (std::map<Window,ClientState>::iterator client_iter = 
-                m_clients->clients_begin();
-            client_iter != m_clients->clients_end();
+    for (std::map<Window,Layer>::iterator client_iter = m_layers.begin();
+            client_iter != m_layers.end();
             client_iter++)
     {
-        if (client_iter->second == CS_VISIBLE || client_iter->second == CS_ACTIVE)
+        ClientState state = m_clients->get_state(client_iter->first);
+        if (state == CS_VISIBLE || state == CS_ACTIVE)
             clients.push_back(client_iter->first);
     }
 
