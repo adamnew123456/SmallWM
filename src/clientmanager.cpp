@@ -389,9 +389,9 @@ void ClientManager::close(Window window)
     XClientMessageEvent client_close;
     client_close.type = ClientMessage;
     client_close.window = window;
-    client_close.message_type = XInternAtom(m_shared.display, "WM_PROTOCOLS", false);
+    client_close.message_type = m_shared.atoms["WM_PROTOCOLS"];
     client_close.format = 32;
-    client_close.data.l[0] = XInternAtom(m_shared.display, "WM_DELETE_WINDOW", false);
+    client_close.data.l[0] = m_shared.atoms["WM_DELETE_WINDOW"];
     client_close.data.l[1] = CurrentTime;
 
     close_event.xclient = client_close;

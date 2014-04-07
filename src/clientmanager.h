@@ -84,6 +84,7 @@ class ClientManager :
 public:
     /// Initialize the share data and the current desktop
     ClientManager(WMShared &shared) :
+        ClientContainer::ClientContainer(shared),
         LayerManager::LayerManager((ClientContainer*)this, shared),
         DesktopManager::DesktopManager((ClientContainer*)this, shared),
         m_shared(shared)

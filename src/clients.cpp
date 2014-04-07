@@ -61,7 +61,37 @@ void ClientContainer::set_state(Window window, ClientState state)
     if (state < CS_ACTIVE || state > CS_DESTROY)
         delete_state(window);
     else
+    {
         m_clients[window] = state;
+
+        // As mandated by ICCCM, we should set the WM_STATE property depending
+        // on how the client container has been changed.
+
+        // Although ICCCM mandates that we give the client the icon window, we
+        // don't want them to muck with it.
+        int property[] = {0, None};
+
+        switch (state)
+        {
+            case CS_ACTIVE:
+            case CS_VISIBLE:
+                property[0] = NormalState;
+                break;
+            case CS_INVISIBLE:
+            case CS_MOVING:
+            case CS_RESIZING:
+                property[0] = WithdrawnState;
+                break;
+            case CS_ICON:
+                property[0] = IconicState;
+                break;
+        }
+
+        XChangeProperty(m_shared.display, window,
+                m_shared.atoms["WM_STATE"],
+                XA_CARDINAL, 32, PropModeReplace,
+                        (unsigned char*)property, 2);
+    }
 }
 
 /**

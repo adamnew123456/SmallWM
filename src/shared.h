@@ -2,6 +2,8 @@
 #ifndef __SMALLWM_SHARED__
 #define __SMALLWM_SHARED__
 
+#include <map>
+
 /**
  * This is data which needs to be shared between the window manager as a whole
  * and each individual client/icon in under the WM's control.
@@ -33,6 +35,9 @@ struct WMShared {
 
     /// Whether or not to show application icons inside icon windows
     bool show_icons;
+
+    /// All the atoms which are needed by SmallWM
+    std::map<std::string, Atom> atoms;
 };
 
 #endif

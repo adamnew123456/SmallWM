@@ -5,6 +5,7 @@
 #include <map>
 
 #include "common.h"
+#include "shared.h"
 
 /**
  * A complete listing of all the possible states that each client is capable of
@@ -37,6 +38,10 @@ enum ClientState {
 class ClientContainer
 {
 public:
+    ClientContainer(WMShared &shared) : 
+        m_shared(shared)
+    {};
+
     bool is_client(Window);
     bool is_visible(Window);
 
@@ -57,7 +62,11 @@ protected:
     void delete_state(Window);
 
 private:
+    /// A mapping of all clients to their states
     std::map<Window, ClientState> m_clients;
+
+    /// The shared window manager data
+    WMShared &m_shared;
 };
 
 #endif
