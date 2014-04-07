@@ -33,6 +33,20 @@ void DesktopManager::add_desktop(Window window)
 }
 
 /**
+ * Checks to see if a client should be visible on the current desktop.
+ * @param window The window to check the visibility of.
+ * @return Whether or not the client should be visible.
+ */
+bool DesktopManager::should_be_visible(Window window)
+{
+    Desktop client_desktop = m_desktops[window];
+    bool sticky = m_sticky[window];
+
+    return (sticky ||
+            client_desktop == m_current_desktop);
+}
+
+/**
  * Sets the current desktop of a client.
  * @param window The client.
  * @param desktop The desktop to put the client on.
@@ -95,10 +109,8 @@ void DesktopManager::update_desktop()
             client_iter != m_desktops.end();
             client_iter++)
     {
-        bool sticky = m_sticky[client_iter->first];
         ClientState state = m_clients->get_state(client_iter->first);
-
-        if (sticky || client_iter->second == m_current_desktop)
+        if (should_be_visible(client_iter->first))
         {
             // Make sure that the focused window stays focused
             if (state != CS_ACTIVE)

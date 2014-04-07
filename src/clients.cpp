@@ -77,6 +77,7 @@ void ClientContainer::set_state(Window window, ClientState state)
             case CS_VISIBLE:
                 property[0] = NormalState;
                 break;
+            case CS_WITHDRAWN:
             case CS_INVISIBLE:
             case CS_MOVING:
             case CS_RESIZING:

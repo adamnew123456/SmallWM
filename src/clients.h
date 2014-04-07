@@ -30,6 +30,8 @@ enum ClientState {
     CS_RESIZING,
     /// A client has already been destroyed
     CS_DESTROY,
+    /// A client has voluntarily asked to be totally invisible
+    CS_WITHDRAWN,
 };
 
 /**

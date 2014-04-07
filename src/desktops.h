@@ -25,6 +25,7 @@ public:
     void next_desktop();
     void prev_desktop();
 protected:
+    bool should_be_visible(Window);
     void add_desktop(Window);
     void reset_desktop(Window);
     void update_desktop();

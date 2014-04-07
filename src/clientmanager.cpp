@@ -118,6 +118,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
      *          -> invisible
      *          -> moving
      *          -> resizing
+     *          -> withdrawn
      *          -> destroy
      */
     if (old_state == CS_ACTIVE)
@@ -156,6 +157,12 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             begin_resizing(window, attr);
             return;
         }
+        if (new_state == CS_WITHDRAWN)
+        {
+            unfocus(window);
+            XUnmapWindow(m_shared.display, window);
+            set_state(window, CS_WITHDRAWN);
+        }
         if (new_state == CS_DESTROY)
         {
             unfocus(window);
@@ -172,6 +179,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
      *              -> invisible
      *              -> moving
      *              -> resizing
+     *              -> withdrawn
      *              -> destroy
      */
     if (old_state == CS_VISIBLE)
@@ -205,6 +213,11 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             begin_resizing(window, attr);
             return;
         }
+        if (new_state == CS_WITHDRAWN)
+        {
+            XUnmapWindow(m_shared.display, window);
+            set_state(window, CS_WITHDRAWN);
+        }
         if (new_state == CS_DESTROY)
         {
             destroy(window);
@@ -236,16 +249,47 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
     }
 
+    /**
+     * Withdrawn windows are like invisible windows, but they shouldn't be
+     * taken out of that state unless specifically requested by the client.
+     *
+     * * withdrawn  -> invisible // Since it could end up on another desktop
+     *              -> visible
+     *              -> destroy
+     */
+    if (old_state == CS_WITHDRAWN)
+    {
+        if (new_state == CS_VISIBLE)
+        {
+            XMapWindow(m_shared.display, window);
+            set_state(window, CS_VISIBLE);
+            relayer();
+            return;
+        }
+        if (new_state == CS_INVISIBLE)
+        {
+            // It was already hidden anyway - not much to do
+            set_state(window, CS_INVISIBLE);
+            return;
+        }
+        if (new_state == CS_DESTROY)
+        {
+            destroy(window);
+            return;
+        }
+    }
+
     /*
      * Iconified windows can only be unhidden, which automatically focuses them.
      * 
      * icon -> active
+     *      -> withdrawn
      *      -> destroy
      */
     if (old_state == CS_ICON)
     {
         // state_transition is required to take a client window, so the icon
-        // also needs to be retrieved.
+        // also needs to be retrieved in order to destroy it.
         Icon *icon = get_icon_of_client(window);
 
         if (!icon)
@@ -262,6 +306,11 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             relayer();
             return;
         }
+        if (new_state == CS_WITHDRAWN)
+        {
+            delete_icon(icon);
+            reset_desktop(window);
+        }
         if (new_state == CS_DESTROY)
         {
             delete_icon(icon);
@@ -274,7 +323,8 @@ void ClientManager::state_transition(Window window, ClientState new_state)
      * Windows which are currently being moved by the user can only become
      * active again.
      *
-     * moving   -> active
+     * moving   -> activea
+     *          -> withdrawn
      *          -> destroy
      */
     if (old_state == CS_MOVING)
@@ -286,6 +336,10 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             focus(window);
             relayer();
             return;
+        }
+        if (new_state == CS_WITHDRAWN)
+        {
+            end_move_resize_unsafe();
         }
         if (new_state == CS_DESTROY)
         {
@@ -299,6 +353,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
      * Windows which are being resized by the user can only become active again.
      *
      * resizing -> active
+     *          -> withdrawn
      *          -> destroy
      */
     if (old_state == CS_RESIZING)
@@ -310,6 +365,10 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             focus(window);
             relayer();
             return;
+        }
+        if (new_state == CS_WITHDRAWN)
+        {
+            end_move_resize_unsafe();
         }
         if (new_state == CS_DESTROY)
         {
@@ -333,9 +392,34 @@ void ClientManager::create(Window window)
     if (attr.override_redirect)
         return;
 
-    // Avoid double-creating clients
+    /* So, there's an interesting wrinkle here, since support for CS_WITHDRAWN
+     * was added.
+     * 
+     * As it turns out, a window can map itself while it is withdrawn to induce
+     * a change from the Withdrawn state to the Normal state. We have to make
+     * sure that, if the client already exists, that it gets taken out of its
+     * CS_WITHDRAWN state and put into the proper visible/invisible state.
+     *
+     * Other states are irrelevant, since there were no issues with just a plain
+     * 'return' here earlier.
+     */
     if (is_client(window))
+    {
+        ClientState state = get_state(window);
+        if (state != CS_WITHDRAWN)
+            return;
+
+        if (should_be_visible(window))
+        {
+            set_state(window, CS_VISIBLE);
+        }
+        else
+        {
+            set_state(window, CS_INVISIBLE);
+        }
+
         return;
+    }
 
     // Track ConfigureNotify events, so that way client-initiated relayering
     // can be undone
@@ -356,6 +440,32 @@ void ClientManager::create(Window window)
     set_layer(window, is_transient ? DIALOG_LAYER : 5);
     add_desktop(window);
 
+    // Okay, now that we've added everything that this client needs to be used,
+    // figure out its preferences and do what it wants
+    XWMHints *hints = XGetWMHints(m_shared.display, window);
+    if (hints && hints->flags & StateHint)
+    {
+        switch (hints->initial_state)
+        {
+            case NormalState:
+                goto do_normal;
+            case WithdrawnState:
+                state_transition(window, CS_WITHDRAWN);
+                return;
+            case IconicState:
+                state_transition(window, CS_ICON);
+                return;
+        }
+    }
+    else
+    {
+        // If the client didn't say, assume it just wants to be shown
+        goto do_normal;
+    }
+
+    // Using a GOTO here since I didn't want to duplicate this in the switch
+    // and in the else branch.
+do_normal:
     redesktop();
     apply_actions(window);
     focus(window);
@@ -364,6 +474,7 @@ void ClientManager::create(Window window)
     // events, then make sure to get rid of them
     XEvent _;
     while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
+    return;
 }
 
 /**
