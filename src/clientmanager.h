@@ -130,9 +130,6 @@ public:
 
 private:
     void apply_actions(Window);
-
-    void map(Window);
-    void unmap(Window);
         
     void focus(Window);
     void unfocus(Window);

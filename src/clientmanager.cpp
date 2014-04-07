@@ -125,7 +125,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_ICON)
         {
             unfocus(window);
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             make_icon(window);
             return;
         }
@@ -138,21 +138,21 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_INVISIBLE)
         {
             unfocus(window);
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             set_state(window, CS_INVISIBLE);
             return;
         }
         if (new_state == CS_MOVING)
         {
             unfocus(window);
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             begin_moving(window, attr);
             return;
         }
         if (new_state == CS_RESIZING)
         {
             unfocus(window);
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             begin_resizing(window, attr);
             return;
         }
@@ -178,7 +178,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
     {
         if (new_state == CS_ICON)
         {
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             make_icon(window);
             return;
         }
@@ -189,19 +189,19 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
         if (new_state == CS_INVISIBLE)
         {
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             set_state(window, CS_INVISIBLE);
             return;
         }
         if (new_state == CS_MOVING)
         {
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             begin_moving(window, attr);
             return;
         }
         if (new_state == CS_RESIZING)
         {
-            unmap(window);
+            XUnmapWindow(m_shared.display, window);
             begin_resizing(window, attr);
             return;
         }
@@ -222,7 +222,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
     {
         if (new_state == CS_VISIBLE)
         {
-            map(window);
+            XMapWindow(m_shared.display, window);
             set_state(window, CS_VISIBLE);
             // Don't explicitly relayer, since only desktop changes will trigger
             // this transition, and the desktop change function does the
@@ -256,7 +256,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_ACTIVE)
         {
             delete_icon(icon);
-            map(window);
+            XMapWindow(m_shared.display, window);
             focus(window);
             reset_desktop(window);
             relayer();
@@ -281,7 +281,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
     {
         if (new_state == CS_ACTIVE)
         {
-            map(window);
+            XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
             relayer();
@@ -305,7 +305,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
     {
         if (new_state == CS_ACTIVE)
         {
-            map(window);
+            XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
             relayer();
@@ -414,7 +414,7 @@ void ClientManager::focus(Window window)
             // Make sure to unfocus this client before moving on
             state_transition(client_iter->first, CS_VISIBLE);
 
-            // Only window can be focused at once, so this is the only one
+            // Only one window can be focused at once, so we're done looking
             break;
         }
     }
@@ -488,24 +488,6 @@ void ClientManager::apply_actions(Window window)
         snap(window, actions.snap);
 
     XFree(classhint);
-}
-
-/**
- * Maps a window onto the screen, making it visible.
- * @param window The client window to show.
- */
-void ClientManager::map(Window window)
-{
-    XMapWindow(m_shared.display, window);
-}
-
-/**
- * Unmaps a window off the screen.
- * @param window The client window to hide.
- */
-void ClientManager::unmap(Window window)
-{
-    XUnmapWindow(m_shared.display, window);
 }
 
 /**
