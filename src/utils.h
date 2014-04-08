@@ -6,10 +6,7 @@
 #include <cstring>
 #include <map>
 
-#include "common.h"
-
 void strip_string(const char *text, const char *remove, char *buffer);
-void flush_configurenotify(Display *display);
 
 /**
  * A generic functor useful for sorting a vector according to a map of items.

@@ -18,7 +18,17 @@ void ClientManager::register_action(std::string x_class, ClassActions actions)
 void ClientManager::relayer()
 {
     relayer_clients();
-    raise_icons();
+
+    // Now, go back and put all of the icons on the top
+    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        if (!icon_iter->second)
+            continue;
+
+        XRaiseWindow(m_shared.display, icon_iter->first);
+    }
 
     // Finally, put the placeholder on the top, if there is one
     if (m_mvr.window != None)
@@ -26,7 +36,8 @@ void ClientManager::relayer()
 
     // We just generated a lot of ConfigureNotify events. We need to get rid of
     // them so that we don't trigger anything recursive
-    flush_configurenotify(m_shared.display);
+    XEvent _;
+    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
 }
 
 /**
@@ -79,8 +90,6 @@ void ClientManager::handle_motion(const XEvent &event)
             XResizeWindow(m_shared.display, m_mvr.window, width, height);
         }; break;
     }
-
-    flush_configurenotify(m_shared.display);
 }
 
 /**
@@ -118,8 +127,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         {
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
-            create_icon(window);
-            set_state(window, CS_ICON);
+            make_icon(window);
             return;
         }
         if (new_state == CS_VISIBLE)
@@ -179,8 +187,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_ICON)
         {
             XUnmapWindow(m_shared.display, window);
-            create_icon(window);
-            set_state(window, CS_ICON);
+            make_icon(window);
             return;
         }
         if (new_state == CS_ACTIVE)
@@ -411,8 +418,6 @@ void ClientManager::create(Window window)
             set_state(window, CS_INVISIBLE);
         }
 
-        flush_configurenotify(m_shared.display);
-
         return;
     }
 
@@ -446,10 +451,10 @@ void ClientManager::create(Window window)
                 goto do_normal;
             case WithdrawnState:
                 state_transition(window, CS_WITHDRAWN);
-                goto flush_configure;
+                return;
             case IconicState:
                 state_transition(window, CS_ICON);
-                goto flush_configure;
+                return;
         }
     }
     else
@@ -465,9 +470,11 @@ do_normal:
     apply_actions(window);
     focus(window);
 
-flush_configure:
-    // Flush out any ConfigureNotify events we generated
-    flush_configurenotify(m_shared.display);
+    // If anything modifications to the new client generated ConfigureNotify
+    // events, then make sure to get rid of them
+    XEvent _;
+    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
+    return;
 }
 
 /**
@@ -638,7 +645,6 @@ void ClientManager::snap(Window window, SnapDir side)
     }
 
     XMoveResizeWindow(m_shared.display, window, x, y, w, h);
-    flush_configurenotify(m_shared.display);
 }
 
 /**
@@ -656,6 +662,4 @@ void ClientManager::maximize(Window window)
 
     XMoveResizeWindow(m_shared.display, window, 0, icon_height, 
             screen_width, screen_height);
-
-    flush_configurenotify(m_shared.display);
 }
