@@ -10,10 +10,10 @@
 #include "clients.h"
 #include "common.h"
 #include "desktops.h"
+#include "icons.h"
 #include "layers.h"
 #include "shared.h"
 #include "utils.h"
-
 
 /**
  * Data which is used to manage a window which is currently being moved or
@@ -37,38 +37,6 @@ struct MoveResize
 };
 
 /**
- * Data which is used to draw an application icon.
- */
-struct Icon
-{
-    /// Initialize everything to zero
-    Icon() :
-        window(None), client(None), gc(0),
-        has_pixmap(false), pixmap(0),
-        pixmap_size(0, 0)
-    {};
-
-    /// The window that the icon is drawn upon
-    Window window;
-
-    /// The client window which this icon stands in for
-    Window client;
-
-    /// The graphics context used for the title text and the pixmap 
-    /// (i.e. the graphical icon itself)
-    GC gc;
-
-    /// Whether or not this icon has an associated pixmap
-    bool has_pixmap;
-
-    /// The pixmap graphic itself
-    Pixmap pixmap;
-
-    /// The dimensions of the pixmap
-    Dimension2D pixmap_size;
-};
-
-/**
  * A container and 'state manager' for all of the clients. It manages how clients
 * transition between ClientStates, by rejecting invalid states and performing
  * the appropriate operations on valid state transitions.
@@ -79,7 +47,7 @@ struct Icon
  */
 class ClientManager : 
     protected ClientContainer, protected LayerManager,
-    protected DesktopManager
+    protected DesktopManager, protected IconManager
 {
 public:
     /// Initialize the share data and the current desktop
@@ -87,6 +55,7 @@ public:
         ClientContainer::ClientContainer(shared),
         LayerManager::LayerManager((ClientContainer*)this, shared),
         DesktopManager::DesktopManager((ClientContainer*)this, shared),
+        IconManager::IconManager(shared),
         m_shared(shared)
     {};
 
@@ -107,8 +76,10 @@ public:
     using DesktopManager::next_desktop;
     using DesktopManager::prev_desktop;
 
-    Icon *get_icon_of_client(Window);
-    Icon *get_icon_of_icon(Window);
+    using IconManager::get_icon_of_client;
+    using IconManager::get_icon_of_icon;
+    using IconManager::redraw_icon;
+
     Window get_from_placeholder(Window);
 
     void register_action(std::string, ClassActions);
@@ -123,8 +94,6 @@ public:
     void snap(Window, SnapDir);
     void maximize(Window);
 
-    void redraw_icon(Window);
-
     virtual void relayer();
     virtual void redesktop();
 
@@ -134,10 +103,6 @@ private:
     void focus(Window);
     void unfocus(Window);
     void unfocus_unsafe(Window);
-
-    void make_icon(Window);
-    void reflow_icons();
-    void delete_icon(Icon*);
 
     void create_placeholder(const XWindowAttributes&);
     void begin_moving(Window, const XWindowAttributes&);
@@ -153,9 +118,6 @@ private:
 
     /// A relation between each client window and its current state
     std::map<Window,ClientState> m_clients;
-
-    /// A relation between each iconified client and its icon data
-    std::map<Window,Icon*> m_icons;
 
     /// Data used to manage moving/resizing clients
     MoveResize m_mvr;

@@ -18,17 +18,7 @@ void ClientManager::register_action(std::string x_class, ClassActions actions)
 void ClientManager::relayer()
 {
     relayer_clients();
-
-    // Now, go back and put all of the icons on the top
-    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
-            icon_iter != m_icons.end();
-            icon_iter++)
-    {
-        if (!icon_iter->second)
-            continue;
-
-        XRaiseWindow(m_shared.display, icon_iter->first);
-    }
+    raise_icons();
 
     // Finally, put the placeholder on the top, if there is one
     if (m_mvr.window != None)
@@ -127,7 +117,8 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         {
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
-            make_icon(window);
+            create_icon(window);
+            set_state(window, CS_ICON);
             return;
         }
         if (new_state == CS_VISIBLE)
@@ -187,7 +178,8 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         if (new_state == CS_ICON)
         {
             XUnmapWindow(m_shared.display, window);
-            make_icon(window);
+            create_icon(window);
+            set_state(window, CS_ICON);
             return;
         }
         if (new_state == CS_ACTIVE)

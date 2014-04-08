@@ -6,17 +6,10 @@
  * @param window The window to find.
  * @return Either the owning Icon, or NULL.
  */
-Icon *ClientManager::get_icon_of_client(Window window)
+Icon *IconManager::get_icon_of_client(Window window)
 {
-    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
-            icon_iter != m_icons.end();
-            icon_iter++)
-    {
-        if (icon_iter->second && icon_iter->second->client == window)
-            return icon_iter->second;
-    }
-
-    return NULL;
+    Window icon_window = m_client_icons[window];
+    return m_icons[icon_window];
 }
 
 /**
@@ -24,7 +17,7 @@ Icon *ClientManager::get_icon_of_client(Window window)
  * @param window The icon window.
  * @return An Icon*, or NULL.
  */
-Icon *ClientManager::get_icon_of_icon(Window window)
+Icon *IconManager::get_icon_of_icon(Window window)
 {
     return m_icons[window];
 }
@@ -33,7 +26,7 @@ Icon *ClientManager::get_icon_of_icon(Window window)
  * Creates a new icon window, and then reorganizes all the icons.
  * @param window The client window to make an icon for.
  */
-void ClientManager::make_icon(Window window)
+void IconManager::create_icon(Window window)
 {
     Icon *icon = new Icon;
     icon->window = XCreateSimpleWindow(m_shared.display, m_shared.root,
@@ -80,8 +73,8 @@ void ClientManager::make_icon(Window window)
     XFree(hints);
 
     m_icons[icon->window] = icon;
-    set_state(icon->client, CS_ICON);
-
+    m_client_icons[window] = icon->window;
+    
     // Move all the icons into the proper location
     reflow_icons();
 }
@@ -89,7 +82,7 @@ void ClientManager::make_icon(Window window)
 /**
  * Repositions icon windows, to avoid gaps and to make all icons visible.
  */
-void ClientManager::reflow_icons()
+void IconManager::reflow_icons()
 {
     Dimension x = 0, y = 0;
     Dimension icon_width = DIM2D_WIDTH(m_shared.icon_size),
@@ -115,10 +108,23 @@ void ClientManager::reflow_icons()
 }
 
 /**
+ * Puts all icon windows on the top of the stack.
+ */
+void IconManager::raise_icons()
+{
+    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+            icon_iter != m_icons.end();
+            icon_iter++)
+    {
+        XRaiseWindow(m_shared.display, icon_iter->first);
+    }
+}
+
+/**
  * Redraws an individual icon window.
  * @param window The icon window to redraw.
  */
-void ClientManager::redraw_icon(Window window)
+void IconManager::redraw_icon(Window window)
 {
 
     Icon *icon = m_icons[window];
@@ -127,7 +133,6 @@ void ClientManager::redraw_icon(Window window)
 
     // Find out the client's request icon name, or use the name of the client itself
     char *title;
-
     XGetIconName(m_shared.display, icon->client, &title);
     if (!title)
         XFetchName(m_shared.display, icon->client, &title);
@@ -153,12 +158,13 @@ void ClientManager::redraw_icon(Window window)
  * Removes an icon from the icon row and reflows all the icons.
  * @param window The window representing the icon itself
  */
-void ClientManager::delete_icon(Icon *icon)
+void IconManager::delete_icon(Icon *icon)
 {
     XUnmapWindow(m_shared.display, icon->window);
     XDestroyWindow(m_shared.display, icon->window);
     XFreeGC(m_shared.display, icon->gc);
     m_icons.erase(icon->window);
+    m_client_icons.erase(icon->client);
     delete icon;
 
     reflow_icons();
