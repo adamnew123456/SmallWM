@@ -26,8 +26,7 @@ void ClientManager::relayer()
 
     // We just generated a lot of ConfigureNotify events. We need to get rid of
     // them so that we don't trigger anything recursive
-    XEvent _;
-    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
+    flush_configurenotify(m_shared.display);
 }
 
 /**
@@ -80,6 +79,8 @@ void ClientManager::handle_motion(const XEvent &event)
             XResizeWindow(m_shared.display, m_mvr.window, width, height);
         }; break;
     }
+
+    flush_configurenotify(m_shared.display);
 }
 
 /**
@@ -410,6 +411,8 @@ void ClientManager::create(Window window)
             set_state(window, CS_INVISIBLE);
         }
 
+        flush_configurenotify(m_shared.display);
+
         return;
     }
 
@@ -443,10 +446,10 @@ void ClientManager::create(Window window)
                 goto do_normal;
             case WithdrawnState:
                 state_transition(window, CS_WITHDRAWN);
-                return;
+                goto flush_configure;
             case IconicState:
                 state_transition(window, CS_ICON);
-                return;
+                goto flush_configure;
         }
     }
     else
@@ -462,11 +465,9 @@ do_normal:
     apply_actions(window);
     focus(window);
 
-    // If anything modifications to the new client generated ConfigureNotify
-    // events, then make sure to get rid of them
-    XEvent _;
-    while (XCheckTypedEvent(m_shared.display, ConfigureNotify, &_));
-    return;
+flush_configure:
+    // Flush out any ConfigureNotify events we generated
+    flush_configurenotify(m_shared.display);
 }
 
 /**
@@ -637,6 +638,7 @@ void ClientManager::snap(Window window, SnapDir side)
     }
 
     XMoveResizeWindow(m_shared.display, window, x, y, w, h);
+    flush_configurenotify(m_shared.display);
 }
 
 /**
@@ -654,4 +656,6 @@ void ClientManager::maximize(Window window)
 
     XMoveResizeWindow(m_shared.display, window, 0, icon_height, 
             screen_width, screen_height);
+
+    flush_configurenotify(m_shared.display);
 }
