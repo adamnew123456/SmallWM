@@ -79,7 +79,7 @@ version, but with some extended options. For example:
     border-width=4
     icon-icons=0
     [actions]
-    stalonetray=stick,layer:9
+    stalonetray=stick,layer:99
     [keyboard]
     toggle-stick=asciitilde
     snap-top=w
@@ -116,7 +116,7 @@ by separating them with commas.
 The possibilities for a class action are:
  - `stick` makes a particular window stick to all the desktops
  - `maximize` maximizes that window
- - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 1 to 9
+ - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 10 to 99 (the default layer is 50).
  - `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen
 
 Keyboard Bindings
