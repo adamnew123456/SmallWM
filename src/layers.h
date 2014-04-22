@@ -19,6 +19,7 @@ public:
     void raise_layer(Window);
     void lower_layer(Window);
     void set_layer(Window, Layer);
+    void adjust_layer(Window, LayerDiff);
 protected:
     void relayer_clients();
     void delete_layer(Window);

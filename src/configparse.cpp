@@ -182,7 +182,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
             if (!strncmp(stripped, "layer:", 6))
             {
                 Layer layer = strtoul(stripped + 6, NULL, 0);
-                if (layer >= 1 && layer <= 9)
+                if (layer >= MIN_LAYER && layer <= MAX_LAYER)
                 {
                     action.actions |= ACT_SETLAYER;
                     action.layer = layer;

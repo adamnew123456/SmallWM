@@ -30,15 +30,19 @@ typedef std::pair<Dimension,Dimension> Dimension2D;
 typedef unsigned long long Desktop;
 /// The z-layer of a window.
 typedef unsigned char Layer;
+/// A difference between two layers.
+typedef char LayerDiff;
 
 /// The maximum layer of any non-dialog window.
-const Layer MAX_LAYER = 9,
+const Layer MAX_LAYER = 99,
       /// The lowest layer for any window.
-      MIN_LAYER = 1,
+      MIN_LAYER = 10,
       /// The layer of dialogs, which are on top of everything else.
-      DIALOG_LAYER = 10,
+      DIALOG_LAYER = 100,
       /// The default layer assigned to all windows.
-      DEF_LAYER = 5;
+      DEF_LAYER = 50,
+      /// How much to raise the z-layer of the focused window
+      FOCUS_SHIFT = 5;
     
 /// The button to click to launch a terminal
 const int LAUNCH_BUTTON = 1,

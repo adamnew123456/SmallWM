@@ -13,7 +13,7 @@ void LayerManager::raise_layer(Window window)
     Layer current = m_layers[window];
     if (current < MAX_LAYER)
     {
-        m_layers[window]++;
+        m_layers[window] += 10;
         m_clients->relayer();
     }
 }
@@ -30,7 +30,22 @@ void LayerManager::lower_layer(Window window)
     Layer current = m_layers[window];
     if (current > MIN_LAYER)
     {
-        m_layers[window]--;
+        m_layers[window] -= 10;
+        m_clients->relayer();
+    }
+}
+
+/**
+ * Shifts the layer of a window up/down by a certain value.
+ * @param window The window of a client
+ * @param offset The z-layer to shift by.
+ */
+void LayerManager::adjust_layer(Window window, LayerDiff layer)
+{
+    Layer new_layer = m_layers[window] + layer;
+    if (new_layer >= MIN_LAYER && new_layer <= MAX_LAYER)
+    {
+        m_layers[window] = new_layer;
         m_clients->relayer();
     }
 }

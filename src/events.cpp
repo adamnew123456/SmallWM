@@ -153,31 +153,31 @@ void XEvents::handle_keypress()
         m_done = true;
 
     if (*keysym == m_keyboard.layer1)
-        m_clients.set_layer(client, 1);
+        m_clients.set_layer(client, 10);
 
     if (*keysym == m_keyboard.layer2)
-        m_clients.set_layer(client, 2);
+        m_clients.set_layer(client, 20);
 
     if (*keysym == m_keyboard.layer3)
-        m_clients.set_layer(client, 3);
+        m_clients.set_layer(client, 30);
 
     if (*keysym == m_keyboard.layer4)
-        m_clients.set_layer(client, 4);
+        m_clients.set_layer(client, 40);
 
     if (*keysym == m_keyboard.layer5)
-        m_clients.set_layer(client, 5);
+        m_clients.set_layer(client, 50);
 
     if (*keysym == m_keyboard.layer6)
-        m_clients.set_layer(client, 6);
+        m_clients.set_layer(client, 60);
 
     if (*keysym == m_keyboard.layer7)
-        m_clients.set_layer(client, 7);
+        m_clients.set_layer(client, 70);
 
     if (*keysym == m_keyboard.layer8)
-        m_clients.set_layer(client, 8);
+        m_clients.set_layer(client, 80);
 
     if (*keysym == m_keyboard.layer9)
-        m_clients.set_layer(client, 9);
+        m_clients.set_layer(client, 90);
 }
 
 /**

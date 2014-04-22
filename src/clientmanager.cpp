@@ -97,6 +97,7 @@ void ClientManager::handle_motion(const XEvent &event)
  * @param window The client to transition.
  * @param new_state The new state to attempt to transition to.
  */
+
 void ClientManager::state_transition(Window window, ClientState new_state)
 {   
     if (!is_client(window))
@@ -123,8 +124,10 @@ void ClientManager::state_transition(Window window, ClientState new_state)
      */
     if (old_state == CS_ACTIVE)
     {
+
         if (new_state == CS_ICON)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
             make_icon(window);
@@ -132,12 +135,14 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
         if (new_state == CS_VISIBLE)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             set_state(window, CS_VISIBLE);
             return;
         }
         if (new_state == CS_INVISIBLE)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
             set_state(window, CS_INVISIBLE);
@@ -145,6 +150,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
         if (new_state == CS_MOVING)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
             begin_moving(window, attr);
@@ -152,6 +158,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
         if (new_state == CS_RESIZING)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
             begin_resizing(window, attr);
@@ -159,12 +166,14 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
         if (new_state == CS_WITHDRAWN)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             XUnmapWindow(m_shared.display, window);
             set_state(window, CS_WITHDRAWN);
         }
         if (new_state == CS_DESTROY)
         {
+            adjust_layer(window, -FOCUS_SHIFT);
             unfocus(window);
             destroy(window);
             return;
@@ -192,6 +201,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
         }
         if (new_state == CS_ACTIVE)
         {
+            adjust_layer(window, FOCUS_SHIFT);
             focus(window);
             return;
         }
@@ -303,7 +313,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             focus(window);
             reset_desktop(window);
-            relayer();
+            adjust_layer(window, FOCUS_SHIFT);
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -334,7 +344,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
-            relayer();
+            adjust_layer(window, FOCUS_SHIFT);
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -363,7 +373,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
-            relayer();
+            adjust_layer(window, FOCUS_SHIFT);
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -437,7 +447,7 @@ void ClientManager::create(Window window)
     XSetWindowBorderWidth(m_shared.display, window, m_shared.border_width);
 
     set_state(window, CS_VISIBLE);
-    set_layer(window, is_transient ? DIALOG_LAYER : 5);
+    set_layer(window, is_transient ? DIALOG_LAYER : DEF_LAYER);
     add_desktop(window);
 
     // Okay, now that we've added everything that this client needs to be used,
