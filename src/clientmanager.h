@@ -3,6 +3,7 @@
 #define __SMALLWM_CLIENTMANAGER__
 
 #include <algorithm>
+#include <list>
 #include <map>
 #include <vector>
 
@@ -87,7 +88,7 @@ public:
         ClientContainer::ClientContainer(shared),
         LayerManager::LayerManager((ClientContainer*)this, shared),
         DesktopManager::DesktopManager((ClientContainer*)this, shared),
-        m_shared(shared)
+        m_shared(shared), m_current_focus(None), m_revert_focus(true)
     {};
 
     using ClientContainer::is_client;
@@ -130,10 +131,12 @@ public:
 
 private:
     void apply_actions(Window);
+
+    void unmap(Window);
         
     void focus(Window);
-    void unfocus(Window);
-    void unfocus_unsafe(Window);
+    void unfocus();
+    void remove_from_focus_history(Window);
 
     void make_icon(Window);
     void reflow_icons();
@@ -159,5 +162,14 @@ private:
 
     /// Data used to manage moving/resizing clients
     MoveResize m_mvr;
+
+    /// A stack of previously focused windows
+    std::list<Window> m_focus_history;
+
+    /// The currently focused window
+    Window m_current_focus;
+
+    /// Whether or not the unfocus routine should revert the focus
+    bool m_revert_focus;
 };
 #endif

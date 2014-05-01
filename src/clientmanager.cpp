@@ -127,54 +127,47 @@ void ClientManager::state_transition(Window window, ClientState new_state)
 
         if (new_state == CS_ICON)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
-            XUnmapWindow(m_shared.display, window);
+            unfocus();
+            unmap(window);
             make_icon(window);
             return;
         }
         if (new_state == CS_VISIBLE)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
+            unfocus();
             set_state(window, CS_VISIBLE);
             return;
         }
         if (new_state == CS_INVISIBLE)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
-            XUnmapWindow(m_shared.display, window);
+            unfocus();
+            unmap(window);
             set_state(window, CS_INVISIBLE);
             return;
         }
         if (new_state == CS_MOVING)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
-            XUnmapWindow(m_shared.display, window);
+            unfocus();
+            unmap(window);
             begin_moving(window, attr);
             return;
         }
         if (new_state == CS_RESIZING)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
-            XUnmapWindow(m_shared.display, window);
+            unfocus();
+            unmap(window);
             begin_resizing(window, attr);
             return;
         }
         if (new_state == CS_WITHDRAWN)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
-            XUnmapWindow(m_shared.display, window);
+            unfocus();
+            unmap(window);
             set_state(window, CS_WITHDRAWN);
         }
         if (new_state == CS_DESTROY)
         {
-            adjust_layer(window, -FOCUS_SHIFT);
-            unfocus(window);
+            unfocus();
             destroy(window);
             return;
         }
@@ -195,37 +188,36 @@ void ClientManager::state_transition(Window window, ClientState new_state)
     {
         if (new_state == CS_ICON)
         {
-            XUnmapWindow(m_shared.display, window);
+            unmap(window);
             make_icon(window);
             return;
         }
         if (new_state == CS_ACTIVE)
         {
-            adjust_layer(window, FOCUS_SHIFT);
             focus(window);
             return;
         }
         if (new_state == CS_INVISIBLE)
         {
-            XUnmapWindow(m_shared.display, window);
+            unmap(window);
             set_state(window, CS_INVISIBLE);
             return;
         }
         if (new_state == CS_MOVING)
         {
-            XUnmapWindow(m_shared.display, window);
+            unmap(window);
             begin_moving(window, attr);
             return;
         }
         if (new_state == CS_RESIZING)
         {
-            XUnmapWindow(m_shared.display, window);
+            unmap(window);
             begin_resizing(window, attr);
             return;
         }
         if (new_state == CS_WITHDRAWN)
         {
-            XUnmapWindow(m_shared.display, window);
+            unmap(window);
             set_state(window, CS_WITHDRAWN);
         }
         if (new_state == CS_DESTROY)
@@ -313,7 +305,6 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             focus(window);
             reset_desktop(window);
-            adjust_layer(window, FOCUS_SHIFT);
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -344,7 +335,6 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
-            adjust_layer(window, FOCUS_SHIFT);
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -373,7 +363,6 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
-            adjust_layer(window, FOCUS_SHIFT);
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -525,19 +514,15 @@ void ClientManager::close(Window window)
  */
 void ClientManager::focus(Window window)
 {
-    // Find the currently focused window
-    for (std::map<Window,ClientState>::iterator client_iter = clients_begin();
-            client_iter != clients_end();
-            client_iter++)
-    {
-        if (client_iter->second == CS_ACTIVE)
-        {
-            // Make sure to unfocus this client before moving on
-            state_transition(client_iter->first, CS_VISIBLE);
+    // Save this, since it will need to be put on the history if the focus
+    // succeeds.
+    Window old_focus = m_current_focus;
 
-            // Only one window can be focused at once, so we're done looking
-            break;
-        }
+    if (m_current_focus != None)
+    {
+        m_revert_focus = False;
+        state_transition(m_current_focus, CS_VISIBLE);
+        m_revert_focus = True;
     }
 
     // It is guaranteed that no window is focused now - make sure this window can
@@ -557,14 +542,22 @@ void ClientManager::focus(Window window)
         // If this window isn't actually focused, then re-execute the grab
         if (new_focus != window)
         {
-            unfocus(window);
-            set_state(window, CS_VISIBLE);
+            // Since the unfocus() routine checks the current focus, make sure to
+            // update the current focus to what it actually is
+            m_current_focus = new_focus;
+            unfocus();
         }
         else
         {
             XSetWindowBorder(m_shared.display, window, 
                     BlackPixel(m_shared.display, m_shared.screen));
+
+            adjust_layer(window, FOCUS_SHIFT);
+
             set_state(window, CS_ACTIVE);
+            m_current_focus = window;
+            if (old_focus != None)
+                m_focus_history.push_back(old_focus);
         }
     }
 }
@@ -573,13 +566,58 @@ void ClientManager::focus(Window window)
  * Causes the client to lose its input focus.
  * @param window The client window to unfocus.
  */
-void ClientManager::unfocus(Window window)
+void ClientManager::unfocus()
 {
-    XSetWindowBorder(m_shared.display, window, 
-            WhitePixel(m_shared.display, m_shared.screen));
-    XGrabButton(m_shared.display, AnyButton, AnyModifier, window, false,
-            ButtonPressMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync,
-            None, None);
+    if (m_current_focus != None)
+    {
+        XSetWindowBorder(m_shared.display, m_current_focus, 
+                WhitePixel(m_shared.display, m_shared.screen));
+        XGrabButton(m_shared.display, AnyButton, AnyModifier, m_current_focus, false,
+                ButtonPressMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync,
+                None, None);
+
+        adjust_layer(m_current_focus, -FOCUS_SHIFT);
+        
+        m_current_focus = None;
+    }
+
+    // If there is a window which can accept the focus, then give the focus to it
+    if (m_revert_focus && !m_focus_history.empty())
+    {
+        Window prev_focus = m_focus_history.back();
+        m_focus_history.pop_back();
+        focus(prev_focus);
+    }
+}
+
+/**
+ * Removes a window from the focus history.
+ * @param window The window to change the focus to.
+ * @note This should be used when the window is unmapped, so that the focus doesn't
+ * go to invisible windows.
+ */
+void ClientManager::remove_from_focus_history(Window window)
+{
+    for (std::list<Window>::iterator focus_chain = m_focus_history.begin();
+            focus_chain != m_focus_history.end();
+            focus_chain++)
+    {
+        if (*focus_chain == window)
+        {
+            m_focus_history.erase(focus_chain);
+            break;
+        }
+    }
+}
+
+/**
+ * Unmaps a window, and removes it from the focus history.
+ * @param window The window to unmap.
+ */
+void ClientManager::unmap(Window window)
+{
+    remove_from_focus_history(window);
+    XUnmapWindow(m_shared.display, window);
 }
 
 /**
