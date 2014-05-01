@@ -485,6 +485,7 @@ void ClientManager::destroy(Window window)
     delete_layer(window);
     delete_desktop(window);
     delete_state(window);
+    remove_from_focus_history(window);
 }
 
 /**
@@ -556,6 +557,11 @@ void ClientManager::focus(Window window)
 
             set_state(window, CS_ACTIVE);
             m_current_focus = window;
+
+            // If this window is already in the focus history, then remove it to
+            // avoid cycles in the focus history.
+            remove_from_focus_history(window);
+
             if (old_focus != None)
                 m_focus_history.push_back(old_focus);
         }
