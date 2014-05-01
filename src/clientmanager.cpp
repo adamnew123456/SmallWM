@@ -335,6 +335,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
+            relayer();
             return;
         }
         if (new_state == CS_WITHDRAWN)
@@ -363,6 +364,7 @@ void ClientManager::state_transition(Window window, ClientState new_state)
             XMapWindow(m_shared.display, window);
             end_move_resize();
             focus(window);
+            relayer();
             return;
         }
         if (new_state == CS_WITHDRAWN)
