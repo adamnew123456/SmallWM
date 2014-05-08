@@ -4,7 +4,7 @@ CXX=/usr/bin/g++
 CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 -Itest -Iinih -Isrc
 LINKERFLAGS=-lX11 -lXrandr
 BINS=bin/test_configparse bin/smallwm
-OBJS=obj/ini.o obj/clients.o obj/clientmanager.o obj/configparse.o obj/desktops.o obj/events.o obj/icons.o obj/layers.o obj/moveresize.o obj/smallwm.o obj/utils.o
+OBJS=obj/ini.o obj/clients.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icons.o obj/layers.o obj/logging.o obj/moveresize.o obj/smallwm.o obj/utils.o
 HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/desktops.h src/events.h src/layers.h src/shared.h src/utils.h
 SRCS=src/clients.cpp src/clientmanager.cpp src/configparse.cpp src/desktops.cpp src/events.cpp src/icons.cpp src/layers.cpp src/moveresize.cpp src/smallwm.cpp src/utils.cpp
 
@@ -42,6 +42,9 @@ obj/icons.o: obj src/icons.cpp
 
 obj/layers.o: obj src/layers.cpp
 	${CXX} ${CXXFLAGS} -c src/layers.cpp -o obj/layers.o
+
+obj/logging.o: obj src/logging.cpp
+	${CXX} ${CXXFLAGS} -c src/logging.cpp -o obj/logging.o
 
 obj/moveresize.o: obj src/moveresize.cpp
 	${CXX} ${CXXFLAGS} -c src/moveresize.cpp -o obj/moveresize.o

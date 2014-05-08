@@ -78,6 +78,7 @@ version, but with some extended options. For example:
     icon-height=20
     border-width=4
     icon-icons=0
+    log-level=NOTICE
     [actions]
     stalonetray=stick,layer:99
     [keyboard]
@@ -95,6 +96,7 @@ The options in the `[smallwm]` section are (in order):
  - The height in pixels of icons (default: 20)
  - The width of the border of windows (default: 4)
  - Whether to (1) or not to (0) show application icons inside icon windows. (default: 1)
+ - The severity of logging messages to send to syslog. By default, this is `WARNING`. See `syslog(3)` for the other log levels.
 
 The options in the `[actions]` section are covered next, and then the 
 `[keyboard]` section after that.

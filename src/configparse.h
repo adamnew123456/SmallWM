@@ -99,10 +99,14 @@ public:
     /// Loads a couple of defaults for the WMConfig.
     WMConfig() : shell("/usr/bin/xterm"), num_desktops(5), 
         icon_width(75), icon_height(20), border_width(2),
-        show_icons(true) {};
+        show_icons(true), log_mask(LOG_UPTO(LOG_WARNING))
+    {};
     
     void load();
-    
+
+    /// The minimum message level to send to syslog
+    int log_mask;
+
     /// The shell to run.
     std::string shell;
 

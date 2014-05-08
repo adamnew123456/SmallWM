@@ -4,6 +4,8 @@
 
 #include <map>
 
+#include "logging.h"
+
 /**
  * This is data which needs to be shared between the window manager as a whole
  * and each individual client/icon in under the WM's control.
@@ -36,8 +38,13 @@ struct WMShared {
     /// Whether or not to show application icons inside icon windows
     bool show_icons;
 
+<<<<<<< HEAD
     /// All the atoms which are needed by SmallWM
     std::map<std::string, Atom> atoms;
+=======
+    /// The logger
+    SysLog logger;
+>>>>>>> c8488f7... Fixed some minor errors in the logging module, and integrated it.
 };
 
 #endif

@@ -24,7 +24,11 @@ int register_xrandr(WMShared &shared)
     Bool xrandr_state = XRRQueryExtension(shared.display, &xrandr_evt_base, &xrandr_err_base);
     if (xrandr_state == false)
     {
-        std::cerr << "Unable to initialize XRandR\n";
+        shared.logger.set_priority(LOG_ERR);
+        shared.logger << "Unable to initialize XRandR extension - terminating" << 
+            SysLog::endl;
+        shared.logger.stop();
+
         std::exit(3);
     }
     else
@@ -59,6 +63,13 @@ int register_xrandr(WMShared &shared)
  */
 void copy_config(WMConfig &config, WMShared &shared, ClientManager &clients)
 {
+
+    shared.logger.set_identity("smallwm");
+    shared.logger.set_priority(LOG_INFO);
+    shared.logger.set_facility(LOG_USER);
+    shared.logger.set_log_mask(config.log_mask);
+    shared.logger.start();
+
     shared.shell = config.shell;
     shared.icon_size = Dimension2D(config.icon_width, config.icon_height);
     shared.border_width = config.border_width;
@@ -147,7 +158,10 @@ int main()
     shared.display = XOpenDisplay(NULL);
     if (!shared.display)
     {
-        std::cerr << "Could not open X display\n";
+        shared.logger.set_priority(LOG_ERR);
+        shared.logger << "Could not open X display - terminating" << SysLog::endl;
+        shared.logger.stop();
+
         std::exit(2);
     }
 

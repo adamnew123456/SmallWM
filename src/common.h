@@ -14,6 +14,8 @@
 #include <utility>
 #include <unistd.h>
 
+#include "logging.h"
+
 /// A size of some kind.
 typedef unsigned int Dimension;
 /// The extend of some window or other surface.

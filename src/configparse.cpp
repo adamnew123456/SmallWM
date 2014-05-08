@@ -57,14 +57,49 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
     if (section == std::string("smallwm"))
     {
-        if (name == std::string("shell"))
+        if (name == std::string("log-level"))
+        {
+            if (value == "EMERG")
+            {
+                self->log_mask = LOG_UPTO(LOG_EMERG);
+            }
+            else if (value == "ALERT")
+            {
+                self->log_mask = LOG_UPTO(LOG_ALERT);
+            }
+            else if (value == "CRIT")
+            {
+                self->log_mask = LOG_UPTO(LOG_CRIT);
+            }
+            else if (value == "ERR")
+            {
+                self->log_mask = LOG_UPTO(LOG_ERR);
+            }
+            else if (value == "WARNING")
+            {
+                self->log_mask = LOG_UPTO(LOG_WARNING);
+            }
+            else if (value == "NOTICE")
+            {
+                self->log_mask = LOG_UPTO(LOG_NOTICE);
+            }
+            else if (value == "INFO")
+            {
+                self->log_mask = LOG_UPTO(LOG_INFO);
+            }
+            else if (value == "DEBUG")
+            {
+                self->log_mask = LOG_UPTO(LOG_DEBUG);
+            }
+        }
+        else if (name == std::string("shell"))
         {
             self->shell = value;
         }
-        if (name == std::string("desktops"))
+        else if (name == std::string("desktops"))
         {
             /* This example here is a general template for how all of these
-             * works:
+             * work:
              *
              *========================================
              * type old_value = self->attribute;
@@ -84,7 +119,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 self->num_desktops = old_value;
             }
         }
-        if (name == std::string("icon-width"))
+        else if (name == std::string("icon-width"))
         {
             Dimension old_value = self->icon_width;
 
@@ -94,7 +129,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 self->icon_width = old_value;
             }
         }
-        if (name == std::string("icon-height"))
+        else if (name == std::string("icon-height"))
         {
             Dimension old_value = self->icon_height;
 
@@ -104,7 +139,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 self->icon_height = old_value;
             }
         }
-        if (name == std::string("border-width"))
+        else if (name == std::string("border-width"))
         {
             Dimension old_value = self->border_width;
 
@@ -114,7 +149,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 self->border_width = old_value;
             }
         }
-        if (name == std::string("icon-icons"))
+        else if (name == std::string("icon-icons"))
         {
             bool old_value = self->show_icons;
 
@@ -130,7 +165,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
         }
     }
 
-    if (section == std::string("actions"))
+    else if (section == std::string("actions"))
     {
         ClassActions action;
 
@@ -155,31 +190,31 @@ int WMConfig::config_parser(void *user, const char *c_section,
             {
                 action.actions |= ACT_STICK;
             }
-            if (!strcmp(stripped, "maximize"))
+            else if (!strcmp(stripped, "maximize"))
             {
                 action.actions |= ACT_MAXIMIZE;
             }
-            if (!strcmp(stripped, "snap:left"))
+            else if (!strcmp(stripped, "snap:left"))
             {
                 action.actions |= ACT_SNAP;
                 action.snap = SNAP_LEFT;
             }
-            if (!strcmp(stripped, "snap:right"))
+            else if (!strcmp(stripped, "snap:right"))
             {
                 action.actions |= ACT_SNAP;
                 action.snap = SNAP_RIGHT;
             }
-            if (!strcmp(stripped, "snap:top"))
+            else if (!strcmp(stripped, "snap:top"))
             {
                 action.actions |= ACT_SNAP;
                 action.snap = SNAP_TOP;
             }
-            if (!strcmp(stripped, "snap:bottom"))
+            else if (!strcmp(stripped, "snap:bottom"))
             {
                 action.actions |= ACT_SNAP;
                 action.snap = SNAP_BOTTOM;
             }
-            if (!strncmp(stripped, "layer:", 6))
+            else if (!strncmp(stripped, "layer:", 6))
             {
                 Layer layer = strtoul(stripped + 6, NULL, 0);
                 if (layer >= MIN_LAYER && layer <= MAX_LAYER)
@@ -197,7 +232,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
     // All of the keyboard bindings are handled here - see configparse.h, and
     // more specifically KeyboardConfig.
-    if (section == std::string("keyboard"))
+    else if (section == std::string("keyboard"))
     {
 /// A common template for all key binding declarations
 #define GET_KEY_BINDING(opt_name, attr, def_value) do { \
