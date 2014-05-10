@@ -38,13 +38,11 @@ struct WMShared {
     /// Whether or not to show application icons inside icon windows
     bool show_icons;
 
-<<<<<<< HEAD
     /// All the atoms which are needed by SmallWM
     std::map<std::string, Atom> atoms;
-=======
+
     /// The logger
     SysLog logger;
->>>>>>> c8488f7... Fixed some minor errors in the logging module, and integrated it.
 };
 
 #endif

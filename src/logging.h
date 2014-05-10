@@ -4,6 +4,7 @@
 
 #include <ostream>
 #include <sstream>
+#include <stack>
 #include <string>
 
 #include <syslog.h>
@@ -35,7 +36,7 @@ public:
     void remove_option(int);
 
     void set_identity(std::string);
-    void set_priority(int);
+    SysLog &set_priority(int);
     void set_facility(int);
     void set_log_mask(int);
 

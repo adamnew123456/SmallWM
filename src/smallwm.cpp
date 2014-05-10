@@ -24,9 +24,8 @@ int register_xrandr(WMShared &shared)
     Bool xrandr_state = XRRQueryExtension(shared.display, &xrandr_evt_base, &xrandr_err_base);
     if (xrandr_state == false)
     {
-        shared.logger.set_priority(LOG_ERR);
-        shared.logger << "Unable to initialize XRandR extension - terminating" << 
-            SysLog::endl;
+        shared.logger.set_priority(LOG_ERR) << 
+            "Unable to initialize XRandR extension - terminating" << SysLog::endl;
         shared.logger.stop();
 
         std::exit(3);
@@ -158,8 +157,8 @@ int main()
     shared.display = XOpenDisplay(NULL);
     if (!shared.display)
     {
-        shared.logger.set_priority(LOG_ERR);
-        shared.logger << "Could not open X display - terminating" << SysLog::endl;
+        shared.logger.set_priority(LOG_ERR) << 
+            "Could not open X display - terminating" << SysLog::endl;
         shared.logger.stop();
 
         std::exit(2);

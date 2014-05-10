@@ -31,9 +31,10 @@ void SysLog::set_identity(std::string syslog_ident)
  * The minimum priority to log messages at.
  * @param syslog_priority The minimum priority level.
  */
-void SysLog::set_priority(int syslog_priority)
+SysLog &SysLog::set_priority(int syslog_priority)
 {
     m_priority = syslog_priority;
+    return *this;
 };
 
 /**
