@@ -171,5 +171,18 @@ private:
 
     /// Whether or not the unfocus routine should revert the focus
     bool m_revert_focus;
+
+    /*
+     * Various typedefs, which are used in lieu of the actual iteartors.
+     *
+     * Iterator types are a pain to type, and aren't semantically meaningful
+     * in and of themselves.
+     */
+
+    /// Iterator for accessing the icon map
+    typedef std::map<Window,Icon*>::iterator ClientIconIterator;
+
+    /// Iterator for accessing the focus list
+    typedef std::list<Window>::iterator WindowIterator;
 };
 #endif

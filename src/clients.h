@@ -44,11 +44,14 @@ public:
         m_shared(shared)
     {};
 
+    /// Iterator for accessing the client state mapping
+    typedef std::map<Window,ClientState>::iterator iterator;
+
     bool is_client(Window);
     bool is_visible(Window);
 
-    std::map<Window,ClientState>::iterator clients_begin();
-    std::map<Window,ClientState>::iterator clients_end();
+    ClientContainer::iterator clients_begin();
+    ClientContainer::iterator clients_end();
 
     ClientState get_state(Window);
 

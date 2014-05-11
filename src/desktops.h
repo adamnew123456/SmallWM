@@ -32,6 +32,9 @@ protected:
     void delete_desktop(Window);
 
 private:
+    /// Iterator used for accessing the desktop mapping
+    typedef std::map<Window,Desktop>::iterator iterator;
+
     /// A relation between each client and its current desktop
     std::map<Window, Desktop> m_desktops;
 

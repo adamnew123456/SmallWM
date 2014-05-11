@@ -27,7 +27,7 @@ bool ClientContainer::is_visible(Window window)
  * Gets the iterator at the beginning of the client list.
  * @return An iterator.
  */
-std::map<Window,ClientState>::iterator ClientContainer::clients_begin()
+ClientContainer::iterator ClientContainer::clients_begin()
 {
     return m_clients.begin();
 }
@@ -36,7 +36,7 @@ std::map<Window,ClientState>::iterator ClientContainer::clients_begin()
  * Gets an iterator at the end of the client list.
  * @return An iterator.
  */
-std::map<Window,ClientState>::iterator ClientContainer::clients_end()
+ClientContainer::iterator ClientContainer::clients_end()
 {
     return m_clients.end();
 }
@@ -68,7 +68,7 @@ void ClientContainer::set_state(Window window, ClientState state)
         // on how the client container has been changed.
 
         // Although ICCCM mandates that we give the client the icon window, we
-        // don't want them to muck with it.
+        // don't want them to muck with it. So, give them None instead.
         int property[] = {0, None};
 
         switch (state)

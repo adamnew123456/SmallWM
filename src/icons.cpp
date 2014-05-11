@@ -8,7 +8,7 @@
  */
 Icon *ClientManager::get_icon_of_client(Window window)
 {
-    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+    for (ClientIconIterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {
@@ -96,7 +96,7 @@ void ClientManager::reflow_icons()
               icon_height = DIM2D_HEIGHT(m_shared.icon_size),
               screen_width = DIM2D_WIDTH(m_shared.screen_size);
 
-    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+    for (ClientIconIterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {

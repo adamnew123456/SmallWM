@@ -105,7 +105,7 @@ void DesktopManager::delete_desktop(Window window)
  */
 void DesktopManager::update_desktop()
 {
-    for (std::map<Window,Desktop>::iterator client_iter = m_desktops.begin();
+    for (DesktopManager::iterator client_iter = m_desktops.begin();
             client_iter != m_desktops.end();
             client_iter++)
     {

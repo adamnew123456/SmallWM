@@ -20,7 +20,7 @@ void ClientManager::relayer()
     relayer_clients();
 
     // Now, go back and put all of the icons on the top
-    for (std::map<Window,Icon*>::iterator icon_iter = m_icons.begin();
+    for (ClientIconIterator icon_iter = m_icons.begin();
             icon_iter != m_icons.end();
             icon_iter++)
     {
@@ -606,7 +606,7 @@ void ClientManager::unfocus()
  */
 void ClientManager::remove_from_focus_history(Window window)
 {
-    for (std::list<Window>::iterator focus_chain = m_focus_history.begin();
+    for (WindowIterator focus_chain = m_focus_history.begin();
             focus_chain != m_focus_history.end();
             focus_chain++)
     {

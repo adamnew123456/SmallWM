@@ -82,7 +82,7 @@ void LayerManager::relayer_clients()
 {
     // First, only layer the 'normal' windows which are not icons or placeholders.
     std::vector<Window> clients;
-    for (std::map<Window,Layer>::iterator client_iter = m_layers.begin();
+    for (LayerManager::iterator client_iter = m_layers.begin();
             client_iter != m_layers.end();
             client_iter++)
     {

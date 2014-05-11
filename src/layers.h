@@ -21,6 +21,9 @@ public:
     void set_layer(Window, Layer);
     void adjust_layer(Window, LayerDiff);
 protected:
+    /// Iterator type used for accessing the layer map
+    typedef std::map<Window,Layer>::iterator iterator;
+
     void relayer_clients();
     void delete_layer(Window);
 
