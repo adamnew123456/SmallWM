@@ -1,3 +1,4 @@
+/** @file */
 #ifndef __SMALLWM_LAYERS__
 #define __SMALLWM_LAYERS__
 

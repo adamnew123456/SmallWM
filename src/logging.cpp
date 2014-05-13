@@ -1,3 +1,4 @@
+/** @file */
 #include "logging.h"
 
 /**

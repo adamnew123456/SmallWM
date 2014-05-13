@@ -1,3 +1,4 @@
+/** @file */
 #ifndef __SMALLWM_DESKTOPS__
 #define __SMALLWM_DESKTOPS__
 
