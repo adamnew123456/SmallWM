@@ -2,6 +2,14 @@
 #include "clientmanager.h"
 
 /**
+ * Gets the current 'offset', which is 0 when the window is unfocused and 5 when it is.
+ */
+int get_layer_offset(Layer layer)
+{
+    return layer % 10;
+}
+
+/**
  * Raises a client to the layer above it.
  * @param window The client to raise
  */
@@ -59,8 +67,13 @@ void LayerManager::set_layer(Window window, Layer layer)
 {
     if (!m_clients->is_client(window))
         return;
+    
+    // If the window is focused, then be sure to keep the focus offset when
+    // changing to a new layer
+    Layer old_layer = m_layers[window];
+    Layer offset = get_layer_offset(old_layer);
 
-    m_layers[window] = layer;
+    m_layers[window] = layer + offset;
     m_clients->relayer();
 }
 
