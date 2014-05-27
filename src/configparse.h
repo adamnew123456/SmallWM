@@ -78,6 +78,7 @@ struct KeyboardConfig
             { LAYER_7, "layer-7", XK_7 },
             { LAYER_8, "layer-8", XK_8 },
             { LAYER_9, "layer-9", XK_9 },
+            { EXIT_WM, "exit", XK_Escape },
         };
 
         int num_shortcuts = sizeof(shortcuts) / sizeof(shortcuts[0]);
