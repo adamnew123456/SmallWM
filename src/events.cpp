@@ -20,19 +20,24 @@ XEvents::XEvents(WMShared &shared, ClientManager &clients, KeyboardConfig &keybo
                 ButtonPressMask,GrabModeAsync, GrabModeAsync, None, None);
     }
 
-    KeySym keys[] = {m_keyboard.client_next_desktop, m_keyboard.client_prev_desktop,
-        m_keyboard.next_desktop, m_keyboard.prev_desktop, m_keyboard.toggle_stick,
-        m_keyboard.iconify, m_keyboard.maximize, m_keyboard.request_close, 
-        m_keyboard.force_close, m_keyboard.snap_top, m_keyboard.snap_bottom,
-        m_keyboard.snap_left, m_keyboard.snap_right, m_keyboard.layer_above,
-        m_keyboard.layer_below, m_keyboard.layer_top, m_keyboard.layer_bottom,
-        m_keyboard.exit_wm, m_keyboard.layer1, m_keyboard.layer2, m_keyboard.layer3,
-        m_keyboard.layer4, m_keyboard.layer5, m_keyboard.layer6, m_keyboard.layer7,
-        m_keyboard.layer8, m_keyboard.layer9, NoSymbol};
+    KeyboardAction actions[] = {
+        CLIENT_NEXT_DESKTOP, CLIENT_PREV_DESKTOP,
+        NEXT_DESKTOP, PREV_DESKTOP,
+        TOGGLE_STICK,
+        ICONIFY,
+        MAXIMIZE,
+        REQUEST_CLOSE, FORCE_CLOSE,
+        K_SNAP_TOP, K_SNAP_BOTTOM, K_SNAP_LEFT, K_SNAP_RIGHT,
+        LAYER_ABOVE, LAYER_BELOW, LAYER_TOP, LAYER_BOTTOM,
+        LAYER_1, LAYER_2, LAYER_3, LAYER_4, LAYER_5, LAYER_6, LAYER_7, LAYER_8, LAYER_9,
+        EXIT_WM,
+        INVALID_ACTION
+    };
 
-    for (KeySym *key = &keys[0]; *key != NoSymbol; key++)
+    for (KeyboardAction *action = &actions[0]; *action != INVALID_ACTION; action++)
     {
-        int keycode = XKeysymToKeycode(m_shared.display, *key);
+        KeySym key = m_keyboard.bindings[*action];
+        int keycode = XKeysymToKeycode(m_shared.display, key);
         XGrabKey(m_shared.display, keycode, BUTTON_MASK, m_shared.root, true, 
                 GrabModeAsync, GrabModeAsync);
     }
@@ -90,94 +95,94 @@ void XEvents::handle_keypress()
     if (client == None)
         client = m_event.xkey.window;
 
-    if (*keysym == m_keyboard.client_next_desktop)
-        m_clients.to_next_desktop(client);
-
-    if (*keysym == m_keyboard.client_prev_desktop)
-        m_clients.to_prev_desktop(client);
-
-    if (*keysym == m_keyboard.next_desktop)
-        m_clients.next_desktop();
-
-    if (*keysym == m_keyboard.prev_desktop)
-        m_clients.prev_desktop();
-
-    if (*keysym == m_keyboard.toggle_stick)
-        m_clients.flip_sticky_flag(client);
-
-    if (*keysym == m_keyboard.iconify)
-        m_clients.state_transition(client, CS_ICON);
-
-    if (*keysym == m_keyboard.maximize)
-        m_clients.maximize(client);
-
-    if (*keysym == m_keyboard.request_close)
-        m_clients.close(client);
-
-    // Note that m_clients.destroy() is not usable here, since it must be called
-    // _after_ the window has been removed
-    if (*keysym == m_keyboard.force_close)
+    KeyboardAction action = m_keyboard.reverse_bindings[*keysym];
+    switch (action)
     {
+    case CLIENT_NEXT_DESKTOP:
+        m_clients.to_next_desktop(client);
+        break;
+    case CLIENT_PREV_DESKTOP:
+        m_clients.to_prev_desktop(client);
+        break;
+    case NEXT_DESKTOP:
+        m_clients.next_desktop();
+        break;
+    case PREV_DESKTOP:
+        m_clients.prev_desktop();
+        break;
+    case TOGGLE_STICK:
+        m_clients.flip_sticky_flag(client);
+        break;
+    case ICONIFY:
+        m_clients.state_transition(client, CS_ICON);
+        break;
+    case MAXIMIZE:
+        m_clients.maximize(client);
+        break;
+    case REQUEST_CLOSE:
+        m_clients.close(client);
+        break;
+    case FORCE_CLOSE:
         // Make sure that the window isn't an icon before we nuke it
-        if (m_clients.get_icon_of_icon(client))
-            return;
-
-        XDestroyWindow(m_shared.display, client);
+        if (!m_clients.get_icon_of_icon(client))
+            XDestroyWindow(m_shared.display, client);
+        break;
+    case K_SNAP_TOP:
+        m_clients.snap(client, SNAP_TOP);
+        break;
+    case K_SNAP_BOTTOM:
+        m_clients.snap(client, SNAP_BOTTOM);
+        break;
+    case K_SNAP_LEFT:
+        m_clients.snap(client, SNAP_LEFT);
+        break;
+    case K_SNAP_RIGHT:
+        m_clients.snap(client, SNAP_RIGHT);
+        break;
+    case LAYER_ABOVE:
+        m_clients.raise_layer(client);
+        break;
+    case LAYER_BELOW:
+        m_clients.lower_layer(client);
+        break;
+    case LAYER_TOP:
+        m_clients.set_layer(client, MAX_LAYER);
+        break;
+    case LAYER_BOTTOM:
+        m_clients.set_layer(client, MIN_LAYER);
+        break;
+    case LAYER_1:
+        m_clients.set_layer(client, 10);
+        break;
+    case LAYER_2:
+        m_clients.set_layer(client, 20);
+        break;
+    case LAYER_3:
+        m_clients.set_layer(client, 30);
+        break;
+    case LAYER_4:
+        m_clients.set_layer(client, 40);
+        break;
+    case LAYER_5:
+        m_clients.set_layer(client, 50);
+        break;
+    case LAYER_6:
+        m_clients.set_layer(client, 60);
+        break;
+    case LAYER_7:
+        m_clients.set_layer(client, 70);
+        break;
+    case LAYER_8:
+        m_clients.set_layer(client, 80);
+        break;
+    case LAYER_9:
+        m_clients.set_layer(client, 90);
+        break;
+    case EXIT_WM:
+        m_done = true;
+        break;
     }
 
-    if (*keysym == m_keyboard.snap_top)
-        m_clients.snap(client, SNAP_TOP);
-
-    if (*keysym == m_keyboard.snap_bottom)
-        m_clients.snap(client, SNAP_BOTTOM);
-
-    if (*keysym == m_keyboard.snap_left)
-        m_clients.snap(client, SNAP_LEFT);
-
-    if (*keysym == m_keyboard.snap_right)
-        m_clients.snap(client, SNAP_RIGHT);
-
-    if (*keysym == m_keyboard.layer_above)
-        m_clients.raise_layer(client);
-
-    if (*keysym == m_keyboard.layer_below)
-        m_clients.lower_layer(client);
-
-    if (*keysym == m_keyboard.layer_top)
-        m_clients.set_layer(client, MAX_LAYER);
-
-    if (*keysym == m_keyboard.layer_bottom)
-        m_clients.set_layer(client, MIN_LAYER);
-
-    if (*keysym == m_keyboard.exit_wm)
-        m_done = true;
-
-    if (*keysym == m_keyboard.layer1)
-        m_clients.set_layer(client, 10);
-
-    if (*keysym == m_keyboard.layer2)
-        m_clients.set_layer(client, 20);
-
-    if (*keysym == m_keyboard.layer3)
-        m_clients.set_layer(client, 30);
-
-    if (*keysym == m_keyboard.layer4)
-        m_clients.set_layer(client, 40);
-
-    if (*keysym == m_keyboard.layer5)
-        m_clients.set_layer(client, 50);
-
-    if (*keysym == m_keyboard.layer6)
-        m_clients.set_layer(client, 60);
-
-    if (*keysym == m_keyboard.layer7)
-        m_clients.set_layer(client, 70);
-
-    if (*keysym == m_keyboard.layer8)
-        m_clients.set_layer(client, 80);
-
-    if (*keysym == m_keyboard.layer9)
-        m_clients.set_layer(client, 90);
 }
 
 /**

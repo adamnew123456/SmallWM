@@ -24,21 +24,6 @@ std::string WMConfig::get_config_path() const
 }
 
 /**
- * Converts a key name into a KeySym, or returns the default.
- * @param key The name of the key as a string.
- * @param default_key The default KeySym to return if conversion fails.
- * @return Either the key as a KeySym, or the default.
- */
-KeySym string_to_keysym(std::string key, KeySym default_key)
-{
-    KeySym result = XStringToKeysym(key.c_str());
-    if (result == NoSymbol)
-        return default_key;
-    else
-        return result;
-}
-
-/**
  * A callback for the inih library, which handles a singular key-value pair.
  *
  * @param user The WMConfig object this parser belongs to (necessary because
@@ -60,42 +45,24 @@ int WMConfig::config_parser(void *user, const char *c_section,
         if (name == std::string("log-level"))
         {
             if (value == "EMERG")
-            {
                 self->log_mask = LOG_UPTO(LOG_EMERG);
-            }
             else if (value == "ALERT")
-            {
                 self->log_mask = LOG_UPTO(LOG_ALERT);
-            }
             else if (value == "CRIT")
-            {
                 self->log_mask = LOG_UPTO(LOG_CRIT);
-            }
             else if (value == "ERR")
-            {
                 self->log_mask = LOG_UPTO(LOG_ERR);
-            }
             else if (value == "WARNING")
-            {
                 self->log_mask = LOG_UPTO(LOG_WARNING);
-            }
             else if (value == "NOTICE")
-            {
                 self->log_mask = LOG_UPTO(LOG_NOTICE);
-            }
             else if (value == "INFO")
-            {
                 self->log_mask = LOG_UPTO(LOG_INFO);
-            }
             else if (value == "DEBUG")
-            {
                 self->log_mask = LOG_UPTO(LOG_DEBUG);
-            }
         }
         else if (name == std::string("shell"))
-        {
             self->shell = value;
-        }
         else if (name == std::string("desktops"))
         {
             /* This example here is a general template for how all of these
@@ -115,9 +82,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
             self->num_desktops = strtoul(value.c_str(), NULL, 0);
             if (self->num_desktops == 0)
-            {
                 self->num_desktops = old_value;
-            }
         }
         else if (name == std::string("icon-width"))
         {
@@ -125,9 +90,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
             self->icon_width = strtoul(value.c_str(), NULL, 0);
             if (self->icon_width == 0)
-            {
                 self->icon_width = old_value;
-            }
         }
         else if (name == std::string("icon-height"))
         {
@@ -135,9 +98,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
             self->icon_height = strtoul(value.c_str(), NULL, 0);
             if (self->icon_height == 0)
-            {
                 self->icon_height = old_value;
-            }
         }
         else if (name == std::string("border-width"))
         {
@@ -145,9 +106,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
             self->border_width = strtoul(value.c_str(), NULL, 0);
             if (self->border_width == 0)
-            {
                 self->border_width = old_value;
-            }
         }
         else if (name == std::string("icon-icons"))
         {
@@ -155,13 +114,9 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
             unsigned long as_long = strtoul(value.c_str(), NULL, -1);
             if (as_long != 0 && as_long != 1)
-            {
                 self->show_icons = old_value;
-            }
             else
-            {
                 self->show_icons = as_long == 1 ? true : false;
-            }
         }
     }
 
@@ -234,41 +189,30 @@ int WMConfig::config_parser(void *user, const char *c_section,
     // more specifically KeyboardConfig.
     else if (section == std::string("keyboard"))
     {
-/// A common template for all key binding declarations
-#define GET_KEY_BINDING(opt_name, attr, def_value) do { \
-        if (name == std::string(opt_name)) \
-            self->key_commands.attr = \
-                string_to_keysym(value, def_value); \
-    } while (0);
+        KeyboardConfig &kb_config = self->key_commands;
 
-        GET_KEY_BINDING("client-next-desktop", client_next_desktop, 
-                XK_bracketright);
-        GET_KEY_BINDING("client-prev-desktop", client_prev_desktop,
-                XK_bracketleft);
+        // If there is already a binding for that action, then fail
+        KeyboardAction action = kb_config.action_names[name];
+        if (action == INVALID_ACTION)
+            return 0;
 
-        GET_KEY_BINDING("next-desktop", next_desktop, XK_period);
-        GET_KEY_BINDING("prev-desktop", prev_desktop, XK_comma);
-        GET_KEY_BINDING("toggle-stick", toggle_stick, XK_backslash);
+        // If an old binding exists for this action, then remove it
+        if (kb_config.bindings[action] != NoSymbol)
+        {
+            KeySym old_binding = kb_config.bindings[action];
+            kb_config.bindings.erase(action);
+            kb_config.reverse_bindings.erase(old_binding);
+        }
 
-        GET_KEY_BINDING("iconify", iconify, XK_h);
+        KeySym binding = XStringToKeysym(value.c_str());
+        if (binding == NoSymbol)
+            return 0;
 
-        GET_KEY_BINDING("maximize", maximize, XK_m);
+        // If the key that is being bound is already in use, then fail
+        if (kb_config.reverse_bindings[binding] != INVALID_ACTION)
+            return 0;
 
-        GET_KEY_BINDING("request-close", request_close, XK_c);
-        GET_KEY_BINDING("force-close", force_close, XK_x);
-
-        GET_KEY_BINDING("snap-top", snap_top, XK_Up);
-        GET_KEY_BINDING("snap-bottom", snap_bottom, XK_Down);
-        GET_KEY_BINDING("snap-left", snap_left, XK_Left);
-        GET_KEY_BINDING("snap-right", snap_right, XK_Right);
-
-        GET_KEY_BINDING("layer-above", layer_above, XK_Page_Up);
-        GET_KEY_BINDING("layer-below", layer_below, XK_Page_Down);
-        GET_KEY_BINDING("layer-top", layer_top, XK_Home);
-        GET_KEY_BINDING("layer-bottom", layer_bottom, XK_End);
-
-        GET_KEY_BINDING("exit-wm", exit_wm, XK_Escape);
-#undef GET_KEY_BINDING
+        kb_config.bindings[action] = binding;
     }
 
     return 0;
