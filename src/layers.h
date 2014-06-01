@@ -25,6 +25,7 @@ protected:
     /// Iterator type used for accessing the layer map
     typedef std::map<Window,Layer>::iterator iterator;
 
+    void set_layer_property(Window);
     void relayer_clients();
     void delete_layer(Window);
 

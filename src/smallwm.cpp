@@ -87,18 +87,19 @@ void copy_config(WMConfig &config, WMShared &shared, ClientManager &clients)
 /**
  * Interns all necessary X atoms.
  */
-const int n_atoms = 3;
+const int n_atoms = 4;
 void intern_atoms(WMShared &shared)
 {
-    char *atom_names[n_atoms] = {
-        (char*)"WM_PROTOCOLS",
-        (char*)"WM_DELETE_WINDOW",
-        (char*)"WM_STATE",
+    const char *atom_names[n_atoms] = {
+        "WM_PROTOCOLS",
+        "WM_DELETE_WINDOW",
+        "WM_STATE",
+        "SMALLWM_LAYER"
     };
 
     Atom atoms[n_atoms];
 
-    XInternAtoms(shared.display, atom_names, n_atoms, false, atoms);
+    XInternAtoms(shared.display, const_cast<char**>(atom_names), n_atoms, false, atoms);
     for (int i = 0; i < n_atoms; i++)
     {
         std::string atom_as_string(atom_names[i]);

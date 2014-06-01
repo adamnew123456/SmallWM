@@ -10,6 +10,18 @@ int get_layer_offset(Layer layer)
 }
 
 /**
+ * Attaches the layer of a client to the window via X properties.
+ */
+void LayerManager::set_layer_property(Window window)
+{
+    int property[] = {(int)m_layers[window]};
+    XChangeProperty(m_shared.display, window,
+            m_shared.atoms["SMALLWM_LAYER"],
+            XA_CARDINAL, 32, PropModeReplace,
+            (unsigned char*)property, 1);
+}
+
+/**
  * Raises a client to the layer above it.
  * @param window The client to raise
  */
@@ -24,6 +36,8 @@ void LayerManager::raise_layer(Window window)
         m_layers[window] += 10;
         m_clients->relayer();
     }
+
+    set_layer_property(window);
 }
 
 /**
@@ -41,6 +55,8 @@ void LayerManager::lower_layer(Window window)
         m_layers[window] -= 10;
         m_clients->relayer();
     }
+
+    set_layer_property(window);
 }
 
 /**
@@ -56,6 +72,8 @@ void LayerManager::adjust_layer(Window window, LayerDiff layer)
         m_layers[window] = new_layer;
         m_clients->relayer();
     }
+
+    set_layer_property(window);
 }
 
 /**
@@ -75,6 +93,8 @@ void LayerManager::set_layer(Window window, Layer layer)
 
     m_layers[window] = layer + offset;
     m_clients->relayer();
+
+    set_layer_property(window);
 }
 
 /**
