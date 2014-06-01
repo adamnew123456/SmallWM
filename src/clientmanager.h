@@ -89,7 +89,17 @@ public:
         LayerManager::LayerManager((ClientContainer*)this, shared),
         DesktopManager::DesktopManager((ClientContainer*)this, shared),
         m_shared(shared), m_current_focus(None), m_revert_focus(true)
-    {};
+    {
+#define METHOD_POINTER(method) &ClientManager::method
+        m_state_changers[CS_ACTIVE] = METHOD_POINTER(from_active_state);
+        m_state_changers[CS_VISIBLE] = METHOD_POINTER(from_visible_state);
+        m_state_changers[CS_INVISIBLE] = METHOD_POINTER(from_invisible_state);
+        m_state_changers[CS_ICON] = METHOD_POINTER(from_icon_state);
+        m_state_changers[CS_MOVING] = METHOD_POINTER(from_moving_state);
+        m_state_changers[CS_RESIZING] = METHOD_POINTER(from_resizing_state);
+        m_state_changers[CS_WITHDRAWN] = METHOD_POINTER(from_withdrawn_state);
+#undef METHOD_POINTER
+    };
 
     using ClientContainer::is_client;
     using ClientContainer::is_visible;
@@ -130,11 +140,19 @@ public:
     virtual void redesktop();
 
 private:
+    bool from_active_state(ClientState&, Window);
+    bool from_visible_state(ClientState&, Window);
+    bool from_invisible_state(ClientState&, Window);
+    bool from_withdrawn_state(ClientState&, Window);
+    bool from_icon_state(ClientState&, Window);
+    bool from_moving_state(ClientState&, Window);
+    bool from_resizing_state(ClientState&, Window);
+
     void apply_actions(Window);
 
     void unmap(Window);
         
-    void focus(Window);
+    bool focus(Window);
     void unfocus();
     void remove_from_focus_history(Window);
 
@@ -150,6 +168,13 @@ private:
 
     /// Shared window manager data
     WMShared &m_shared;
+
+    /// A type indicating a generic state-change function
+    typedef bool(ClientManager::*StateChange)(ClientState&, Window);
+
+    /** A function table for dispatching when changing the state of a client
+        (Note that the state used in the map is the __old__ state). */
+    std::map<ClientState, StateChange> m_state_changers;
 
     /// All the registered ClassActions
     std::map<std::string, ClassActions> m_actions;

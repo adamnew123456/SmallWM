@@ -101,283 +101,230 @@ void ClientManager::handle_motion(const XEvent &event)
 void ClientManager::state_transition(Window window, ClientState new_state)
 {   
     if (!is_client(window))
-    {
         return;
-    }
-
-    // Save the current window's attributes, should any transition need them
-    XWindowAttributes attr;
-    XGetWindowAttributes(m_shared.display, window, &attr);
 
     ClientState old_state = get_state(window);
+    StateChange state_change = m_state_changers[old_state];
+    bool successful = (this->*state_change)(new_state, window);
     
-    /*
-     * An active (i.e. focused) window can do anything:
-     *
-     *  active  -> icon
-     *          -> visible
-     *          -> invisible
-     *          -> moving
-     *          -> resizing
-     *          -> withdrawn
-     *          -> destroy
-     */
-    if (old_state == CS_ACTIVE)
-    {
+    if (successful && new_state == CS_DESTROY)
+        destroy(window);
+    else if (successful)
+        set_state(window, new_state);
+}
 
-        if (new_state == CS_ICON)
-        {
-            unfocus();
-            unmap(window);
-            make_icon(window);
-            return;
-        }
-        if (new_state == CS_VISIBLE)
-        {
-            unfocus();
-            set_state(window, CS_VISIBLE);
-            return;
-        }
-        if (new_state == CS_INVISIBLE)
-        {
-            unfocus();
-            unmap(window);
-            set_state(window, CS_INVISIBLE);
-            return;
-        }
-        if (new_state == CS_MOVING)
-        {
-            unfocus();
-            unmap(window);
-            begin_moving(window, attr);
-            return;
-        }
-        if (new_state == CS_RESIZING)
-        {
-            unfocus();
-            unmap(window);
-            begin_resizing(window, attr);
-            return;
-        }
-        if (new_state == CS_WITHDRAWN)
-        {
-            unfocus();
-            unmap(window);
-            set_state(window, CS_WITHDRAWN);
-        }
-        if (new_state == CS_DESTROY)
-        {
-            unfocus();
-            destroy(window);
-            return;
-        }
+/**
+ * Handles the transition away from the ACTIVE state.
+ */
+bool ClientManager::from_active_state(ClientState &new_state, Window client)
+{
+    XWindowAttributes attr;
+
+    switch (new_state)
+    {
+    case CS_ICON:
+        unfocus();
+        unmap(client);
+        make_icon(client);
+        return true;
+    case CS_VISIBLE:
+        unfocus();
+        return true;
+    case CS_INVISIBLE:
+        unfocus();
+        unmap(client);
+        return true;
+    case CS_MOVING:
+        XGetWindowAttributes(m_shared.display, client, &attr);
+
+        unfocus();
+        unmap(client);
+        begin_moving(client, attr);
+        return true;
+    case CS_RESIZING:
+        XGetWindowAttributes(m_shared.display, client, &attr);
+
+        unfocus();
+        unmap(client);
+        begin_resizing(client, attr);
+        return true;
+    case CS_WITHDRAWN:
+        unfocus();
+        unmap(client);
+        return true;
+    case CS_DESTROY:
+        unfocus();
+        return true;
     }
 
-    /*
-     * Visible (unfocused, but viewable) windows can also do anything:
-     *
-     *  visible     -> icon
-     *              -> active
-     *              -> invisible
-     *              -> moving
-     *              -> resizing
-     *              -> withdrawn
-     *              -> destroy
-     */
-    if (old_state == CS_VISIBLE)
+    return false;
+}
+
+/**
+ * Handles the transition away from the VISIBLE state.
+ */
+bool ClientManager::from_visible_state(ClientState &new_state, Window client)
+{
+    XWindowAttributes attr;
+
+    switch (new_state)
     {
-        if (new_state == CS_ICON)
-        {
-            unmap(window);
-            make_icon(window);
-            return;
-        }
-        if (new_state == CS_ACTIVE)
-        {
-            focus(window);
-            return;
-        }
-        if (new_state == CS_INVISIBLE)
-        {
-            unmap(window);
-            set_state(window, CS_INVISIBLE);
-            return;
-        }
-        if (new_state == CS_MOVING)
-        {
-            unmap(window);
-            begin_moving(window, attr);
-            return;
-        }
-        if (new_state == CS_RESIZING)
-        {
-            unmap(window);
-            begin_resizing(window, attr);
-            return;
-        }
-        if (new_state == CS_WITHDRAWN)
-        {
-            unmap(window);
-            set_state(window, CS_WITHDRAWN);
-        }
-        if (new_state == CS_DESTROY)
-        {
-            destroy(window);
-            return;
-        }
+    case CS_ICON:
+        unmap(client);
+        make_icon(client);
+        return true;
+    case CS_ACTIVE:
+        return focus(client);
+    case CS_INVISIBLE:
+        unmap(client);
+        return true;
+    case CS_MOVING:
+        XGetWindowAttributes(m_shared.display, client, &attr);
+
+        unmap(client);
+        begin_moving(client, attr);
+        return true;
+    case CS_RESIZING:
+        XGetWindowAttributes(m_shared.display, client, &attr);
+
+        unmap(client);
+        begin_resizing(client, attr);
+        return true;
+    case CS_WITHDRAWN:
+        unmap(client);
+        return true;
+    case CS_DESTROY:
+        return true;
     }
 
-    /*
-     * Invisible windows (those on other desktops) can only be made visible.
-     *
-     * invisible    -> visible
-     *              -> destroy
-     */
-    if (old_state == CS_INVISIBLE)
+    return false;
+}
+
+/**
+ * Handles the transition away from the INVISIBLE state.
+ */
+bool ClientManager::from_invisible_state(ClientState &new_state, Window client)
+{
+    switch (new_state)
     {
-        if (new_state == CS_VISIBLE)
-        {
-            XMapWindow(m_shared.display, window);
-            set_state(window, CS_VISIBLE);
-            // Don't explicitly relayer, since only desktop changes will trigger
-            // this transition, and the desktop change function does the
-            // relayering itself.
-            return;
-        }
-        if (new_state == CS_DESTROY)
-        {
-            destroy(window);
-            return;
-        }
+    case CS_VISIBLE:
+        XMapWindow(m_shared.display, client);
+        // Don't explicitly relayer, since only desktop changes will trigger
+        // this transition, and the desktop change function does the
+        // relayering itself.
+        return true;
+    case CS_DESTROY:
+        return true;
     }
 
-    /**
-     * Withdrawn windows are like invisible windows, but they shouldn't be
-     * taken out of that state unless specifically requested by the client.
-     *
-     * * withdrawn  -> invisible // Since it could end up on another desktop
-     *              -> visible
-     *              -> destroy
-     */
-    if (old_state == CS_WITHDRAWN)
+    return false;
+}
+
+/**
+ * Handles the transition away from the WITHDRAWN state.
+ */
+bool ClientManager::from_withdrawn_state(ClientState &new_state, Window client)
+{
+    switch (new_state)
     {
-        if (new_state == CS_VISIBLE)
-        {
-            XMapWindow(m_shared.display, window);
-            set_state(window, CS_VISIBLE);
-            relayer();
-            return;
-        }
-        if (new_state == CS_INVISIBLE)
-        {
-            // It was already hidden anyway - not much to do
-            set_state(window, CS_INVISIBLE);
-            return;
-        }
-        if (new_state == CS_DESTROY)
-        {
-            destroy(window);
-            return;
-        }
+    case CS_VISIBLE:
+        XMapWindow(m_shared.display, client);
+        relayer();
+        return true;
+    case CS_INVISIBLE:
+        // It was already hidden anyway - nothing to do, really
+        return true;
+    case CS_DESTROY:
+        return true;
     }
 
-    /*
-     * Iconified windows can only be unhidden, which automatically focuses them.
-     * 
-     * icon -> active
-     *      -> withdrawn
-     *      -> destroy
-     */
-    if (old_state == CS_ICON)
+    return false;
+}
+
+/**
+ * Handles the transition away from the ICON state.
+ */
+bool ClientManager::from_icon_state(ClientState &new_state, Window client)
+{
+    // state_transition is required to take a client client, so the icon
+    // also needs to be retrieved in order to destroy it.
+    Icon *icon = get_icon_of_client(client);
+    if (!icon)
+        return false;
+
+    switch (new_state)
     {
-        // state_transition is required to take a client window, so the icon
-        // also needs to be retrieved in order to destroy it.
-        Icon *icon = get_icon_of_client(window);
+    case CS_ACTIVE:
+        delete_icon(icon);
+        XMapWindow(m_shared.display, client);
+        reset_desktop(client);
+        if (!focus(client))
+            new_state = CS_VISIBLE;
 
-        if (!icon)
-        {
-            return;
-        }
-
-        if (new_state == CS_ACTIVE)
-        {
-            delete_icon(icon);
-            XMapWindow(m_shared.display, window);
-            focus(window);
-            reset_desktop(window);
-            return;
-        }
-        if (new_state == CS_WITHDRAWN)
-        {
-            delete_icon(icon);
-            reset_desktop(window);
-        }
-        if (new_state == CS_DESTROY)
-        {
-            delete_icon(icon);
-            destroy(window);
-            return;
-        }
+        relayer(); // After focus(), since focus() may change the layer
+        return true;
+    case CS_WITHDRAWN:
+        delete_icon(icon);
+        reset_desktop(client);
+        return true;
+    case CS_DESTROY:
+        delete_icon(icon);
+        return true;
     }
 
-    /*
-     * Windows which are currently being moved by the user can only become
-     * active again.
-     *
-     * moving   -> activea
-     *          -> withdrawn
-     *          -> destroy
-     */
-    if (old_state == CS_MOVING)
+    return false;
+}
+
+/**
+ * Handles the transition away from the MOVING state.
+ */
+bool ClientManager::from_moving_state(ClientState &new_state, Window client)
+{
+    switch (new_state)
     {
-        if (new_state == CS_ACTIVE)
-        {
-            XMapWindow(m_shared.display, window);
-            end_move_resize();
-            focus(window);
-            relayer();
-            return;
-        }
-        if (new_state == CS_WITHDRAWN)
-        {
-            end_move_resize_unsafe();
-        }
-        if (new_state == CS_DESTROY)
-        {
-            end_move_resize_unsafe();
-            destroy(window);
-            return;
-        }
+    case CS_ACTIVE:
+        XMapWindow(m_shared.display, client);
+        end_move_resize();
+        if (!focus(client))
+            new_state = CS_VISIBLE;
+
+        relayer(); // After focus(), since focus() may change the layer
+        return true;
+    case CS_WITHDRAWN:
+        end_move_resize_unsafe();
+        return true;
+    case CS_DESTROY:
+        end_move_resize_unsafe();
+        return true;
     }
 
-    /*
-     * Windows which are being resized by the user can only become active again.
-     *
-     * resizing -> active
-     *          -> withdrawn
-     *          -> destroy
-     */
-    if (old_state == CS_RESIZING)
+    return false;
+}
+
+/**
+ * Handles the transition away from the RESIZING state.
+ */
+bool ClientManager::from_resizing_state(ClientState &new_state, Window client)
+{
+    switch (new_state)
     {
-        if (new_state == CS_ACTIVE)
-        {
-            XMapWindow(m_shared.display, window);
-            end_move_resize();
-            focus(window);
-            relayer();
-            return;
-        }
-        if (new_state == CS_WITHDRAWN)
-        {
-            end_move_resize_unsafe();
-        }
-        if (new_state == CS_DESTROY)
-        {
-            end_move_resize_unsafe();
-            destroy(window);
-            return;
-        }
+    case CS_ACTIVE:
+        XMapWindow(m_shared.display, client);
+        end_move_resize();
+        if (!focus(client))
+            new_state = CS_VISIBLE;
+
+        relayer(); // After focus(), since focus() may change the layer
+        return false;
+    case CS_WITHDRAWN:
+        end_move_resize_unsafe();
+        return true;
+    case CS_DESTROY:
+        end_move_resize_unsafe();
+        return true;
     }
+
+    return false;
 }
 
 /**
@@ -411,13 +358,9 @@ void ClientManager::create(Window window)
             return;
 
         if (should_be_visible(window))
-        {
             set_state(window, CS_VISIBLE);
-        }
         else
-        {
             set_state(window, CS_INVISIBLE);
-        }
 
         return;
     }
@@ -515,7 +458,7 @@ void ClientManager::close(Window window)
  * Set the focus on a particular window, unfocusing the previous window.
  * @param window The client window to focus on.
  */
-void ClientManager::focus(Window window)
+bool ClientManager::focus(Window window)
 {
     // Save this, since it will need to be put on the history if the focus
     // succeeds.
@@ -549,6 +492,7 @@ void ClientManager::focus(Window window)
             // update the current focus to what it actually is
             m_current_focus = new_focus;
             unfocus();
+            return false;
         }
         else
         {
@@ -566,6 +510,8 @@ void ClientManager::focus(Window window)
 
             if (old_focus != None)
                 m_focus_history.push_back(old_focus);
+
+            return true;
         }
     }
 }

@@ -80,7 +80,6 @@ void ClientManager::make_icon(Window window)
     XFree(hints);
 
     m_icons[icon->window] = icon;
-    set_state(icon->client, CS_ICON);
 
     // Move all the icons into the proper location
     reflow_icons();
