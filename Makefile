@@ -4,9 +4,9 @@ CXX=/usr/bin/g++
 CXXFLAGS=-g -I/usr/include/i386-linux-gnu/c++/4.8 -Itest -Iinih -Isrc
 LINKERFLAGS=-lX11 -lXrandr
 BINS=bin/test_configparse bin/smallwm
-OBJS=obj/ini.o obj/clients.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icons.o obj/layers.o obj/logging.o obj/moveresize.o obj/smallwm.o obj/utils.o
-HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/desktops.h src/events.h src/layers.h src/shared.h src/utils.h
-SRCS=src/clients.cpp src/clientmanager.cpp src/configparse.cpp src/desktops.cpp src/events.cpp src/icons.cpp src/layers.cpp src/moveresize.cpp src/smallwm.cpp src/utils.cpp
+OBJS=obj/ini.o obj/clients.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icccm.o obj/icons.o obj/layers.o obj/logging.o obj/moveresize.o obj/smallwm.o obj/utils.o
+HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/desktops.h src/events.h src/icccm.h src/layers.h src/shared.h src/utils.h
+SRCS=src/clients.cpp src/clientmanager.cpp src/configparse.cpp src/desktops.cpp src/events.cpp src/icccm.cpp src/icons.cpp src/layers.cpp src/moveresize.cpp src/smallwm.cpp src/utils.cpp
 
 all: bin/smallwm
 
@@ -36,6 +36,9 @@ obj/desktops.o: obj src/desktops.cpp
 
 obj/events.o: obj src/events.cpp
 	${CXX} ${CXXFLAGS} -c src/events.cpp -o obj/events.o
+
+obj/icccm.o: obj src/icccm.cpp
+	${CXX} ${CXXFLAGS} -c src/icccm.cpp -o obj/icccm.o
 
 obj/icons.o: obj src/icons.cpp
 	${CXX} ${CXXFLAGS} -c src/icons.cpp -o obj/icons.o

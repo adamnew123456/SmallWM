@@ -646,7 +646,11 @@ void ClientManager::snap(Window window, SnapDir side)
             break;
     }
 
-    XMoveResizeWindow(m_shared.display, window, x, y, w, h);
+    Dimension2D current_size(w, h);
+    Dimension2D preferred_size = icccm_move_resize_check(m_shared, window, current_size);
+
+    XMoveResizeWindow(m_shared.display, window, x, y, 
+            DIM2D_WIDTH(preferred_size), DIM2D_HEIGHT(preferred_size));
 }
 
 /**
@@ -662,6 +666,9 @@ void ClientManager::maximize(Window window)
     Dimension screen_width = DIM2D_WIDTH(m_shared.screen_size),
               screen_height = DIM2D_HEIGHT(m_shared.screen_size) - icon_height;
 
+    Dimension2D current_size(screen_width, screen_height);
+    Dimension2D preferred_size = icccm_move_resize_check(m_shared, window, current_size);
+
     XMoveResizeWindow(m_shared.display, window, 0, icon_height, 
-            screen_width, screen_height);
+            DIM2D_WIDTH(preferred_size), DIM2D_HEIGHT(preferred_size));
 }

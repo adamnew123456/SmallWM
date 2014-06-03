@@ -99,7 +99,13 @@ void ClientManager::end_move_resize()
 
     end_move_resize_unsafe();
 
-    XMoveResizeWindow(m_shared.display, m_mvr.client, attr.x, attr.y, attr.width, attr.height);
+    Dimension2D current_size(attr.width, attr.height);
+
+    // Find out the client's preferences with regards to its size
+    Dimension2D preferred_size = icccm_move_resize_check(m_shared, m_mvr.client, current_size);
+
+    XMoveResizeWindow(m_shared.display, m_mvr.client, 
+        attr.x, attr.y, DIM2D_WIDTH(preferred_size), DIM2D_HEIGHT(preferred_size));
 
     // Moving/resizing a window generates ConfigureNotify events - dump them
     XEvent _;

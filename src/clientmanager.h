@@ -11,6 +11,7 @@
 #include "clients.h"
 #include "common.h"
 #include "desktops.h"
+#include "icccm.h"
 #include "layers.h"
 #include "shared.h"
 #include "utils.h"
