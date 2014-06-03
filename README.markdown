@@ -69,7 +69,7 @@ Configuration
 =============
 
 The C++ version follows a similar configuration file format to the original C 
-version, but with some extended options. It should be placed at `$HOME/.config/smallwm.conf`.
+version, but with some extended options. It should be placed at `$HOME/.config/smallwm`.
 
 For example:
 
