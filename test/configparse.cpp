@@ -40,6 +40,7 @@ SUITE(WMConfigSuite)
 {
     TEST_FIXTURE(WMConfigFixture, test_default_shell)
     {
+        // Ensure that an empty config file provides the default shell
         write_config_file(*config_path, "\n");
 
         config.load();
@@ -68,7 +69,8 @@ SUITE(WMConfigSuite)
 
     TEST_FIXTURE(WMConfigFixture, test_default_num_desktops)
     {
-
+        // Ensure that an empty config file provides the default number of
+        // desktops
         write_config_file(*config_path, "\n");
 
         config.load();
@@ -175,6 +177,42 @@ SUITE(WMConfigSuite)
 
         config.load();
         CHECK_EQUAL(20, config.icon_height);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_default_border_width)
+    {
+
+        write_config_file(*config_path, "\n");
+
+        config.load();
+        CHECK_EQUAL(4, config.border_width);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_border_width)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nborder-width=42\n");
+
+        config.load();
+        CHECK_EQUAL(42, config.border_width);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_border_width_zero)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nborder-width=0\n");
+
+        config.load();
+        CHECK_EQUAL(4, config.border_width);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_border_width_negative)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nborder-width=-42\n");
+
+        config.load();
+        CHECK_EQUAL(4, config.border_width);
     }
 };
 

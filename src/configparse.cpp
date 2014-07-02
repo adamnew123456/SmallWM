@@ -84,10 +84,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
         else if (name == std::string("border-width"))
         {
             Dimension old_value = self->border_width;
-
-            self->border_width = strtoul(value.c_str(), NULL, 0);
-            if (self->border_width == 0)
-                self->border_width = old_value;
+            self->border_width = try_parse_ulong(value.c_str(), old_value);
         }
         else if (name == std::string("icon-icons"))
         {

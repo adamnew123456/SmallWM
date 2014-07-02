@@ -114,7 +114,7 @@ class WMConfig
 public:
     /// Loads a couple of defaults for the WMConfig.
     WMConfig() : shell("/usr/bin/xterm"), num_desktops(5), 
-        icon_width(75), icon_height(20), border_width(2),
+        icon_width(75), icon_height(20), border_width(4),
         show_icons(true), log_mask(LOG_UPTO(LOG_WARNING))
     {};
     
