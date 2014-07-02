@@ -6,6 +6,7 @@
 #include <cstring>
 #include <map>
 
+unsigned long try_parse_ulong(const char *string, unsigned long default_);
 void strip_string(const char *text, const char *remove, char *buffer);
 
 /**

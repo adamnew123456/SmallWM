@@ -68,24 +68,8 @@ int WMConfig::config_parser(void *user, const char *c_section,
         }
         else if (name == std::string("desktops"))
         {
-            /* This example here is a general template for how all of these
-             * work:
-             *
-             *========================================
-             * type old_value = self->attribute;
-             *
-             * self->attribute = some_conversion();
-             * if (self->attribute is invalid)
-             * {
-             *     self->attribute = old_value;
-             * }
-             * =======================================
-             */
             Desktop old_value = self->num_desktops;
-
-            self->num_desktops = strtoul(value.c_str(), NULL, 0);
-            if (self->num_desktops == 0)
-                self->num_desktops = old_value;
+            self->num_desktops = try_parse_ulong(value.c_str(), old_value);
         }
         else if (name == std::string("icon-width"))
         {

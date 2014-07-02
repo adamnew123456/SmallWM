@@ -25,3 +25,24 @@ void strip_string(const char *text, const char *remove, char *buffer)
     // Ensure that the NUL terminator comes after all the content
     *buffer_iter = '\0';
 }
+
+/**
+ * Tries to convert a string to an unsigned integer.
+ *
+ * @param[in] string The text to convert.
+ * @param default_ The default value to return if there is an error.
+ * @return The parsed value, or the default.
+ */
+unsigned long try_parse_ulong(const char *string, unsigned long default_)
+{
+    // strtoul is a little weird about negatives, and thus we have to filter
+    // them out beforehand.
+    if (strchr(string, '-'))
+        return default_;
+
+    unsigned long result = strtoul(string, NULL, 0);
+    if (result == 0)
+        return default_;
+
+    return result;
+}

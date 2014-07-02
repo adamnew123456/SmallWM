@@ -38,7 +38,15 @@ void write_config_file(std::string filename, const char *text)
 
 SUITE(WMConfigSuite)
 {
-    TEST_FIXTURE(WMConfigFixture, test_parse_shell) 
+    TEST_FIXTURE(WMConfigFixture, test_default_shell)
+    {
+        write_config_file(*config_path, "\n");
+
+        config.load();
+        CHECK_EQUAL(std::string("/usr/bin/xterm"), config.shell);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_shell) 
     {
         // Make sure that any particular setting is acceptable
         write_config_file(*config_path,
@@ -48,7 +56,7 @@ SUITE(WMConfigSuite)
         CHECK_EQUAL(std::string("some-terminal"), config.shell);
     }
     
-    TEST_FIXTURE(WMConfigFixture, test_parse_shell_empty)
+    TEST_FIXTURE(WMConfigFixture, test_shell_empty)
     {
         // Make sure that an empty configuration option is not accepted
         write_config_file(*config_path,
