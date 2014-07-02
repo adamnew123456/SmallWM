@@ -95,3 +95,9 @@ bin/libUnitTest++.a: bin
 # anything, since if it builds, the test is a success.
 bin/test-test: bin bin/libUnitTest++.a test/test.cpp
 	${CXX} ${CXXFLAGS} test/test.cpp bin/libUnitTest++.a -o bin/test-test
+
+bin/test-configparse: bin/libUnitTest++.a obj/test-configparse.o obj/ini.o obj/configparse.o obj/utils.o
+	${CXX} ${CXXFLAGS} obj/test-configparse.o bin/libUnitTest++.a obj/configparse.o obj/ini.o obj/utils.o ${LINKERFLAGS} -o bin/test-configparse
+
+obj/test-configparse.o: obj test/configparse.cpp
+	${CXX} ${CXXFLAGS} -c test/configparse.cpp -o obj/test-configparse.o

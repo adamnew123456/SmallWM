@@ -62,7 +62,10 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 self->log_mask = LOG_UPTO(LOG_DEBUG);
         }
         else if (name == std::string("shell"))
-            self->shell = value;
+        {
+            if (value.size() > 0)
+                self->shell = value;
+        }
         else if (name == std::string("desktops"))
         {
             /* This example here is a general template for how all of these
