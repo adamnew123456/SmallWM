@@ -2,7 +2,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <syslog.h>
 
 #include <UnitTest++.h>
 #include "configparse.h"
@@ -294,6 +296,48 @@ SUITE(WMConfigSuite)
 
         config.load();
         CHECK_EQUAL(true, config.show_icons);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_syslog_level_default)
+    {
+        write_config_file(*config_path, "\n");
+
+        config.load();
+        CHECK_EQUAL(LOG_UPTO(LOG_WARNING), config.log_mask);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_syslog_level_valid)
+    {
+        const char *log_names[] = {
+            "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO",
+            "DEBUG", NULL
+        };
+        int log_levels[] = {
+            LOG_EMERG, LOG_ALERT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE,
+            LOG_INFO, LOG_DEBUG
+        };
+
+        for (int i = 0; log_names[i] != NULL; i++)
+        {
+            const char *log_name = log_names[i];
+            int log_level = LOG_UPTO(log_levels[i]);
+
+            std::stringstream stream;
+            stream << "[smallwm]\nlog-level=" << log_name << "\n";
+            write_config_file(*config_path, stream.str().c_str());
+
+            config.load();
+            CHECK_EQUAL(log_level, config.log_mask);
+        }
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_syslog_invalid)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nlog-level=not a log level\n");
+
+        config.load();
+        CHECK_EQUAL(LOG_UPTO(LOG_WARNING), config.log_mask);
     }
 };
 
