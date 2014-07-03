@@ -53,7 +53,7 @@ SUITE(WMConfigSuite)
     {
         // Make sure that any particular setting is acceptable
         write_config_file(*config_path,
-            "[smallwm]\nshell=some-terminal\n");
+            "[smallwm]\nshell=some-terminal \n");
 
         config.load();
         CHECK_EQUAL(std::string("some-terminal"), config.shell);
@@ -63,7 +63,7 @@ SUITE(WMConfigSuite)
     {
         // Make sure that an empty configuration option is not accepted
         write_config_file(*config_path,
-            "[smallwm]\nshell=\n");
+            "[smallwm]\nshell= \n");
         
         config.load();
         CHECK_EQUAL(std::string("/usr/bin/xterm"), config.shell);
@@ -83,7 +83,7 @@ SUITE(WMConfigSuite)
     {
         // Make sure that a valid number of desktops sets the option
         write_config_file(*config_path,
-            "[smallwm]\ndesktops=42\n");
+            "[smallwm]\ndesktops= 42 \n");
 
         config.load();
         CHECK_EQUAL(42, config.num_desktops);
@@ -131,7 +131,7 @@ SUITE(WMConfigSuite)
     TEST_FIXTURE(WMConfigFixture, test_icon_width)
     {
         write_config_file(*config_path,
-            "[smallwm]\nicon-width=42\n");
+            "[smallwm]\nicon-width= 42 \n");
 
         config.load();
         CHECK_EQUAL(42, config.icon_width);
@@ -176,7 +176,7 @@ SUITE(WMConfigSuite)
     TEST_FIXTURE(WMConfigFixture, test_icon_height)
     {
         write_config_file(*config_path,
-            "[smallwm]\nicon-height=42\n");
+            "[smallwm]\nicon-height= 42 \n");
 
         config.load();
         CHECK_EQUAL(42, config.icon_height);
@@ -221,7 +221,7 @@ SUITE(WMConfigSuite)
     TEST_FIXTURE(WMConfigFixture, test_border_width)
     {
         write_config_file(*config_path,
-            "[smallwm]\nborder-width=42\n");
+            "[smallwm]\nborder-width= 42 \n");
 
         config.load();
         CHECK_EQUAL(42, config.border_width);
@@ -265,7 +265,7 @@ SUITE(WMConfigSuite)
     TEST_FIXTURE(WMConfigFixture, test_icon_icons_yes)
     {
         write_config_file(*config_path, 
-            "[smallwm]\nicon-icons=1\n");
+            "[smallwm]\nicon-icons= 1 \n");
 
         config.load();
         CHECK_EQUAL(true, config.show_icons);
@@ -274,7 +274,7 @@ SUITE(WMConfigSuite)
     TEST_FIXTURE(WMConfigFixture, test_icon_icons_no)
     {
         write_config_file(*config_path, 
-            "[smallwm]\nicon-icons=0\n");
+            "[smallwm]\nicon-icons= 0 \n");
 
         config.load();
         CHECK_EQUAL(false, config.show_icons);
@@ -283,7 +283,7 @@ SUITE(WMConfigSuite)
     TEST_FIXTURE(WMConfigFixture, test_icon_icons_invalid)
     {
         write_config_file(*config_path, 
-            "[smallwm]\nicon-icons=42\n");
+            "[smallwm]\nicon-icons= 42 \n");
 
         config.load();
         CHECK_EQUAL(true, config.show_icons);
@@ -323,7 +323,7 @@ SUITE(WMConfigSuite)
             int log_level = LOG_UPTO(log_levels[i]);
 
             std::stringstream stream;
-            stream << "[smallwm]\nlog-level=" << log_name << "\n";
+            stream << "[smallwm]\nlog-level= " << log_name << " \n";
             write_config_file(*config_path, stream.str().c_str());
 
             config.load();
