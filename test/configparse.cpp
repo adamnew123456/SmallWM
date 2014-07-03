@@ -107,6 +107,16 @@ SUITE(WMConfigSuite)
         CHECK_EQUAL(5, config.num_desktops);
     }
 
+    TEST_FIXTURE(WMConfigFixture, test_num_desktops_non_numeric)
+    {
+        // Non-numbers should give back the default value
+        write_config_file(*config_path,
+            "[smallwm]\ndesktops=not a number\n");
+
+        config.load();
+        CHECK_EQUAL(5, config.num_desktops);
+    }
+
     TEST_FIXTURE(WMConfigFixture, test_default_icon_width)
     {
 
@@ -138,6 +148,15 @@ SUITE(WMConfigSuite)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-width=-42\n");
+
+        config.load();
+        CHECK_EQUAL(75, config.icon_width);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_icon_width_not_numeric)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nicon-width=not a number\n");
 
         config.load();
         CHECK_EQUAL(75, config.icon_width);
@@ -179,6 +198,15 @@ SUITE(WMConfigSuite)
         CHECK_EQUAL(20, config.icon_height);
     }
 
+    TEST_FIXTURE(WMConfigFixture, test_icon_height_not_numeric)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nicon-height=not a number\n");
+
+        config.load();
+        CHECK_EQUAL(20, config.icon_height);
+    }
+
     TEST_FIXTURE(WMConfigFixture, test_default_border_width)
     {
 
@@ -215,6 +243,15 @@ SUITE(WMConfigSuite)
         CHECK_EQUAL(4, config.border_width);
     }
 
+    TEST_FIXTURE(WMConfigFixture, test_border_width_not_numeric)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nborder-width=not a number\n");
+
+        config.load();
+        CHECK_EQUAL(4, config.border_width);
+    }
+
     TEST_FIXTURE(WMConfigFixture, test_icon_icons_default)
     {
         write_config_file(*config_path, "\n");
@@ -245,6 +282,15 @@ SUITE(WMConfigSuite)
     {
         write_config_file(*config_path, 
             "[smallwm]\nicon-icons=42\n");
+
+        config.load();
+        CHECK_EQUAL(true, config.show_icons);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_icon_icons_not_numeric)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nicon-icons=not a number\n");
 
         config.load();
         CHECK_EQUAL(true, config.show_icons);

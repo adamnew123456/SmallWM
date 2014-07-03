@@ -69,32 +69,29 @@ int WMConfig::config_parser(void *user, const char *c_section,
         else if (name == std::string("desktops"))
         {
             Desktop old_value = self->num_desktops;
-            self->num_desktops = try_parse_ulong(value.c_str(), old_value);
+            self->num_desktops = try_parse_ulong_nonzero(value.c_str(), old_value);
         }
         else if (name == std::string("icon-width"))
         {
             Dimension old_value = self->icon_width;
-            self->icon_width = try_parse_ulong(value.c_str(), old_value);
+            self->icon_width = try_parse_ulong_nonzero(value.c_str(), old_value);
         }
         else if (name == std::string("icon-height"))
         {
             Dimension old_value = self->icon_height;
-            self->icon_height = try_parse_ulong(value.c_str(), old_value);
+            self->icon_height = try_parse_ulong_nonzero(value.c_str(), old_value);
         }
         else if (name == std::string("border-width"))
         {
             Dimension old_value = self->border_width;
-            self->border_width = try_parse_ulong(value.c_str(), old_value);
+            self->border_width = try_parse_ulong_nonzero(value.c_str(), old_value);
         }
         else if (name == std::string("icon-icons"))
         {
             bool old_value = self->show_icons;
-
-            unsigned long as_long = strtoul(value.c_str(), NULL, -1);
-            if (as_long != 0 && as_long != 1)
-                self->show_icons = old_value;
-            else
-                self->show_icons = as_long == 1 ? true : false;
+            self->show_icons = 
+                try_parse_ulong(value.c_str(), 
+                     (unsigned long)old_value) != 0;
         }
     }
 
