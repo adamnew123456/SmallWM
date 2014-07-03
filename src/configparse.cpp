@@ -102,6 +102,12 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
         // All the configuration options are separated by commas
         char *option = strtok(copied_value, ",");
+       
+        // Catch an empty configuration setting (which returns NULL) before it
+        // gets into the loop below, which will cause a crash. However, we still
+        // have to assign the empty ClassAction, so we can't just return here.
+        if (option == (char*)0)
+            goto set_actions;
 
         // The configuration values are stripped of spaces
         char *stripped;
@@ -154,6 +160,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
             delete[] stripped;
         } while((option = strtok(NULL, ",")));
 
+set_actions:
         self->classactions[name] = action;
     }
 
