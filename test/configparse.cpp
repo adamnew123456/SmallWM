@@ -214,6 +214,41 @@ SUITE(WMConfigSuite)
         config.load();
         CHECK_EQUAL(4, config.border_width);
     }
+
+    TEST_FIXTURE(WMConfigFixture, test_icon_icons_default)
+    {
+        write_config_file(*config_path, "\n");
+
+        config.load();
+        CHECK_EQUAL(true, config.show_icons);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_icon_icons_yes)
+    {
+        write_config_file(*config_path, 
+            "[smallwm]\nicon-icons=1\n");
+
+        config.load();
+        CHECK_EQUAL(true, config.show_icons);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_icon_icons_no)
+    {
+        write_config_file(*config_path, 
+            "[smallwm]\nicon-icons=0\n");
+
+        config.load();
+        CHECK_EQUAL(false, config.show_icons);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_icon_icons_invalid)
+    {
+        write_config_file(*config_path, 
+            "[smallwm]\nicon-icons=42\n");
+
+        config.load();
+        CHECK_EQUAL(true, config.show_icons);
+    }
 };
 
 int main()
@@ -223,4 +258,5 @@ int main()
     std::free(filename);
 
     UnitTest::RunAllTests();
+    remove(config_path->c_str());
 }
