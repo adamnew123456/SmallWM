@@ -44,22 +44,19 @@ int WMConfig::config_parser(void *user, const char *c_section,
     {
         if (name == std::string("log-level"))
         {
-            if (value == "EMERG")
-                self->log_mask = LOG_UPTO(LOG_EMERG);
-            else if (value == "ALERT")
-                self->log_mask = LOG_UPTO(LOG_ALERT);
-            else if (value == "CRIT")
-                self->log_mask = LOG_UPTO(LOG_CRIT);
-            else if (value == "ERR")
-                self->log_mask = LOG_UPTO(LOG_ERR);
-            else if (value == "WARNING")
-                self->log_mask = LOG_UPTO(LOG_WARNING);
-            else if (value == "NOTICE")
-                self->log_mask = LOG_UPTO(LOG_NOTICE);
-            else if (value == "INFO")
-                self->log_mask = LOG_UPTO(LOG_INFO);
-            else if (value == "DEBUG")
-                self->log_mask = LOG_UPTO(LOG_DEBUG);
+#define SYSLOG_MACRO_CHECK(level) do {\
+        if (value == std::string(#level)) \
+            self->log_mask = LOG_UPTO(LOG_##level); \
+    } while (0);
+            SYSLOG_MACRO_CHECK(EMERG);
+            SYSLOG_MACRO_CHECK(ALERT);
+            SYSLOG_MACRO_CHECK(CRIT);
+            SYSLOG_MACRO_CHECK(ERR);
+            SYSLOG_MACRO_CHECK(WARNING);
+            SYSLOG_MACRO_CHECK(NOTICE);
+            SYSLOG_MACRO_CHECK(INFO);
+            SYSLOG_MACRO_CHECK(DEBUG);
+#undef SYSLOG_MACRO_CHECK
         }
         else if (name == std::string("shell"))
         {
