@@ -21,15 +21,14 @@ protected:
     };
 };
 
+CustomFileWMConfig config;
 struct WMConfigFixture 
 {
     WMConfigFixture() 
-    {};
+    { config.reset(); };
 
     ~WMConfigFixture() 
     {};
-
-    CustomFileWMConfig config;
 };
 
 void write_config_file(std::string filename, const char *text)
@@ -359,6 +358,23 @@ SUITE(WMConfigSuiteActions)
         // the default values
         write_config_file(*config_path, 
             "[actions]\ntest-class=\n");
+
+        config.load();
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_invalid_actions)
+    {
+        // Check that we get an entry in the class actions mapping, but with
+        // the default values, whenever the configuration encounters an
+        // invalid value
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=not an action\n");
 
         config.load();
         ClassActions &action = config.classactions[

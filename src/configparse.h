@@ -113,12 +113,11 @@ class WMConfig
 {
 public:
     /// Loads a couple of defaults for the WMConfig.
-    WMConfig() : shell("/usr/bin/xterm"), num_desktops(5), 
-        icon_width(75), icon_height(20), border_width(4),
-        show_icons(true), log_mask(LOG_UPTO(LOG_WARNING))
-    {};
+    WMConfig()
+    { reset(); };
     
     void load();
+    void reset();
 
     /// The minimum message level to send to syslog
     int log_mask;

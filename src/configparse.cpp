@@ -13,6 +13,20 @@ void WMConfig::load()
 }
 
 /**
+ * Resets the configuration - this is used mostly for testing purposes.
+ */
+void WMConfig::reset()
+{
+    shell.assign("/usr/bin/xterm");
+    num_desktops = 5;
+    icon_width = 75;
+    icon_height = 20;
+    border_width = 4;
+    show_icons = true;
+    log_mask = LOG_UPTO(LOG_WARNING);
+}
+
+/**
  * Gets the path to the configuration file. This is a virtual method so that
  * unit tests can override this to present a dummy configuration file.
  */
