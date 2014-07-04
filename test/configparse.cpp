@@ -562,6 +562,27 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(action.snap, SNAP_LEFT);
         CHECK_EQUAL(action.layer, 42);
     }
+
+    TEST_FIXTURE(WMConfigFixture, test_combiations_with_duplicates)
+    {
+        // Test a few combinations of different comma-separated options
+        config.reset();
+
+        write_config_file(*config_path,
+            "[actions]\ntest-class= maximize, snap:left, layer:42, stick, layer:43 \n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK(action.actions & ACT_STICK);
+        CHECK(action.actions & ACT_SNAP);
+        CHECK(action.actions & ACT_MAXIMIZE);
+        CHECK(action.actions & ACT_SETLAYER);
+
+        CHECK_EQUAL(action.snap, SNAP_LEFT);
+        CHECK_EQUAL(action.layer, 43);
+    }
 };
 
 int main()
