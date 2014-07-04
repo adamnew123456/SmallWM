@@ -51,6 +51,14 @@ struct KeyboardConfig
     // Initialize the default keyboard bindings.
     KeyboardConfig()
     {
+        reset();
+    };
+
+    void reset()
+    {
+        action_to_keysym.clear();
+        keysym_to_action.clear();
+
         DefaultShortcut shortcuts[] = {
             { CLIENT_NEXT_DESKTOP, "client-next-desktop", XK_bracketright },
             { CLIENT_PREV_DESKTOP, "client-prev-desktop", XK_bracketleft },
@@ -91,19 +99,21 @@ struct KeyboardConfig
                 action_names[config_name] = current_shortcut.action;
             }
 
-            bindings[current_shortcut.action] = current_shortcut.keysym;
-            reverse_bindings[current_shortcut.keysym] = current_shortcut.action;
+            action_to_keysym[current_shortcut.action] = 
+                current_shortcut.keysym;
+            keysym_to_action[current_shortcut.keysym] =
+                current_shortcut.action;
         }
-    };
+    }
 
     /// The keyboard shortcuts which are bound to specific keys
-    std::map<KeyboardAction, KeySym> bindings;
+    std::map<KeyboardAction, KeySym> action_to_keysym;
 
     /// The configuration values which are bound to specific shortcuts
     std::map<std::string, KeyboardAction> action_names;
 
     /// A reverse mapping between KeySyms and KeyboardActions
-    std::map<KeySym, KeyboardAction> reverse_bindings;
+    std::map<KeySym, KeyboardAction> keysym_to_action;
 };
 
 /**

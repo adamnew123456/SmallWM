@@ -633,8 +633,8 @@ SUITE(WMConfigSuiteKeyboardOptions)
         {
             KeyboardAction action = shortcuts[i].action;
             KeySym keysym = shortcuts[i].keysym;
-            CHECK_EQUAL(config.key_commands.bindings[action], keysym);
-            CHECK_EQUAL(config.key_commands.reverse_bindings[keysym], action);
+            CHECK_EQUAL(config.key_commands.action_to_keysym[action], keysym);
+            CHECK_EQUAL(config.key_commands.keysym_to_action[keysym], action);
         }
     }
 
@@ -645,12 +645,31 @@ SUITE(WMConfigSuiteKeyboardOptions)
             "[keyboard]\nlayer-1=asciitilde\nlayer-2=colon\n");
         config.load();
 
-        CHECK_EQUAL(XK_asciitilde, config.key_commands.bindings[LAYER_1]);
+        CHECK_EQUAL(XK_asciitilde, 
+            config.key_commands.action_to_keysym[LAYER_1]);
         CHECK_EQUAL(LAYER_1, 
-            config.key_commands.reverse_bindings[XK_asciitilde]);
+            config.key_commands.keysym_to_action[XK_asciitilde]);
 
-        CHECK_EQUAL(XK_colon, config.key_commands.bindings[LAYER_2]);
-        CHECK_EQUAL(LAYER_2, config.key_commands.reverse_bindings[XK_colon]);
+        CHECK_EQUAL(XK_colon, config.key_commands.action_to_keysym[LAYER_2]);
+        CHECK_EQUAL(LAYER_2, config.key_commands.keysym_to_action[XK_colon]);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_duplicate_bindings)
+    {
+        // Tests to make sure that duplicate bindings get reverted, to avoid
+        // bindings which are not attached to any key
+        write_config_file(*config_path,
+            "[keyboard]\nlayer-1=x\n");
+        config.load();
+
+        // Remember that the binding remains for the original Super+x binding
+        CHECK_EQUAL(XK_x, config.key_commands.action_to_keysym[FORCE_CLOSE]);
+        CHECK_EQUAL(FORCE_CLOSE, config.key_commands.keysym_to_action[XK_x]);
+
+        // Similarly, make sure that the old binding remains for the original
+        // LAYER_1 action
+        CHECK_EQUAL(XK_1, config.key_commands.action_to_keysym[LAYER_1]);
+        CHECK_EQUAL(LAYER_1, config.key_commands.keysym_to_action[XK_1]);
     }
 };
 

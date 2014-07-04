@@ -24,6 +24,9 @@ void WMConfig::reset()
     border_width = 4;
     show_icons = true;
     log_mask = LOG_UPTO(LOG_WARNING);
+
+    key_commands.reset();
+    classactions.clear();
 }
 
 /**
@@ -183,30 +186,24 @@ set_actions:
     else if (section == std::string("keyboard"))
     {
         KeyboardConfig &kb_config = self->key_commands;
-
-        // If there is already a binding for that action, then fail
         KeyboardAction action = kb_config.action_names[name];
-        if (action == INVALID_ACTION)
-            return 0;
-
-        // If an old binding exists for this action, then remove it
-        if (kb_config.bindings[action] != NoSymbol)
-        {
-            KeySym old_binding = kb_config.bindings[action];
-            kb_config.bindings.erase(action);
-            kb_config.reverse_bindings.erase(old_binding);
-        }
-
         KeySym binding = XStringToKeysym(value.c_str());
+
+        // Fail if the key is not recognized by Xlib
         if (binding == NoSymbol)
             return 0;
 
-        // If the key that is being bound is already in use, then fail
-        if (kb_config.reverse_bindings[binding] != INVALID_ACTION)
+        // If this new binding is in use by another entry, then fail
+        if (kb_config.keysym_to_action[binding] != INVALID_ACTION)
             return 0;
 
-        kb_config.bindings[action] = binding;
-        kb_config.reverse_bindings[binding] = action;
+        // If an old binding exists for this action, then remove it
+        KeySym old_binding = kb_config.action_to_keysym[action];
+        if (old_binding != NoSymbol)
+            kb_config.keysym_to_action.erase(old_binding);
+
+        kb_config.action_to_keysym[action] = binding;
+        kb_config.keysym_to_action[binding] = action;
     }
 
     return 0;
