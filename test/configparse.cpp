@@ -368,6 +368,39 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
     }
+
+    TEST_FIXTURE(WMConfigFixture, test_stick)
+    {
+        // Check that the created class action sticks the window and nothing
+        // else
+        write_config_file(*config_path, 
+            "[actions]\ntest-class= stick \n");
+
+        config.load();
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+        CHECK(action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_maximize)
+    {
+
+        // Check that the created class action sticks the window and nothing
+        // else
+        write_config_file(*config_path, 
+            "[actions]\ntest-class= maximize \n");
+
+        config.load();
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK(action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+    }
 };
 
 int main()
