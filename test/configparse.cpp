@@ -637,6 +637,21 @@ SUITE(WMConfigSuiteKeyboardOptions)
             CHECK_EQUAL(config.key_commands.reverse_bindings[keysym], action);
         }
     }
+
+    TEST_FIXTURE(WMConfigFixture, test_unused_bindings)
+    {
+        // Makes sure that unused bindings are assigned properly
+        write_config_file(*config_path,
+            "[keyboard]\nlayer-1=asciitilde\nlayer-2=colon\n");
+        config.load();
+
+        CHECK_EQUAL(XK_asciitilde, config.key_commands.bindings[LAYER_1]);
+        CHECK_EQUAL(LAYER_1, 
+            config.key_commands.reverse_bindings[XK_asciitilde]);
+
+        CHECK_EQUAL(XK_colon, config.key_commands.bindings[LAYER_2]);
+        CHECK_EQUAL(LAYER_2, config.key_commands.reverse_bindings[XK_colon]);
+    }
 };
 
 int main()

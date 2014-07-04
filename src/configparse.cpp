@@ -206,6 +206,7 @@ set_actions:
             return 0;
 
         kb_config.bindings[action] = binding;
+        kb_config.reverse_bindings[binding] = action;
     }
 
     return 0;
