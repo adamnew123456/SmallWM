@@ -585,6 +585,60 @@ SUITE(WMConfigSuiteActions)
     }
 };
 
+struct DefaultBinding
+{
+    KeyboardAction action;
+    KeySym keysym;
+};
+
+DefaultBinding shortcuts[] = {
+    { CLIENT_NEXT_DESKTOP, XK_bracketright },
+    { CLIENT_PREV_DESKTOP, XK_bracketleft },
+    { NEXT_DESKTOP, XK_period },
+    { PREV_DESKTOP, XK_comma },
+    { TOGGLE_STICK, XK_backslash },
+    { ICONIFY, XK_h },
+    { MAXIMIZE, XK_m },
+    { REQUEST_CLOSE, XK_c },
+    { FORCE_CLOSE, XK_x },
+    { K_SNAP_TOP, XK_Up },
+    { K_SNAP_BOTTOM, XK_Down },
+    { K_SNAP_LEFT, XK_Left },
+    { K_SNAP_RIGHT, XK_Right },
+    { LAYER_ABOVE, XK_Page_Up },
+    { LAYER_BELOW, XK_Page_Down },
+    { LAYER_TOP, XK_Home },
+    { LAYER_BOTTOM, XK_End },
+    { LAYER_1, XK_1 },
+    { LAYER_2, XK_2 },
+    { LAYER_3, XK_3 },
+    { LAYER_4, XK_4 },
+    { LAYER_5, XK_5 },
+    { LAYER_6, XK_6 },
+    { LAYER_7, XK_7 },
+    { LAYER_8, XK_8 },
+    { LAYER_9, XK_9 },
+    { EXIT_WM, XK_Escape },
+};
+
+// Note that all the key bindings tested here used "layer-1" through
+// "layer-9"
+SUITE(WMConfigSuiteKeyboardOptions)
+{
+    TEST_FIXTURE(WMConfigFixture, test_default_bindngs)
+    {
+        write_config_file(*config_path, "");
+        config.load();
+        for (int i = 0; i < sizeof(shortcuts) / sizeof(*shortcuts); i++)
+        {
+            KeyboardAction action = shortcuts[i].action;
+            KeySym keysym = shortcuts[i].keysym;
+            CHECK_EQUAL(config.key_commands.bindings[action], keysym);
+            CHECK_EQUAL(config.key_commands.reverse_bindings[keysym], action);
+        }
+    }
+};
+
 int main()
 {
     char *filename = tempnam("/tmp", "smallwm");
