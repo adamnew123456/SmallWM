@@ -417,6 +417,75 @@ SUITE(WMConfigSuiteActions)
         CHECK(action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
     }
+
+    TEST_FIXTURE(WMConfigFixture, test_set_valid_layers)
+    {
+        // Set the layer using some valid layers
+        Layer layers[] = {MIN_LAYER, MAX_LAYER, DEF_LAYER, 87, 22, 41};
+        for (int idx = 0; idx < sizeof(layers) / sizeof(*layers); idx++)
+        {
+            config.reset();
+
+            std::stringstream stream;
+            stream << "[actions]\ntest-class= layer:" << (int)layers[idx] << " \n";
+            write_config_file(*config_path, stream.str().c_str());
+            config.load();
+
+            ClassActions &action = config.classactions[
+                std::string("test-class")];
+
+            // Ensure that only the layer is changed...
+            CHECK_EQUAL(0, action.actions & ACT_STICK);
+            CHECK_EQUAL(0, action.actions & ACT_SNAP);
+            CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+            CHECK(action.actions & ACT_SETLAYER);
+
+            // ... and that it is changed correctly
+            CHECK_EQUAL(action.layer, layers[idx]);
+        }
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_set_invalid_layers)
+    {
+        // Set the layer using some invalid layers
+        Layer layers[] = {DIALOG_LAYER, 120, 168, 114, 210};
+
+        for (int idx = 0; idx < sizeof(layers) / sizeof(*layers); idx++)
+        {
+            config.reset();
+
+            std::stringstream stream;
+            stream << "[actions]\ntest-class= layer:" << (int)layers[idx] << " \n";
+            write_config_file(*config_path, stream.str().c_str());
+            config.load();
+
+            ClassActions &action = config.classactions[
+                std::string("test-class")];
+
+            // Ensure that invalid layers do not cause the layer to be
+            // changed
+            CHECK_EQUAL(0, action.actions & ACT_STICK);
+            CHECK_EQUAL(0, action.actions & ACT_SNAP);
+            CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+            CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        }
+
+        // Test with something non-numeric
+        config.reset();
+
+        write_config_file(*config_path, "[actions]\ntest-class= layer:not a layer\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        // Ensure that invalid layers do not cause the layer to be
+        // changed
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+    }
 };
 
 int main()
