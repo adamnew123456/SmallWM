@@ -486,6 +486,61 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
     }
+
+    TEST_FIXTURE(WMConfigFixture, test_set_snap_sides)
+    {
+        // Snap toward all valid sides
+        SnapDir snaps[] = {SNAP_TOP, SNAP_BOTTOM, SNAP_LEFT, SNAP_RIGHT};
+        const char *snap_names[] = {"top", "bottom", "left", "right"};
+
+        for (int idx = 0; idx < sizeof(snaps) / sizeof(*snaps); idx++)
+        {
+            config.reset();
+
+            std::stringstream stream;
+            stream << "[actions]\ntest-class= snap:" << 
+                snap_names[idx] << " \n";
+            write_config_file(*config_path, stream.str().c_str());
+            config.load();
+
+            ClassActions &action = config.classactions[
+                std::string("test-class")];
+
+            CHECK_EQUAL(0, action.actions & ACT_STICK);
+            CHECK(action.actions & ACT_SNAP);
+            CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+            CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+
+            CHECK_EQUAL(action.snap, snaps[idx]);
+        }
+    }
+
+    TEST_FIXTURE(WMConfigFixture, test_set_invalid_snap)
+    {
+        // Snap some invalid sides
+        const char *invalid_snaps[] = {"LEFT", "lEfT", "not a layer", "42"};
+
+        for (int idx = 0; 
+                idx < sizeof(invalid_snaps) / sizeof(*invalid_snaps);
+                idx++)
+        {
+            config.reset();
+
+            std::stringstream stream;
+            stream << "[actions]\ntest-class= snap:" << 
+                invalid_snaps[idx] << " \n";
+            write_config_file(*config_path, stream.str().c_str());
+            config.load();
+
+            ClassActions &action = config.classactions[
+                std::string("test-class")];
+
+            CHECK_EQUAL(0, action.actions & ACT_STICK);
+            CHECK_EQUAL(0, action.actions & ACT_SNAP);
+            CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+            CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        }
+    }
 };
 
 int main()
