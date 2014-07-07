@@ -139,7 +139,7 @@ public:
     KeyboardConfig key_commands;
 
     /// The number of available desktops.
-    Desktop num_desktops;
+    unsigned long long num_desktops;
 
     /// The width of hidden icons.
     Dimension icon_width, 

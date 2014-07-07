@@ -82,7 +82,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
         }
         else if (name == std::string("desktops"))
         {
-            Desktop old_value = self->num_desktops;
+            unsigned long long old_value = self->num_desktops;
             self->num_desktops = try_parse_ulong_nonzero(value.c_str(), old_value);
         }
         else if (name == std::string("icon-width"))

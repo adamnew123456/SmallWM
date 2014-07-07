@@ -28,8 +28,6 @@ typedef std::pair<Dimension,Dimension> Dimension2D;
 #define DIM2D_X(dim2d) ((dim2d).first)
 #define DIM2D_Y(dim2d) ((dim2d).second)
 
-/// The desktop number.
-typedef unsigned long long Desktop;
 /// The z-layer of a window.
 typedef unsigned char Layer;
 /// A difference between two layers.
