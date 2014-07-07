@@ -1,12 +1,12 @@
 # C related flags. This project is mostly C++ at this point, but it still uses
 # the C API provided by inih.
-CC=/usr/bin/gcc
+CC=/usr/bin/clang
 CFLAGS=-O3
 
 # C++ related flags. Note that you may need to modify the CXXFLAGS variable to
 # get SmallWM to build with Clang++.
-CXX=/usr/bin/g++
-CXXFLAGS=-g -IUnitTest++/src -Itest -Iinih -Isrc
+CXX=/usr/bin/clang++
+CXXFLAGS=-g -IUnitTest++/src -Itest -Iinih -Isrc -Isrc.new
 LINKERFLAGS=-lX11 -lXrandr
 
 # Binaries are classified into two groups - ${BINS} includes the main smallwm
@@ -101,3 +101,9 @@ bin/test-configparse: bin/libUnitTest++.a obj/test-configparse.o obj/ini.o obj/c
 
 obj/test-configparse.o: obj test/configparse.cpp
 	${CXX} ${CXXFLAGS} -c test/configparse.cpp -o obj/test-configparse.o
+
+bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o
+	${CXX} ${CXXFLAGS} obj/test-client-model.o bin/libUnitTest++.a ${LINKER_FLAGS} -o bin/test-client-model
+
+obj/test-client-model.o: obj test/client-model.cpp
+	${CXX} ${CXXFLAGS} -c test/client-model.cpp -o obj/test-client-model.o

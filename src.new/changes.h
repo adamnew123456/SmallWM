@@ -3,6 +3,7 @@
 #define __SMALLWM_MODEL_CHANGE__
 
 #include "common.h"
+#include "desktop-type.h"
 
 /**
  * This is the root of a hierarchy which forms the layer between the parts
@@ -11,8 +12,6 @@
  */
 struct Change
 {
-    ChangeType type;
-
     virtual bool is_layer_change() const
     { return false; }
 
@@ -63,7 +62,7 @@ struct ChangeLayer : Change
 struct ChangeFocus : Change
 {
     ChangeFocus(Window old_focus, Window new_focus) :
-        type(CHANGE_FOCUS), prev_focus(old_focus), next_focus(new_focus)
+        prev_focus(old_focus), next_focus(new_focus)
     {};
 
     bool is_focus_change() const
@@ -87,7 +86,7 @@ struct ChangeFocus : Change
 struct ChangeClientDesktop : Change
 {
     ChangeClientDesktop(Window win, Desktop new_desktop) :
-        type(CHANGE_CLIENT_DESKTOP), window(win), desktop(new_desktop)
+        window(win), desktop(new_desktop)
     {};
 
     bool is_client_desktop_change() const
@@ -100,18 +99,18 @@ struct ChangeClientDesktop : Change
 
         ChangeClientDesktop *cast_other = (ChangeClientDesktop*)&other;
         return (cast_other->window == window &&
-                cast_other->new_desktop == new_desktop);
+                cast_other->desktop == desktop);
     }
 
     Window window;
-    Desktop new_desktop;
+    Desktop desktop;
 };
 
 /// Indicates a change in the currently visible desktop
 struct ChangeCurrentDesktop : Change
 {
     ChangeCurrentDesktop(Desktop new_desktop) :
-        type(CHANGE_CURRENT_DESKTOP), desktop(new_desktop)
+        desktop(new_desktop)
     {};
 
     bool is_current_desktop_change() const
@@ -133,7 +132,7 @@ struct ChangeCurrentDesktop : Change
 struct ChangeLocation : Change
 {
     ChangeLocation(Window win, Dimension _x, Dimension _y) :
-        type(CHANGE_LOCATION), window(win), x(_x), y(_y)
+        window(win), x(_x), y(_y)
     {};
 
     bool is_location_change() const

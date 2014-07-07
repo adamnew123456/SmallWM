@@ -7,12 +7,12 @@
  * desktop classes with the same parameters are equal, and are stored in
  * the same place in an std::map
  */
-const int DESKTOP_SORT_KEY = 1,
-          ALL_DESKTOP_SORT_KEY = 2,
-          ICON_DESKTOP_SORT_KEY = 3,
-          MOVING_DESKTOP_SORT_KEY = 4,
-          RESIZING_DESKTOP_SORT_KEY = 5,
-          USER_DESKTOP_SORT_KEY = 6;
+const unsigned long long DESKTOP_SORT_KEY = 1,
+      ALL_DESKTOP_SORT_KEY = 2,
+      ICON_DESKTOP_SORT_KEY = 3,
+      MOVING_DESKTOP_SORT_KEY = 4,
+      RESIZING_DESKTOP_SORT_KEY = 5,
+      USER_DESKTOP_SORT_KEY = 6;
 
 /**
  * This describes both 'real' desktops that the user interacts with, and
@@ -25,6 +25,9 @@ const int DESKTOP_SORT_KEY = 1,
  */
 struct Desktop
 {
+    Desktop(unsigned long long _sort_key) : sort_key(_sort_key)
+    {};
+
     Desktop() : sort_key(DESKTOP_SORT_KEY)
     {};
 
@@ -49,7 +52,7 @@ struct Desktop
     virtual bool operator==(const Desktop &other) const
     { return sort_key == other.sort_key; }
 
-    unsigned int sort_key;
+    unsigned long long sort_key;
 };
 
 /**
@@ -58,16 +61,13 @@ struct Desktop
 struct UserDesktop : public Desktop
 {
     UserDesktop(unsigned long long _desktop) :
-        desktop(_desktop), sort_key(_desktop + USER_DESKTOP_KEY)
+        desktop(_desktop), Desktop(_desktop + USER_DESKTOP_SORT_KEY)
     {};
 
     bool is_user_desktop() const
     { return true; }
 
-    bool operator==(Desktop &other)
-    { return (a.is_user_desktop() && b.is_user_desktop()
-
-    const unsigned long long deskop;
+    unsigned long long desktop;
 };
 
 /**
@@ -76,10 +76,10 @@ struct UserDesktop : public Desktop
  */
 struct AllDesktops : public Desktop
 {
-    AllDesktops() : sort_key(ALL_DESKTOP_SORT_KEY)
+    AllDesktops() : Desktop(ALL_DESKTOP_SORT_KEY)
     {};
 
-    bool is_all_desktop const
+    bool is_all_desktop() const
     { return true; }
 };
 
@@ -88,7 +88,7 @@ struct AllDesktops : public Desktop
  */
 struct IconDesktop : public Desktop
 {
-    IconDesktop() : sort_key(ICON_DESKTOP_SORT_KEY)
+    IconDesktop() : Desktop(ICON_DESKTOP_SORT_KEY)
     {};
 
     bool is_icon_desktop() const
@@ -100,7 +100,7 @@ struct IconDesktop : public Desktop
  */
 struct MovingDesktop : public Desktop
 {
-    MovingDesktop() : sort_key(MOVING_DESKTOP_SORT_KEY)
+    MovingDesktop() : Desktop(MOVING_DESKTOP_SORT_KEY)
     {};
 
     bool is_moving_desktop() const
@@ -112,7 +112,7 @@ struct MovingDesktop : public Desktop
  */
 struct ResizingDesktop : public Desktop
 {
-    ResizingDesktop() : sort_key(RESIZING_DESKTOP_SORT_KEY)
+    ResizingDesktop() : Desktop(RESIZING_DESKTOP_SORT_KEY)
     {};
 
     bool is_resizing_desktop() const

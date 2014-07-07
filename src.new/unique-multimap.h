@@ -1,6 +1,6 @@
 /** @file */
-#ifndef __SMALLWM_BJS__
-#define __SMALLWM_BJS__
+#ifndef __SMALLWM_UNIQUE_MULTIMAP__
+#define __SMALLWM_UNIQUE_MULTIMAP__
 
 #include <algorithm>
 #include <map>
@@ -77,7 +77,7 @@ public:
      * @param[in] element The element to find the category of.
      * @return The category.
      */
-    void get_category_of(member_t &element)
+    category_t &get_category_of(member_t const &element)
     {
         return m_member_to_category[element];
     }
@@ -177,6 +177,7 @@ private:
 template <typename category_t, typename member_t>
 class UniqueMultimapSorter
 {
+public:
     UniqueMultimapSorter(UniqueMultimap<category_t, member_t> &data) :
         m_uniquemultimap(data)
     {};
@@ -184,12 +185,15 @@ class UniqueMultimapSorter
     /**
      * Returns if A < B.
      */
-    bool operator()(category_t const &a, category_t const &b)
+    bool operator()(member_t const &a, member_t const &b)
     {
-        category_t &a_category = m_uniquemultimap.get_category_of(a);
-        category_t &b_category = m_uniquemultimap.get_category_of(b);
+        const category_t &a_category = m_uniquemultimap.get_category_of(a);
+        const category_t &b_category = m_uniquemultimap.get_category_of(b);
         return a < b;
     }
+
+private:
+    UniqueMultimap<category_t, member_t> m_uniquemultimap;
 };
 
 #endif
