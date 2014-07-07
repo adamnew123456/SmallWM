@@ -170,4 +170,26 @@ private:
     std::map<member_t, category_t> m_member_to_category;
 };
 
+/**
+ * Sorts according to the categories of values contained inside of a
+ * UniqueMultimap.
+ */
+template <typename category_t, typename member_t>
+class UniqueMultimapSorter
+{
+    UniqueMultimapSorter(UniqueMultimap<category_t, member_t> &data) :
+        m_uniquemultimap(data)
+    {};
+
+    /**
+     * Returns if A < B.
+     */
+    bool operator()(category_t const &a, category_t const &b)
+    {
+        category_t &a_category = m_uniquemultimap.get_category_of(a);
+        category_t &b_category = m_uniquemultimap.get_category_of(b);
+        return a < b;
+    }
+};
+
 #endif
