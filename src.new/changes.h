@@ -30,6 +30,9 @@ struct Change
 
     virtual bool is_size_change() const
     { return false; }
+
+    virtual bool operator==(const Change &other)
+    { return false; }
 };
 
 /// Indicates a change in the stacking order of a window
@@ -41,6 +44,16 @@ struct ChangeLayer : Change
 
     bool is_layer_change() const
     { return true; }
+
+    bool operator==(const Change &other)
+    {
+        if (!other.is_layer_change())
+            return false;
+
+        ChangeLayer *cast_other = (ChangeLayer*)&other;
+        return (cast_other->window == window &&
+                cast_other->layer == layer);
+    }
 
     Window window;
     Layer layer;
@@ -56,6 +69,16 @@ struct ChangeFocus : Change
     bool is_focus_change() const
     { return true; }
 
+    bool operator==(const Change &other)
+    {
+        if (!other.is_focus_change())
+            return false;
+
+        ChangeFocus *cast_other = (ChangeFocus*)&other;
+        return (cast_other->prev_focus == prev_focus &&
+                cast_other->next_focus == next_focus);
+    }
+
     Window prev_focus;
     Window next_focus;
 };
@@ -69,6 +92,16 @@ struct ChangeClientDesktop : Change
 
     bool is_client_desktop_change() const
     { return true; }
+
+    bool operator==(const Change &other)
+    {
+        if (!other.is_client_desktop_change())
+            return false;
+
+        ChangeClientDesktop *cast_other = (ChangeClientDesktop*)&other;
+        return (cast_other->window == window &&
+                cast_other->new_desktop == new_desktop);
+    }
 
     Window window;
     Desktop new_desktop;
@@ -84,6 +117,15 @@ struct ChangeCurrentDesktop : Change
     bool is_current_desktop_change() const
     { return true; }
 
+    bool operator==(const Change &other)
+    {
+        if (!other.is_current_desktop_change())
+            return false;
+
+        ChangeCurrentDesktop *cast_other = (ChangeCurrentDesktop*)&other;
+        return cast_other->desktop == desktop;
+    }
+
     Desktop desktop;
 };
 
@@ -96,6 +138,17 @@ struct ChangeLocation : Change
 
     bool is_location_change() const
     { return true; }
+
+    bool operator==(const Change &other)
+    {
+        if (!other.is_location_change())
+            return false;
+
+        ChangeLocation *cast_other = (ChangeLocation*)&other;
+        return (cast_other->window == window &&
+                cast_other->x == x &&
+                cast_other->y == y);
+    }
 
     Window window;
     Dimension x;
@@ -112,9 +165,19 @@ struct ChangeSize : Change
     bool is_size_change() const
     { return true; }
 
+    bool operator==(const Change &other)
+    {
+        if (!other.is_size_change())
+            return false;
+
+        ChangeSize *cast_other = (ChangeSize*)&other;
+        return (cast_other->window == window &&
+                cast_other->w == w &&
+                cast_other->h == h);
+    }
+
     Window window;
     Dimension w;
     Dimension h;
 };
-
 #endif
