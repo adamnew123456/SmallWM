@@ -421,7 +421,7 @@ SUITE(WMConfigSuiteActions)
     TEST_FIXTURE(WMConfigFixture, test_set_valid_layers)
     {
         // Set the layer using some valid layers
-        Layer layers[] = {MIN_LAYER, MAX_LAYER, DEF_LAYER, 87, 22, 41};
+        Layer layers[] = {MIN_LAYER, MAX_LAYER, DEF_LAYER, 6, 4, 9};
         for (int idx = 0; idx < sizeof(layers) / sizeof(*layers); idx++)
         {
             config.reset();
@@ -448,7 +448,7 @@ SUITE(WMConfigSuiteActions)
     TEST_FIXTURE(WMConfigFixture, test_set_invalid_layers)
     {
         // Set the layer using some invalid layers
-        Layer layers[] = {DIALOG_LAYER, 120, 168, 114, 210};
+        Layer layers[] = {DIALOG_LAYER, 12, 16, 22, 19};
 
         for (int idx = 0; idx < sizeof(layers) / sizeof(*layers); idx++)
         {
@@ -548,7 +548,7 @@ SUITE(WMConfigSuiteActions)
         config.reset();
 
         write_config_file(*config_path,
-            "[actions]\ntest-class= maximize, snap:left, layer:42, stick \n");
+            "[actions]\ntest-class= maximize, snap:left, layer:4, stick \n");
         config.load();
 
         ClassActions &action = config.classactions[
@@ -560,7 +560,7 @@ SUITE(WMConfigSuiteActions)
         CHECK(action.actions & ACT_SETLAYER);
 
         CHECK_EQUAL(action.snap, SNAP_LEFT);
-        CHECK_EQUAL(action.layer, 42);
+        CHECK_EQUAL(action.layer, 4);
     }
 
     TEST_FIXTURE(WMConfigFixture, test_combiations_with_duplicates)
@@ -569,7 +569,7 @@ SUITE(WMConfigSuiteActions)
         config.reset();
 
         write_config_file(*config_path,
-            "[actions]\ntest-class= maximize, snap:left, layer:42, stick, layer:43 \n");
+            "[actions]\ntest-class= maximize, snap:left, layer:4, stick, layer:5 \n");
         config.load();
 
         ClassActions &action = config.classactions[
@@ -581,7 +581,7 @@ SUITE(WMConfigSuiteActions)
         CHECK(action.actions & ACT_SETLAYER);
 
         CHECK_EQUAL(action.snap, SNAP_LEFT);
-        CHECK_EQUAL(action.layer, 43);
+        CHECK_EQUAL(action.layer, 5);
     }
 };
 
