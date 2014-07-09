@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <memory>
 #include <utility>
 
 #include <UnitTest++.h>
@@ -57,9 +56,97 @@ SUITE(ClientModelMemberSuite)
         }
         iterator++;
 
+        // Make sure it was focused
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+        }
+        iterator++;
+
         // Finally, this is the end of the event stream
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
+
+        // Then, remove the added client
+        model.remove_client(a);
+        CHECK_EQUAL(false, model.is_client(a));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_visibility)
+    {
+        // Add a new client and ensure that it is present
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+
+        // Make sure that the client is visible by default
+        CHECK(model.is_visible(a));
+
+        // Make sure moving clients are invisible
+        model.start_moving(a);
+        CHECK(!model.is_visible(a));
+        model.stop_moving(a, Dimension2D(2, 2));
+        CHECK(model.is_visible(a));
+
+        // Make sure resizing clients are invisible
+        model.start_resizing(a);
+        CHECK(!model.is_visible(a));
+        model.stop_resizing(a, Dimension2D(2, 2));
+        CHECK(model.is_visible(a));
+
+        // Make sure that iconified clients are invisible
+        model.iconify(a);
+        CHECK(!model.is_visible(a));
+        model.deiconify(a);
+        CHECK(model.is_visible(a));
+
+        // Move a client to a different desktop and make sure it is invisible
+        model.client_next_desktop(a);
+        CHECK(!model.is_visible(a));
+        model.client_prev_desktop(a);
+        CHECK(model.is_visible(a));
+
+        model.client_prev_desktop(a);
+        CHECK(!model.is_visible(a));
+        model.client_next_desktop(a);
+        CHECK(model.is_visible(a));
+
+        // View a different desktop and make sure the client is invisible
+        model.next_desktop();
+        CHECK(!model.is_visible(a));
+        model.prev_desktop();
+        CHECK(model.is_visible(a));
+
+        model.prev_desktop();
+        CHECK(!model.is_visible(a));
+        model.next_desktop();
+        CHECK(model.is_visible(a));
+
+        // Stick a window, and then change desktops, making sure the stuck
+        // window is still visible
+        model.toggle_stick(a);
+
+        model.next_desktop();
+        CHECK(model.is_visible(a));
+        model.prev_desktop();
+        CHECK(model.is_visible(a));
+
+        model.prev_desktop();
+        CHECK(model.is_visible(a));
+        model.next_desktop();
+        CHECK(model.is_visible(a));
+
+        // Remove the stickiness and then make sure that the tests display the
+        // same results as last time
+        model.toggle_stick(a);
+
+        model.next_desktop();
+        CHECK(!model.is_visible(a));
+        model.prev_desktop();
+        CHECK(model.is_visible(a));
+
+        model.prev_desktop();
+        CHECK(!model.is_visible(a));
+        model.next_desktop();
+        CHECK(model.is_visible(a));
     }
 };
 

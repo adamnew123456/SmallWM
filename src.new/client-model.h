@@ -53,6 +53,7 @@ public:
      */
     ClientModel(unsigned long long max_desktops) :
         m_max_desktops(max_desktops),
+        m_focused(None),
         // Initialize all the desktops
         ALL_DESKTOPS(new AllDesktops()), 
         ICON_DESKTOP(new IconDesktop()),
@@ -434,7 +435,7 @@ public:
         // Only one window, at max, can be either moved or resized
         if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
                 m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
-            return
+            return;
 
         move_to_desktop(client, MOVING_DESKTOP, true);
     }
@@ -468,7 +469,7 @@ public:
         // Only one window, at max, can be either moved or resized
         if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
                 m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
-            return
+            return;
 
         move_to_desktop(client, RESIZING_DESKTOP, true);
     }
