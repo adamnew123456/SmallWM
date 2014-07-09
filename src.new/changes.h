@@ -129,7 +129,7 @@ std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
 /// Indicates a change in the desktop of a client
 struct ChangeClientDesktop : Change
 {
-    ChangeClientDesktop(Window win, std::shared_ptr<Desktop> new_desktop) :
+    ChangeClientDesktop(Window win, const Desktop *new_desktop) :
         window(win), desktop(new_desktop), Change(CHANGE_CLIENT_DESKTOP)
     {};
 
@@ -144,7 +144,7 @@ struct ChangeClientDesktop : Change
     }
 
     Window window;
-    std::shared_ptr<Desktop> desktop;
+    const Desktop *desktop;
 };
 
 std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
@@ -157,7 +157,7 @@ std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
 /// Indicates a change in the currently visible desktop
 struct ChangeCurrentDesktop : Change
 {
-    ChangeCurrentDesktop(std::shared_ptr<Desktop> new_desktop) :
+    ChangeCurrentDesktop(const Desktop *new_desktop) :
         desktop(new_desktop), Change(CHANGE_CURRENT_DESKTOP)
     {};
 
@@ -171,7 +171,7 @@ struct ChangeCurrentDesktop : Change
         return *cast_other.desktop == *desktop;
     }
 
-    std::shared_ptr<Desktop> desktop;
+    const Desktop *desktop;
 };
 
 std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)

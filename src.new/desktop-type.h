@@ -158,17 +158,17 @@ std::ostream &operator<<(std::ostream &out, const Desktop &desktop)
 }
 
 /**
- * Like std::less<T>, but for shared pointers.
+ * Like std::less<T>, but for pointers.
  */
 template <typename T>
-struct SharedPointerLess
+struct PointerLess
 {
     /**
      * Compares a pair of Desktop pointers. This is used because Desktop must be
      * stored in structures as a pointer, due to the need for downcasting to
      * access appropriate members.
      */
-    bool operator()(const std::shared_ptr<T> a, const std::shared_ptr<T> b) const
+    bool operator()(const T *a, const T* b) const
     {
         return *a < *b;
     }

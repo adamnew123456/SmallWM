@@ -44,15 +44,15 @@ SUITE(ClientModelMemberSuite)
         CHECK((*iterator)->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(iterator->get());
-            std::shared_ptr<Desktop> desktop(new UserDesktop(0));
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            const Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(ChangeClientDesktop(a, desktop), *the_change);
         }
         iterator++;
 
         // Secondly, it is stacked relative to other windows
         {
-            const ChangeLayer *the_change = dynamic_cast<const ChangeLayer*>(iterator->get());
+            const ChangeLayer *the_change = dynamic_cast<const ChangeLayer*>(*iterator);
             CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
         }
         iterator++;
