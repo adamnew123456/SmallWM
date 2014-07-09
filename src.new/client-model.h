@@ -72,6 +72,9 @@ public:
             m_desktops.add_category(USER_DESKTOPS[desktop]);
         }
 
+        for (Layer layer = MIN_LAYER; layer <= MAX_LAYER; layer++)
+            m_layers.add_category(layer);
+
         m_current_desktop = USER_DESKTOPS[0];
     }
 

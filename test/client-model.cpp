@@ -148,6 +148,16 @@ SUITE(ClientModelMemberSuite)
         model.next_desktop();
         CHECK(model.is_visible(a));
     }
+
+    TEST_FIXTURE(ClientModelFixture, test_finder_functions)
+    {
+        // Make sure that the `find_*` functions return the correct results
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+
+        const Desktop *desktop_of = model.find_desktop(a);
+        CHECK(*desktop_of == UserDesktop(0));
+        CHECK(model.find_layer(a) == DEF_LAYER);
+    }
 };
 
 int main()
