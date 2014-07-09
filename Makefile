@@ -6,7 +6,7 @@ CFLAGS=-O3
 # C++ related flags. Note that you may need to modify the CXXFLAGS variable to
 # get SmallWM to build with Clang++.
 CXX=/usr/bin/clang++
-CXXFLAGS=-g -IUnitTest++/src -Itest -Iinih -Isrc -Isrc.new
+CXXFLAGS=-g -IUnitTest++/src -Itest -Iinih -Isrc -Isrc.new -Wold-style-cast --std=c++11
 LINKERFLAGS=-lX11 -lXrandr
 
 # Binaries are classified into two groups - ${BINS} includes the main smallwm
@@ -19,7 +19,7 @@ OBJS=obj/ini.o obj/clients.o obj/configparse.o obj/clientmanager.o obj/desktops.
 # ${HEADERS} exists mostly to make building Doxygen output more consistent
 # since a change in the headers may require the API documentation to be
 # re-created.
-HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/desktops.h src/events.h src/icccm.h src/layers.h src/shared.h src/utils.h
+HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/desktops.h src/events.h src/icccm.h src/layers.h src/shared.h src/utils.h src.new/changes.h src.new/client-model.h src.new/desktop-type.h src.new/unique-multimap.h
 SRCS=src/clients.cpp src/clientmanager.cpp src/configparse.cpp src/desktops.cpp src/events.cpp src/icccm.cpp src/icons.cpp src/layers.cpp src/moveresize.cpp src/smallwm.cpp src/utils.cpp
 
 all: bin/smallwm
@@ -105,5 +105,5 @@ obj/test-configparse.o: obj test/configparse.cpp
 bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o
 	${CXX} ${CXXFLAGS} obj/test-client-model.o bin/libUnitTest++.a ${LINKER_FLAGS} -o bin/test-client-model
 
-obj/test-client-model.o: obj test/client-model.cpp
+obj/test-client-model.o: obj test/client-model.cpp src.new/changes.h src.new/client-model.h src.new/desktop-type.h src.new/unique-multimap.h
 	${CXX} ${CXXFLAGS} -c test/client-model.cpp -o obj/test-client-model.o

@@ -51,4 +51,14 @@ const int LAUNCH_BUTTON = 1,
       /// The key to hold to activate window manager functions
       BUTTON_MASK = Mod4Mask;
 
+// This is useful for tests, since they insist on printing things that they
+// have no knowledge of.
+template <typename T, typename CharT, typename Traits>
+std::basic_ostream<CharT, Traits> &
+operator<<(std::basic_ostream<CharT, Traits> &out, const T &value)
+{
+    out << "[Unknown Value]";
+    return out;
+}
+
 #endif

@@ -2,6 +2,8 @@
 #ifndef __SMALLWM_DESKTOP_TYPE__
 #define __SMALLWM_DESKTOP_TYPE__
 
+#include <ostream>
+
 /*
  * These constants are used to make sure that different instances of
  * desktop classes with the same parameters are equal, and are stored in
@@ -31,25 +33,28 @@ struct Desktop
     Desktop() : sort_key(DESKTOP_SORT_KEY)
     {};
 
-    virtual bool is_user_desktop() const
-    { return false; }
+    virtual ~Desktop()
+    {};
 
-    virtual bool is_all_desktop() const
-    { return false; }
+    bool is_user_desktop() const
+    { return sort_key > USER_DESKTOP_SORT_KEY; }
 
-    virtual bool is_icon_desktop() const
-    { return false; }
+    bool is_all_desktop() const
+    { return sort_key == ALL_DESKTOP_SORT_KEY; }
 
-    virtual bool is_moving_desktop() const
-    { return false; }
+    bool is_icon_desktop() const
+    { return sort_key == ICON_DESKTOP_SORT_KEY; }
 
-    virtual bool is_resizing_desktop() const
-    { return false; }
+    bool is_moving_desktop() const
+    { return sort_key == MOVING_DESKTOP_SORT_KEY; }
 
-    virtual bool operator<(const Desktop &other) const
+    bool is_resizing_desktop() const
+    { return sort_key == RESIZING_DESKTOP_SORT_KEY; }
+
+    bool operator<(const Desktop &other) const
     { return sort_key < other.sort_key; }
 
-    virtual bool operator==(const Desktop &other) const
+    bool operator==(const Desktop &other) const
     { return sort_key == other.sort_key; }
 
     unsigned long long sort_key;
@@ -64,11 +69,14 @@ struct UserDesktop : public Desktop
         desktop(_desktop), Desktop(_desktop + USER_DESKTOP_SORT_KEY)
     {};
 
-    bool is_user_desktop() const
-    { return true; }
-
     unsigned long long desktop;
 };
+
+std::ostream &operator<<(std::ostream &out, const UserDesktop &desktop)
+{
+    out << "[UserDesktop " << desktop.desktop << "]";
+    return out;
+}
 
 /**
  * A virtual desktop describing windows which are visible on all 'real'
@@ -78,10 +86,13 @@ struct AllDesktops : public Desktop
 {
     AllDesktops() : Desktop(ALL_DESKTOP_SORT_KEY)
     {};
-
-    bool is_all_desktop() const
-    { return true; }
 };
+
+std::ostream &operator<<(std::ostream &out, const AllDesktops &desktop)
+{
+    out << "[All Desktops]";
+    return out;
+}
 
 /**
  * A virtual desktop describing windows which are currently hidden.
@@ -90,10 +101,13 @@ struct IconDesktop : public Desktop
 {
     IconDesktop() : Desktop(ICON_DESKTOP_SORT_KEY)
     {};
-
-    bool is_icon_desktop() const
-    { return true; }
 };
+
+std::ostream &operator<<(std::ostream &out, const IconDesktop &desktop)
+{
+    out << "[Icon Desktop]";
+    return out;
+}
 
 /**
  * A virtual desktop for a window which is currently being moved.
@@ -102,10 +116,13 @@ struct MovingDesktop : public Desktop
 {
     MovingDesktop() : Desktop(MOVING_DESKTOP_SORT_KEY)
     {};
-
-    bool is_moving_desktop() const
-    { return true; }
 };
+
+std::ostream &operator<<(std::ostream &out, const MovingDesktop &desktop)
+{
+    out << "[Moving Desktop]";
+    return out;
+}
 
 /**
  * A virtual desktop for a window which is currently being resized.
@@ -114,8 +131,47 @@ struct ResizingDesktop : public Desktop
 {
     ResizingDesktop() : Desktop(RESIZING_DESKTOP_SORT_KEY)
     {};
-
-    bool is_resizing_desktop() const
-    { return true; }
 };
+
+std::ostream &operator<<(std::ostream &out, const ResizingDesktop &desktop)
+{
+    out << "[Resizing Desktop]";
+    return out;
+}
+
+std::ostream &operator<<(std::ostream &out, const Desktop &desktop)
+{
+    if (desktop.is_user_desktop())
+        out << dynamic_cast<const UserDesktop&>(desktop);
+    else if (desktop.is_all_desktop())
+        out << dynamic_cast<const AllDesktops&>(desktop);
+    else if (desktop.is_icon_desktop())
+        out << dynamic_cast<const IconDesktop&>(desktop);
+    else if (desktop.is_moving_desktop())
+        out << dynamic_cast<const MovingDesktop&>(desktop);
+    else if (desktop.is_resizing_desktop())
+        out << dynamic_cast<const ResizingDesktop&>(desktop);
+    else
+        out << "[Desktop]";
+
+    return out;
+}
+
+/**
+ * Like std::less<T>, but for shared pointers.
+ */
+template <typename T>
+struct SharedPointerLess
+{
+    /**
+     * Compares a pair of Desktop pointers. This is used because Desktop must be
+     * stored in structures as a pointer, due to the need for downcasting to
+     * access appropriate members.
+     */
+    bool operator()(const std::shared_ptr<T> a, const std::shared_ptr<T> b) const
+    {
+        return *a < *b;
+    }
+};
+
 #endif

@@ -8,6 +8,7 @@
 #include "unique-multimap.h"
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -34,25 +35,39 @@ bool is_valid_size(Dimension2D &size)
  */
 class ClientModel
 {
+private:
+    std::shared_ptr<Desktop> ALL_DESKTOPS;
+    std::shared_ptr<Desktop> ICON_DESKTOP;
+    std::shared_ptr<Desktop> MOVING_DESKTOP;
+    std::shared_ptr<Desktop> RESIZING_DESKTOP;
+    std::vector<std::shared_ptr<UserDesktop>> USER_DESKTOPS;
+
 public:
-    typedef std::vector<Change>::iterator change_iter;
-    typedef UniqueMultimap<Desktop,Window>::member_iter client_iter;
+    typedef std::vector<std::shared_ptr<const Change>>::iterator change_iter;
+    typedef UniqueMultimap<std::shared_ptr<Desktop>,Window>::member_iter client_iter;
 
     /**
      * Initializes all of the categories in the maps
      */
     ClientModel(unsigned long long max_desktops) :
-        m_max_desktops(max_desktops), m_current_desktop(1),
-        m_focused(None)
+        m_max_desktops(max_desktops),
+        // Initialize all the desktops
+        ALL_DESKTOPS(new AllDesktops()), ICON_DESKTOP(new IconDesktop()),
+        MOVING_DESKTOP(new MovingDesktop()), RESIZING_DESKTOP(new ResizingDesktop())
     {
-        m_desktops.add_category(AllDesktops());
-        m_desktops.add_category(IconDesktop());
-        m_desktops.add_category(MovingDesktop());
-        m_desktops.add_category(ResizingDesktop());
+        m_desktops.add_category(ALL_DESKTOPS);
+        m_desktops.add_category(ICON_DESKTOP);
+        m_desktops.add_category(MOVING_DESKTOP);
+        m_desktops.add_category(RESIZING_DESKTOP);
 
-        for (unsigned long long desktop = 1; desktop <= max_desktops;
+        for (unsigned long long desktop = 0; desktop < max_desktops;
                 desktop++)
-            m_desktops.add_category(UserDesktop(desktop));
+        {
+            USER_DESKTOPS.push_back(std::shared_ptr<UserDesktop>(new UserDesktop(desktop)));
+            m_desktops.add_category(USER_DESKTOPS[desktop]);
+        }
+
+        m_current_desktop = USER_DESKTOPS[0];
     }
 
     /**
@@ -92,12 +107,12 @@ public:
      */
     bool is_visible(Window client)
     {
-        Desktop &desktop_of = m_desktops.get_category_of(client);
-        if (desktop_of.is_all_desktop())
+        std::shared_ptr<Desktop> desktop_of = m_desktops.get_category_of(client);
+        if (desktop_of->is_all_desktop())
             return true;
 
-        if (desktop_of.is_user_desktop())
-            return desktop_of == m_current_desktop;
+        if (desktop_of->is_user_desktop())
+            return *desktop_of == *m_current_desktop;
 
         return false;
     }
@@ -105,7 +120,7 @@ public:
     /**
      * Gets a list of all of the clients on a desktop.
      */
-    void get_clients_of(Desktop const &desktop,
+    void get_clients_of(std::shared_ptr<Desktop> desktop,
         std::vector<Window> &return_clients)
     {
         for (client_iter iter = m_desktops.get_members_of_begin(desktop);
@@ -126,8 +141,8 @@ public:
             return_clients.push_back(*iter);
 
         for (client_iter iter = 
-                    m_desktops.get_members_of_begin(AllDesktops());
-                iter != m_desktops.get_members_of_end(AllDesktops());
+                    m_desktops.get_members_of_begin(ALL_DESKTOPS);
+                iter != m_desktops.get_members_of_end(ALL_DESKTOPS);
                 iter++)
             return_clients.push_back(*iter);
     }
@@ -159,16 +174,16 @@ public:
         {
             case IS_VISIBLE:
                 m_desktops.add_member(m_current_desktop, client);
-                push_change(ChangeClientDesktop(client, m_current_desktop));
+                push_change(new ChangeClientDesktop(client, m_current_desktop));
                 break;
             case IS_HIDDEN:
-                m_desktops.add_member(IconDesktop(), client);
-                push_change(ChangeClientDesktop(client, IconDesktop()));
+                m_desktops.add_member(ICON_DESKTOP, client);
+                push_change(new ChangeClientDesktop(client, ICON_DESKTOP));
                 break;
         }
 
         m_layers.add_member(DEF_LAYER, client);
-        push_change(ChangeLayer(client, DEF_LAYER));
+        push_change(new ChangeLayer(client, DEF_LAYER));
 
         // Since the size and locations are already current, don't put out
         // an event now that they're set
@@ -207,7 +222,7 @@ public:
 
         Window old_focus = m_focused;
         m_focused = client;
-        push_change(ChangeFocus(old_focus, client));
+        push_change(new ChangeFocus(old_focus, client));
     }
 
     /**
@@ -217,7 +232,7 @@ public:
     {
         Window old_focus = m_focused;
         m_focused = None;
-        push_change(ChangeFocus(old_focus, None));
+        push_change(new ChangeFocus(old_focus, None));
     }
 
     /**
@@ -233,7 +248,7 @@ public:
     /**
      * Gets the current desktop which the client inhabits.
      */
-    Desktop find_desktop(Window client)
+    std::shared_ptr<Desktop> find_desktop(Window client)
     {
         return m_desktops.get_category_of(client);
     }
@@ -254,9 +269,9 @@ public:
         if (!is_visible(client))
             return;
 
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (old_desktop.is_user_desktop())
-            move_to_desktop(client, AllDesktops(), false);
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (old_desktop->is_user_desktop())
+            move_to_desktop(client, ALL_DESKTOPS, false);
         else
             move_to_desktop(client, m_current_desktop, false);
     }
@@ -270,7 +285,7 @@ public:
         if (old_layer < MAX_LAYER)
         {
             m_layers.move_member(client, old_layer + 1);
-            push_change(ChangeLayer(client, old_layer + 1));
+            push_change(new ChangeLayer(client, old_layer + 1));
         }
     }
 
@@ -283,7 +298,7 @@ public:
         if (old_layer > MIN_LAYER)
         {
             m_layers.move_member(client, old_layer - 1);
-            push_change(ChangeLayer(client, old_layer - 1));
+            push_change(new ChangeLayer(client, old_layer - 1));
         }
     }
 
@@ -299,7 +314,7 @@ public:
         if (old_layer != layer)
         {
             m_layers.move_member(client, layer);
-            push_change(ChangeLayer(client, layer));
+            push_change(new ChangeLayer(client, layer));
         }
     }
 
@@ -308,18 +323,14 @@ public:
      */
     void client_next_desktop(Window client)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (!old_desktop.is_user_desktop())
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (!old_desktop->is_user_desktop())
             return;
 
-        UserDesktop *user_desktop = (UserDesktop*)&old_desktop;
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop.get());
         unsigned long long desktop_index = user_desktop->desktop;
-        if (desktop_index == m_max_desktops)
-            desktop_index = 1;
-        else
-            desktop_index++;
-
-        move_to_desktop(client, UserDesktop(desktop_index), true);
+        desktop_index  = (desktop_index + 1) % m_max_desktops;
+        move_to_desktop(client, USER_DESKTOPS[desktop_index], true);
     }
 
     /**
@@ -327,18 +338,14 @@ public:
      */
     void client_prev_desktop(Window client)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (!old_desktop.is_user_desktop())
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (!old_desktop->is_user_desktop())
             return;
 
-        UserDesktop *user_desktop = (UserDesktop*)&old_desktop;
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop.get());
         unsigned long long desktop_index = user_desktop->desktop;
-        if (desktop_index == 1)
-            desktop_index = m_max_desktops;
-        else
-            desktop_index--;
-
-        move_to_desktop(client, UserDesktop(desktop_index), true);
+        desktop_index = (desktop_index - 1 + m_max_desktops) % m_max_desktops;
+        move_to_desktop(client, USER_DESKTOPS[desktop_index], true);
     }
     
     /**
@@ -346,12 +353,11 @@ public:
      */
     void next_desktop()
     {
-        if (m_current_desktop.desktop == m_max_desktops)
-            m_current_desktop.desktop = 1;
-        else
-            m_current_desktop.desktop++;
+        unsigned long long desktop_index = 
+            (m_current_desktop->desktop + 1) % m_max_desktops;
+        m_current_desktop = USER_DESKTOPS[desktop_index];
 
-        push_change(ChangeCurrentDesktop(m_current_desktop));
+        push_change(new ChangeCurrentDesktop(m_current_desktop));
     }
 
     /**
@@ -359,12 +365,13 @@ public:
      */
     void prev_desktop()
     {
-        if (m_current_desktop.desktop == 1)
-            m_current_desktop.desktop = m_max_desktops;
-        else
-            m_current_desktop.desktop--;
+        // We have to add the maximum desktops back in, since C++ doesn't
+        // guarantee what will happen with a negative modulus
+        unsigned long long desktop_index = 
+            (m_current_desktop->desktop - 1 + m_max_desktops) % m_max_desktops;
+        m_current_desktop = USER_DESKTOPS[desktop_index];
 
-        push_change(ChangeCurrentDesktop(m_current_desktop));
+        push_change(new ChangeCurrentDesktop(m_current_desktop));
     }
 
     /**
@@ -372,13 +379,13 @@ public:
      */
     void iconify(Window client)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (old_desktop.is_icon_desktop())
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (old_desktop->is_icon_desktop())
             return;
         else if (!is_visible(client))
             return;
 
-        move_to_desktop(client, IconDesktop(), true);
+        move_to_desktop(client, ICON_DESKTOP, true);
     }
 
     /**
@@ -386,8 +393,8 @@ public:
      */
     void deiconify(Window client)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (!old_desktop.is_icon_desktop())
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (!old_desktop->is_icon_desktop())
             return;
 
         // Focus after making the client visible, since a non-visible client
@@ -401,16 +408,15 @@ public:
      */
     void start_moving(Window client)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
         if (!is_visible(client))
             return;
 
         // Only one window, at max, can be either moved or resized
-        if (m_desktops.count_members_of(MovingDesktop()) > 0 ||
-                m_desktops.count_members_of(ResizingDesktop()) > 0)
+        if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
+                m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
             return
 
-        move_to_desktop(client, MovingDesktop(), true);
+        move_to_desktop(client, MOVING_DESKTOP, true);
     }
 
     /**
@@ -418,14 +424,14 @@ public:
      */
     void stop_moving(Window client, Dimension2D location)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (!old_desktop.is_moving_desktop())
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (!old_desktop->is_moving_desktop())
             return;
 
         move_to_desktop(client, m_current_desktop, false);
 
         m_location[client] = location;
-        push_change(ChangeLocation(client, DIM2D_X(location),
+        push_change(new ChangeLocation(client, DIM2D_X(location),
             DIM2D_Y(location)));
 
         focus(client);
@@ -436,16 +442,15 @@ public:
      */
     void start_resizing(Window client)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
         if (!is_visible(client))
             return;
 
         // Only one window, at max, can be either moved or resized
-        if (m_desktops.count_members_of(MovingDesktop()) > 0 ||
-                m_desktops.count_members_of(ResizingDesktop()) > 0)
+        if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
+                m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
             return
 
-        move_to_desktop(client, ResizingDesktop(), true);
+        move_to_desktop(client, RESIZING_DESKTOP, true);
     }
 
     /**
@@ -453,8 +458,8 @@ public:
      */
     void stop_resizing(Window client, Dimension2D size)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (!old_desktop.is_resizing_desktop())
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (!old_desktop->is_resizing_desktop())
             return;
 
         move_to_desktop(client, m_current_desktop, false);
@@ -462,7 +467,7 @@ public:
         if (!is_valid_size(size))
         {
             m_size[client] = size;
-            push_change(ChangeSize(client, DIM2D_WIDTH(size),
+            push_change(new ChangeSize(client, DIM2D_WIDTH(size),
                 DIM2D_HEIGHT(size)));
         }
 
@@ -473,35 +478,35 @@ protected:
     /**
      * Pushes a change into the change buffer.
      */
-    void push_change(Change change)
+    void push_change(const Change *change)
     {
-        m_changes.push_back(change);
+        m_changes.push_back(std::shared_ptr<const Change>(change));
     }
 
     /**
      * Moves a client between two desktops and fires the resulting event.
      */
-    void move_to_desktop(Window client, const Desktop &new_desktop, bool unfocus)
+    void move_to_desktop(Window client, std::shared_ptr<Desktop> new_desktop, bool unfocus)
     {
-        Desktop &old_desktop = m_desktops.get_category_of(client);
-        if (old_desktop == new_desktop)
+        std::shared_ptr<Desktop> old_desktop = m_desktops.get_category_of(client);
+        if (*old_desktop == *new_desktop)
             return;
 
         if (unfocus)
             unfocus_if_focused(client);
 
         m_desktops.move_member(client, new_desktop);
-        push_change(ChangeClientDesktop(client, new_desktop));
+        push_change(new ChangeClientDesktop(client, new_desktop));
     }
 
 private:
     /// A list of the changes made to the client data
-    std::vector<Change> m_changes;
+    std::vector<std::shared_ptr<const Change>> m_changes;
     /// The maximum number of user-visible desktops
     unsigned long long m_max_desktops;
 
     /// A mapping between clients and their desktops
-    UniqueMultimap<Desktop, Window> m_desktops;
+    UniqueMultimap<std::shared_ptr<Desktop>, Window, SharedPointerLess<Desktop>> m_desktops;
     /// A mapping between clients and the layers they inhabit
     UniqueMultimap<Layer, Window> m_layers;
     /// A mapping between clients and their locations
@@ -510,7 +515,7 @@ private:
     std::map<Window, Dimension2D> m_size;
 
     /// The currently visible desktop
-    UserDesktop m_current_desktop;
+    std::shared_ptr<UserDesktop> m_current_desktop;
     /// The currently focused client
     Window m_focused;
 };

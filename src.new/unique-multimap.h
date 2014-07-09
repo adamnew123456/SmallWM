@@ -33,7 +33,7 @@
  *    Members are unique to the UniqueMultimap - that is, no member
  *    can belong to more than one category.
  */
-template <typename category_t, typename member_t>
+template <typename category_t, typename member_t, typename category_comparator_t = std::less<category_t>>
 class UniqueMultimap
 {
 public:
@@ -165,7 +165,7 @@ public:
     }
 private:
     /// The 'top-down' mapping from categories to their members
-    std::map<category_t, std::vector<member_t>*> m_category_members;
+    std::map<category_t, std::vector<member_t>*, category_comparator_t> m_category_members;
     /// The 'bottom-up' mapping from members to their categories
     std::map<member_t, category_t> m_member_to_category;
 };
@@ -189,7 +189,7 @@ public:
     {
         const category_t &a_category = m_uniquemultimap.get_category_of(a);
         const category_t &b_category = m_uniquemultimap.get_category_of(b);
-        return a < b;
+        return a_category < b_category;
     }
 
 private:
