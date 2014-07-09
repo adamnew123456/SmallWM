@@ -158,6 +158,93 @@ SUITE(ClientModelMemberSuite)
         CHECK(*desktop_of == UserDesktop(0));
         CHECK(model.find_layer(a) == DEF_LAYER);
     }
+
+    TEST_FIXTURE(ClientModelFixture, test_getters)
+    {
+        // First, ensure that `get_clients_of` gets only clients on the given
+        // desktop
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+
+        std::vector<Window> result;
+        model.get_clients_of(model.USER_DESKTOPS[0], result);
+        CHECK_EQUAL(2, result.size());
+        if (result[0] == a)
+            CHECK_EQUAL(b, result[1]);
+        else if (result[0] == b)
+            CHECK_EQUAL(a, result[1]);
+        else
+            CHECK(false);
+
+        // Also, ensure that all clients are marked as visible
+        result.clear();
+        model.get_visible_clients(result);
+        CHECK_EQUAL(2, result.size());
+        if (result[0] == a)
+            CHECK_EQUAL(b, result[1]);
+        else if (result[0] == b)
+            CHECK_EQUAL(a, result[1]);
+        else
+            CHECK(false);
+
+        // Move a client down, and ensure that it appears before the other in
+        // stacking order
+        model.down_layer(b);
+        result.clear();
+        model.get_visible_in_layer_order(result);
+        CHECK_EQUAL(2, result.size());
+        CHECK_EQUAL(result[0], b);
+        CHECK_EQUAL(result[1], a);
+
+        // Now, move the client up and ensure that the layer order is reversed
+        model.up_layer(b);
+        model.up_layer(b);
+        result.clear();
+        model.get_visible_in_layer_order(result);
+        CHECK_EQUAL(2, result.size());
+        CHECK_EQUAL(result[0], a);
+        CHECK_EQUAL(result[1], b);
+
+        // Move a client off this desktop, and ensure that it appears there
+        // Also, ensure that the visible list no longer includes it
+        model.client_next_desktop(b);
+
+        result.clear();
+        model.get_clients_of(model.USER_DESKTOPS[0], result);
+        CHECK_EQUAL(1, result.size());
+        CHECK_EQUAL(a, result[0]);
+
+        result.clear();
+        model.get_clients_of(model.USER_DESKTOPS[1], result);
+        CHECK_EQUAL(1, result.size());
+        CHECK_EQUAL(b, result[0]);
+
+        // Ensure that the visible list includes only the client on this
+        // desktop; the same goes for the visible clients in layer order
+        result.clear();
+        model.get_visible_clients(result);
+        CHECK_EQUAL(1, result.size());
+        CHECK_EQUAL(a, result[0]);
+
+        result.clear();
+        model.get_visible_in_layer_order(result);
+        CHECK_EQUAL(1, result.size());
+        CHECK_EQUAL(a, result[0]);
+
+        // Go to the next desktop and make sure that the visible list is
+        // fixed
+        model.next_desktop();
+
+        result.clear();
+        model.get_visible_clients(result);
+        CHECK_EQUAL(1, result.size());
+        CHECK_EQUAL(b, result[0]);
+
+        result.clear();
+        model.get_visible_in_layer_order(result);
+        CHECK_EQUAL(1, result.size());
+        CHECK_EQUAL(b, result[0]);
+    }
 };
 
 int main()

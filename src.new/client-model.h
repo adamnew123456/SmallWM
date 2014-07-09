@@ -136,7 +136,7 @@ public:
     /**
      * Gets a list of all of the clients on a desktop.
      */
-    void get_clients_of(Desktop *desktop,
+    void get_clients_of(desktop_ptr desktop,
         std::vector<Window> &return_clients)
     {
         for (client_iter iter = m_desktops.get_members_of_begin(desktop);
