@@ -8,17 +8,6 @@
 #include "common.h"
 #include "desktop-type.h"
 
-enum ChangeType
-{
-    BASE_CHANGE,
-    CHANGE_LAYER,
-    CHANGE_FOCUS,
-    CHANGE_CLIENT_DESKTOP,
-    CHANGE_CURRENT_DESKTOP,
-    CHANGE_LOCATION,
-    CHANGE_SIZE,
-};
-
 /**
  * This is the root of a hierarchy which forms the layer between the parts
  * of SmallWM which interact with Xlib directly, and the model which is
@@ -29,39 +18,29 @@ enum ChangeType
  */
 struct Change
 {
-    Change(ChangeType type) :
-        change_type(type)
-    {};
-
-    Change() :
-        change_type(BASE_CHANGE)
-    {};
-
     virtual ~Change()
     {};
 
-    bool is_layer_change() const
-    { return change_type == CHANGE_LAYER; }
+    virtual bool is_layer_change() const
+    { return false; }
 
-    bool is_focus_change() const
-    { return change_type == CHANGE_FOCUS; }
+    virtual bool is_focus_change() const
+    { return false; }
 
-    bool is_client_desktop_change() const
-    { return change_type == CHANGE_CLIENT_DESKTOP; }
+    virtual bool is_client_desktop_change() const
+    { return false; }
 
-    bool is_current_desktop_change() const
-    { return change_type == CHANGE_CURRENT_DESKTOP; }
+    virtual bool is_current_desktop_change() const
+    { return false; }
 
-    bool is_location_change() const
-    { return change_type == CHANGE_LOCATION; }
+    virtual bool is_location_change() const
+    { return false; }
 
-    bool is_size_change() const
-    { return change_type == CHANGE_SIZE; }
+    virtual bool is_size_change() const
+    { return false; }
 
     virtual bool operator==(const Change &other) const
     { return false; }
-
-    ChangeType change_type;
 };
 
 std::ostream &operator<<(std::ostream &out, const Change &change)
@@ -74,8 +53,11 @@ std::ostream &operator<<(std::ostream &out, const Change &change)
 struct ChangeLayer : Change
 {
     ChangeLayer(Window win, Layer new_layer) :
-        window(win), layer(new_layer), Change(CHANGE_LAYER)
+        window(win), layer(new_layer)
     {};
+
+    bool is_layer_change() const
+    { return true; }
 
     virtual bool operator==(const Change &other) const
     {
@@ -102,8 +84,11 @@ std::ostream &operator<<(std::ostream &out, const ChangeLayer &change)
 struct ChangeFocus : Change
 {
     ChangeFocus(Window old_focus, Window new_focus) :
-        prev_focus(old_focus), next_focus(new_focus), Change(CHANGE_FOCUS)
+        prev_focus(old_focus), next_focus(new_focus)
     {};
+
+    bool is_focus_change() const
+    { return true; }
 
     virtual bool operator==(const Change &other) const
     {
@@ -130,8 +115,11 @@ std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
 struct ChangeClientDesktop : Change
 {
     ChangeClientDesktop(Window win, const Desktop *new_desktop) :
-        window(win), desktop(new_desktop), Change(CHANGE_CLIENT_DESKTOP)
+        window(win), desktop(new_desktop)
     {};
+
+    bool is_client_desktop_change() const
+    { return true; }
 
     virtual bool operator==(const Change &other) const
     {
@@ -158,8 +146,11 @@ std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
 struct ChangeCurrentDesktop : Change
 {
     ChangeCurrentDesktop(const Desktop *new_desktop) :
-        desktop(new_desktop), Change(CHANGE_CURRENT_DESKTOP)
+        desktop(new_desktop)
     {};
+
+    bool is_curent_desktop_change() const
+    { return true; }
 
     virtual bool operator==(const Change &other) const
     {
@@ -184,8 +175,11 @@ std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)
 struct ChangeLocation : Change
 {
     ChangeLocation(Window win, Dimension _x, Dimension _y) :
-        window(win), x(_x), y(_y), Change(CHANGE_LOCATION)
+        window(win), x(_x), y(_y)
     {};
+
+    bool is_location_change() const
+    { return true; }
 
     virtual bool operator==(const Change &other) const
     {
@@ -214,8 +208,11 @@ std::ostream &operator<<(std::ostream &out, const ChangeLocation &change)
 struct ChangeSize : Change
 {
     ChangeSize(Window win, Dimension _w, Dimension _h) :
-        window(win), w(_w), h(_h), Change(CHANGE_SIZE)
+        window(win), w(_w), h(_h)
     {};
+
+    bool is_size_change() const
+    { return true; }
 
     virtual bool operator==(const Change &other) const
     {

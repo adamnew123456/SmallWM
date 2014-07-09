@@ -36,20 +36,20 @@ struct Desktop
     virtual ~Desktop()
     {};
 
-    bool is_user_desktop() const
-    { return sort_key > USER_DESKTOP_SORT_KEY; }
+    virtual bool is_user_desktop() const
+    { return false; }
 
-    bool is_all_desktop() const
-    { return sort_key == ALL_DESKTOP_SORT_KEY; }
+    virtual bool is_all_desktop() const
+    { return false; }
 
-    bool is_icon_desktop() const
-    { return sort_key == ICON_DESKTOP_SORT_KEY; }
+    virtual bool is_icon_desktop() const
+    { return false; }
 
-    bool is_moving_desktop() const
-    { return sort_key == MOVING_DESKTOP_SORT_KEY; }
+    virtual bool is_moving_desktop() const
+    { return false; }
 
-    bool is_resizing_desktop() const
-    { return sort_key == RESIZING_DESKTOP_SORT_KEY; }
+    virtual bool is_resizing_desktop() const
+    { return false; }
 
     bool operator<(const Desktop &other) const
     { return sort_key < other.sort_key; }
@@ -69,6 +69,9 @@ struct UserDesktop : public Desktop
         desktop(_desktop), Desktop(_desktop + USER_DESKTOP_SORT_KEY)
     {};
 
+    bool is_user_desktop() const
+    { return true; }
+
     unsigned long long desktop;
 };
 
@@ -86,6 +89,9 @@ struct AllDesktops : public Desktop
 {
     AllDesktops() : Desktop(ALL_DESKTOP_SORT_KEY)
     {};
+
+    bool is_all_desktop() const
+    { return true; }
 };
 
 std::ostream &operator<<(std::ostream &out, const AllDesktops &desktop)
@@ -101,6 +107,9 @@ struct IconDesktop : public Desktop
 {
     IconDesktop() : Desktop(ICON_DESKTOP_SORT_KEY)
     {};
+    
+    bool is_icon_desktop() const
+    { return true; }
 };
 
 std::ostream &operator<<(std::ostream &out, const IconDesktop &desktop)
@@ -116,6 +125,9 @@ struct MovingDesktop : public Desktop
 {
     MovingDesktop() : Desktop(MOVING_DESKTOP_SORT_KEY)
     {};
+
+    bool is_moving_desktop() const
+    { return true; }
 };
 
 std::ostream &operator<<(std::ostream &out, const MovingDesktop &desktop)
@@ -131,6 +143,9 @@ struct ResizingDesktop : public Desktop
 {
     ResizingDesktop() : Desktop(RESIZING_DESKTOP_SORT_KEY)
     {};
+
+    bool is_resizing_desktop() const
+    { return true; }
 };
 
 std::ostream &operator<<(std::ostream &out, const ResizingDesktop &desktop)
