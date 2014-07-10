@@ -78,6 +78,11 @@ public:
         m_current_desktop = USER_DESKTOPS[0];
     }
 
+    ~ClientModel()
+    {
+        flush_changes();
+    }
+
     /**
      * Removes all of the recorded changes.
      *
