@@ -149,7 +149,7 @@ struct ChangeCurrentDesktop : Change
         desktop(new_desktop)
     {};
 
-    bool is_curent_desktop_change() const
+    bool is_current_desktop_change() const
     { return true; }
 
     virtual bool operator==(const Change &other) const
