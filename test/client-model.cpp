@@ -245,6 +245,89 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(1, result.size());
         CHECK_EQUAL(b, result[0]);
     }
+
+    TEST_FIXTURE(ClientModelFixture, test_layer_change)
+    {
+        // Move a client up, and then down - ensure that, both times, the
+        // proper event is sent.
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // Up
+        model.up_layer(a);
+        ClientModel::change_iter iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_layer_change());
+        {
+            const ChangeLayer *the_change = 
+                dynamic_cast<const ChangeLayer*>(*iterator);
+            CHECK_EQUAL(ChangeLayer(a, DEF_LAYER + 1), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Down
+        model.down_layer(a);
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_layer_change());
+        {
+            const ChangeLayer *the_change = 
+                dynamic_cast<const ChangeLayer*>(*iterator);
+            CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Set the layer
+        model.set_layer(a, MIN_LAYER);
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_layer_change());
+        {
+            const ChangeLayer *the_change = 
+                dynamic_cast<const ChangeLayer*>(*iterator);
+            CHECK_EQUAL(ChangeLayer(a, MIN_LAYER), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Set the layer to the same layer, and ensure that no change is
+        // fired
+        model.set_layer(a, MIN_LAYER);
+        iterator = model.changes_begin();
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_layer_extremes)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+
+        // First, put the client on the top
+        model.set_layer(a, MIN_LAYER);
+        model.flush_changes();
+
+        // Then, try to move it up and ensure no changes occurred
+        model.down_layer(a);
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+
+        // Put the client on the bottom and run the same test, backwards
+        model.set_layer(a, MAX_LAYER);
+        model.flush_changes();
+
+        model.up_layer(a);
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+    }
 };
 
 int main()
