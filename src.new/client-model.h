@@ -253,9 +253,12 @@ public:
      */
     void unfocus()
     {
-        Window old_focus = m_focused;
-        m_focused = None;
-        push_change(new ChangeFocus(old_focus, None));
+        if (m_focused != None)
+        {
+            Window old_focus = m_focused;
+            m_focused = None;
+            push_change(new ChangeFocus(old_focus, None));
+        }
     }
 
     /**
@@ -385,6 +388,10 @@ public:
             (m_current_desktop->desktop + 1) % m_max_desktops;
         m_current_desktop = USER_DESKTOPS[desktop_index];
 
+        // Only unfocus the current window if it won't be visible
+        if (m_focused != None && !is_visible(m_focused))
+            unfocus();
+
         push_change(new ChangeCurrentDesktop(m_current_desktop));
     }
 
@@ -399,6 +406,10 @@ public:
             (m_current_desktop->desktop - 1 + m_max_desktops) 
             % m_max_desktops;
         m_current_desktop = USER_DESKTOPS[desktop_index];
+
+        // Only unfocus the current window if it won't be visible
+        if (m_focused != None && !is_visible(m_focused))
+            unfocus();
 
         push_change(new ChangeCurrentDesktop(m_current_desktop));
     }
@@ -521,11 +532,11 @@ protected:
         desktop_ptr old_desktop = m_desktops.get_category_of(client);
         if (*old_desktop == *new_desktop)
             return;
+        m_desktops.move_member(client, new_desktop);
 
-        if (unfocus)
+        if (unfocus && !is_visible(client))
             unfocus_if_focused(client);
 
-        m_desktops.move_member(client, new_desktop);
         push_change(new ChangeClientDesktop(client, new_desktop));
     }
 
