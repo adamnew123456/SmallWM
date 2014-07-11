@@ -301,7 +301,7 @@ public:
         if (old_desktop->is_user_desktop())
             move_to_desktop(client, ALL_DESKTOPS, false);
         else
-            move_to_desktop(client, m_current_desktop, false);
+            move_to_desktop(client, m_current_desktop, true);
     }
 
     /**
@@ -388,6 +388,11 @@ public:
             (m_current_desktop->desktop + 1) % m_max_desktops;
         m_current_desktop = USER_DESKTOPS[desktop_index];
 
+        // We can't change while a window is being moved or resized
+        if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
+                m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
+            return;
+
         // Only unfocus the current window if it won't be visible
         if (m_focused != None && !is_visible(m_focused))
             unfocus();
@@ -406,6 +411,11 @@ public:
             (m_current_desktop->desktop - 1 + m_max_desktops) 
             % m_max_desktops;
         m_current_desktop = USER_DESKTOPS[desktop_index];
+
+        // We can't change while a window is being moved or resized
+        if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
+                m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
+            return;
 
         // Only unfocus the current window if it won't be visible
         if (m_focused != None && !is_visible(m_focused))
