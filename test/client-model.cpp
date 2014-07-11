@@ -398,7 +398,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
+                *the_change);
         }
         iterator++;
 
@@ -451,6 +452,7 @@ SUITE(ClientModelMemberSuite)
 
         CHECK_EQUAL(model.changes_begin(), model.changes_end());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
+
 #undef FLUSH_AFTER
     }
 
@@ -535,6 +537,41 @@ SUITE(ClientModelMemberSuite)
         model.flush_changes();
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_bad_desktop_change)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+#define FLUSH_AFTER(expr) expr ; model.flush_changes()
+        // The desktop can't be changed while a window is moving
+        FLUSH_AFTER(model.start_moving(a));
+        model.next_desktop();
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
+
+        FLUSH_AFTER(model.start_moving(a));
+        model.prev_desktop();
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
+
+        // The desktop can't be changed while a window is resizing
+        FLUSH_AFTER(model.start_resizing(a));
+        model.next_desktop();
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
+
+        FLUSH_AFTER(model.start_resizing(a));
+        model.prev_desktop();
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
+#undef FLUSH_AFTER
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_stick_does_not_lose_focus)
     {
         model.add_client(a, IS_VISIBLE, 
@@ -544,6 +581,8 @@ SUITE(ClientModelMemberSuite)
         // Ensure that a window which is stuck does not lose its focus when
         // it is moved around
         model.toggle_stick(a);
+        model.flush_changes();
+
         model.next_desktop();
 
         ClientModel::change_iter iterator = model.changes_begin();
@@ -560,64 +599,124 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
 
-        // Unstick it, and ensure that it is unfocused
+        // Unstick it, and ensure that it was moved onto the current desktop.
+        // This should not cause any focus changes.
         model.toggle_stick(a);
 
-        ClientModel::change_iter iterator = model.changes_begin();
+        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_focus_change())
-        {
-            const ChangeFocus *the_change = 
-                dynamic_cast<const ChangeFocus*>(*iterator);
-            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
-        }
-        iterator++;
-
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
-
-        // Go back, so that we can test how changing the desktop of the client
-        // works
-        model.prev_desktop();
-        model.flush_changes();
-
-        // The window should be visible, now that we're on the same desktop as
-        // it
-        CHECK(model.is_visible(a));
-
-        // Focus it, and ensure that we get the message
-        model.focus(a);
-
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_focus_change())
-        {
-            const ChangeFocus *the_change = 
-                dynamic_cast<const ChangeFocus*>(*iterator);
-            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
-        }
-        iterator++;
-
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
-
-        // Stick the window, and then move it and ensure that it doesn't lose
-        // focus
-        model.client_next_desktop(a);
-
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change())
+        CHECK((*iterator)->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1], 
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1]), 
                 *the_change);
         }
         iterator++;
 
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_iconify)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // First, iconify the client. Ensure that it loses the focus, and that
+        // we get the notification about the desktop change.
+        model.iconify(a);
+
+        ClientModel::change_iter iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change = 
+                dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(a, None), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.ICON_DESKTOP), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Then, deiconify it - ensure that it lands on the current desktop,
+        // and that it regains the focus once it is on the current desktop.
+        model.deiconify(a);
+
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]),
+                *the_change);
+        }
+        iterator++;
+
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change = 
+                dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(None, a), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_bad_iconify)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+#define FLUSH_AFTER(expr) expr ; model.flush_changes()
+        // A window which is not iconified, cannot be deiconified
+        model.deiconify(a);
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+
+        // A window cannot be iconified while it is being moved
+        FLUSH_AFTER(model.start_moving(a));
+        model.iconify(a);
+
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+        FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
+
+        // A window cannot be iconified while it is being resized
+        FLUSH_AFTER(model.start_resizing(a));
+        model.iconify(a);
+
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+        FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
+#undef FLUSH_AFER
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_moving)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // Start moving the client - ensure that it is unfocused, and that it
+        // its desktop changes
     }
 };
 
