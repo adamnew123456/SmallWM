@@ -822,6 +822,192 @@ SUITE(ClientModelMemberSuite)
         
 #undef FLUSH_AFER
     }
+
+    TEST_FIXTURE(ClientModelFixture, test_resizing)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // Start resizing the client - ensure that it is unfocused, and that 
+        // it its desktop changes
+        model.start_resizing(a);
+
+        ClientModel::change_iter iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+        }
+        iterator++;
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP),
+                *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Stop moving the client, and ensure that we get a move event back 
+        // after the client is restored.
+        model.stop_resizing(a, Dimension2D(42, 43));
+
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK((*iterator)->is_size_change());
+        {
+            const ChangeSize *the_change =
+                dynamic_cast<const ChangeSize*>(*iterator);
+            CHECK_EQUAL(ChangeSize(a, 42, 43), *the_change);
+        }
+        iterator++;
+
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+        }
+        iterator++;
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_bad_resizing)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+#define FLUSH_AFTER(expr) expr ; model.flush_changes()
+        // A window which is not resizing, cannot cease resizing
+        model.stop_resizing(a, Dimension2D(1, 1));
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+
+        // A window cannot be resized while it is iconified
+        FLUSH_AFTER(model.iconify(a));
+        model.start_resizing(a);
+
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+        FLUSH_AFTER(model.deiconify(a));
+
+        // A window cannot be resized while it is being moved
+        FLUSH_AFTER(model.start_moving(a));
+        model.start_resizing(a);
+
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+        FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
+
+        // A window cannot be moved while *any* other window is being resized
+        // or moved.
+        model.add_client(b, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        FLUSH_AFTER(model.start_moving(b));
+        model.start_resizing(a);
+
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+        FLUSH_AFTER(model.stop_moving(b, Dimension2D(1, 1)));
+
+        FLUSH_AFTER(model.start_resizing(b));
+        model.start_resizing(a);
+
+        CHECK_EQUAL(model.changes_begin(), 
+            model.changes_end());
+        FLUSH_AFTER(model.stop_resizing(b, Dimension2D(1, 1)));
+
+        // Unfocus whatever is currently focused, so that it doesn't taint
+        // the ChangeFocus event in the next test
+        FLUSH_AFTER(model.unfocus());
+
+        // When resizing, giving an invalid size should restore the window's
+        // desktop and focus, but should *not* trigger a ChangeSize event
+        FLUSH_AFTER(model.start_resizing(a));
+
+        model.stop_resizing(a, Dimension2D(0, 0));
+
+        ClientModel::change_iter iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+        }
+        iterator++;
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+#undef FLUSH_AFER
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_toggle_stick)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // First, stick a client and ensure that we get the desktop change event
+        model.toggle_stick(a);
+
+        ClientModel::change_iter iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.ALL_DESKTOPS), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Then, unstick it and ensure that we get the change event again
+        model.toggle_stick(a);
+
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+    }
 };
 
 int main()
