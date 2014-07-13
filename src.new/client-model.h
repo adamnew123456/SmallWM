@@ -514,7 +514,7 @@ public:
 
         move_to_desktop(client, m_current_desktop, false);
 
-        if (!is_valid_size(size))
+        if (is_valid_size(size))
         {
             m_size[client] = size;
             push_change(new ChangeSize(client, DIM2D_WIDTH(size),
