@@ -2,7 +2,7 @@
 #include <utility>
 
 #include <UnitTest++.h>
-#include "client-model.h"
+#include "model/client-model.h"
 
 const Window a = 1,
       b = 2,
