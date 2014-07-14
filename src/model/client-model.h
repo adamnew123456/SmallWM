@@ -235,6 +235,27 @@ public:
     }
 
     /**
+     * Changes the location of a client.
+     */
+    void change_location(Window client, Dimension x, Dimension y)
+    {
+        m_location[client] = Dimension2D(x, y);
+        push_change(new ChangeLocation(client, x, y));
+    }
+
+    /**
+     * Changes the size of a client.
+     */
+    void change_size(Window client, Dimension width, Dimension height)
+    {
+        if (width > 0 && height > 0)
+        {
+            m_size[client] = Dimension2D(width, height);
+            push_change(new ChangeSize(client, width, height));
+        }
+    }
+
+    /**
      * Changes the focus to another window. Note that this fails if the client
      * is not currently visible.
      */
@@ -479,10 +500,7 @@ public:
             return;
 
         move_to_desktop(client, m_current_desktop, false);
-
-        m_location[client] = location;
-        push_change(new ChangeLocation(client, DIM2D_X(location),
-            DIM2D_Y(location)));
+        change_location(client, DIM2D_X(location), DIM2D_Y(location));
 
         focus(client);
     }
@@ -513,13 +531,7 @@ public:
             return;
 
         move_to_desktop(client, m_current_desktop, false);
-
-        if (is_valid_size(size))
-        {
-            m_size[client] = size;
-            push_change(new ChangeSize(client, DIM2D_WIDTH(size),
-                DIM2D_HEIGHT(size)));
-        }
+        change_size(client, DIM2D_WIDTH(size), DIM2D_HEIGHT(size));
 
         focus(client);
     }
