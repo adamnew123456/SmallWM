@@ -16,12 +16,6 @@ enum InitialState
     IS_HIDDEN,
 };
 
-bool is_valid_size(Dimension2D &size)
-{
-    return (DIM2D_WIDTH(size) > 0 &&
-            DIM2D_HEIGHT(size) > 0);
-}
-
 /**
  * This defines the data model used for the client.
  *
