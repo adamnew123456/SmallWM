@@ -1,26 +1,36 @@
 # C related flags. This project is mostly C++ at this point, but it still uses
 # the C API provided by inih.
-CC=/usr/bin/clang
+CC=/usr/bin/gcc
 CFLAGS=-O3
 
 # C++ related flags. Note that you may need to modify the CXXFLAGS variable to
 # get SmallWM to build with Clang++.
-CXX=/usr/bin/clang++
+CXX=/usr/bin/g++
 CXXFLAGS=-g -IUnitTest++/src -Itest -Iinih -Isrc -Wold-style-cast --std=c++11
 LINKERFLAGS=-lX11 -lXrandr
 
 # Binaries are classified into two groups - ${BINS} includes the main smallwm
 # binary only, while ${TESTS} includes all the binaries for the test suite.
 BINS=bin/smallwm
-TESTS=bin/test-test
+TESTS=$(patsubst test/%.cpp,bin/test-%,$(wildcard test/*.cpp))
 
-OBJS=obj/ini.o obj/clients.o obj/configparse.o obj/clientmanager.o obj/desktops.o obj/events.o obj/icccm.o obj/icons.o obj/layers.o obj/logging.o obj/moveresize.o obj/smallwm.o obj/utils.o
+# We need to use := do to immediate evaluation. Since inih/ini.c is not with
+# the rest of the C sources files, we handle it as an explicit case at the end.
+# 
+# Makefile variables with = are 'lazy', and thus self-reference doesn't work.
+# If we do the naive thing and just use += on the second set, then inih/ini.c
+# is included in ${OBJS} because the $(patsubst ...) expression cannot match
+# it.
+CFILES:=$(wildcard src/*.cpp)
+OBJS:=$(patsubst src/%.cpp,obj/%.o,${CFILES})
+
+CFILES:=${CFILES} inih/ini.c
+OBJS:=${OBJS} obj/ini.o
 
 # ${HEADERS} exists mostly to make building Doxygen output more consistent
 # since a change in the headers may require the API documentation to be
 # re-created.
-HEADERS=src/actions.h src/clients.h src/clientmanager.h src/common.h src/configparse.h src/desktops.h src/events.h src/icccm.h src/layers.h src/shared.h src/utils.h src/model/changes.h src/model/client-model.h src/model/desktop-type.h src/model/unique-multimap.h
-SRCS=src/clients.cpp src/clientmanager.cpp src/configparse.cpp src/desktops.cpp src/events.cpp src/icccm.cpp src/icons.cpp src/layers.cpp src/moveresize.cpp src/smallwm.cpp src/utils.cpp
+HEADERS=$(wildcard src/*.h)
 
 all: bin/smallwm
 
@@ -47,41 +57,10 @@ bin/smallwm: bin obj ${OBJS}
 obj/ini.o: obj inih/ini.c
 	${CC} ${CFLAGS} -c inih/ini.c -o obj/ini.o
 
-obj/clients.o: obj src/clients.cpp
-	${CXX} ${CXXFLAGS} -c src/clients.cpp -o obj/clients.o
+obj/%.o: obj
 
-obj/configparse.o: obj src/configparse.cpp
-	${CXX} ${CXXFLAGS} -c src/configparse.cpp -o obj/configparse.o
-
-obj/clientmanager.o: obj src/clientmanager.cpp
-	${CXX} ${CXXFLAGS} -c src/clientmanager.cpp -o obj/clientmanager.o
-
-obj/desktops.o: obj src/desktops.cpp
-	${CXX} ${CXXFLAGS} -c src/desktops.cpp -o obj/desktops.o
-
-obj/events.o: obj src/events.cpp
-	${CXX} ${CXXFLAGS} -c src/events.cpp -o obj/events.o
-
-obj/icccm.o: obj src/icccm.cpp
-	${CXX} ${CXXFLAGS} -c src/icccm.cpp -o obj/icccm.o
-
-obj/icons.o: obj src/icons.cpp
-	${CXX} ${CXXFLAGS} -c src/icons.cpp -o obj/icons.o
-
-obj/layers.o: obj src/layers.cpp
-	${CXX} ${CXXFLAGS} -c src/layers.cpp -o obj/layers.o
-
-obj/logging.o: obj src/logging.cpp
-	${CXX} ${CXXFLAGS} -c src/logging.cpp -o obj/logging.o
-
-obj/moveresize.o: obj src/moveresize.cpp
-	${CXX} ${CXXFLAGS} -c src/moveresize.cpp -o obj/moveresize.o
-
-obj/smallwm.o: obj src/smallwm.cpp
-	${CXX} ${CXXFLAGS} -c src/smallwm.cpp -o obj/smallwm.o
-
-obj/utils.o: obj src/utils.cpp
-	${CXX} ${CXXFLAGS} -c src/utils.cpp -o obj/utils.o
+obj/%.o: src/%.cpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
 
 # Getting unit tests to build is a bit awkward. Since I want to avoid
 # distributing a static library along with SmallWM, it is necessary to build
