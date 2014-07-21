@@ -181,7 +181,7 @@ public:
     void add_client(Window client, InitialState state,
         Dimension2D location, Dimension2D size)
     {
-        if (!is_valid_size(size))
+        if (DIM2D_WIDTH(size) <= 0 || DIM2D_HEIGHT(size) <= 0)
             return;
 
         // Special care is given to honor the initial state, since it is
