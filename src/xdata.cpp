@@ -125,7 +125,7 @@ void XData::next_event(XData &data)
  */
 void XData::get_latest_event(XData &data, int type)
 {
-    while (XCheckTypedEvent(m_display, type, &data);
+    while (XCheckTypedEvent(m_display, type, &data));
 }
 
 /**
@@ -259,6 +259,26 @@ void XData::map_win(Window window)
 void XData::unmap_window(Window window)
 {
     XUnmapWindow(m_display, window);
+}
+
+/**
+ * Requests a window to close using the WM_DELETE_WINDOW message, as specified
+ * by the ICCCM.
+ * @param window The window to close.
+ */
+void XData::request_close(Window window)
+{
+    XEvent close_event;
+    XClientMessageEvent client_close;
+    client_close.type = ClientMessage;
+    client_close.window = window;
+    client_close.message_type = intern_if_needed("WM_PROTOCOLS");
+    client_close.format = 32;
+    client_close.data.l[0] = intern_if_needed("WM_DELETE_WINDOW");
+    client_close.data.l[1] = CurrentTime;
+
+    close_event.xclient = client_close;
+    XSendEvent(m_display, window, False, NoEventMask, &close_event);
 }
 
 /**
@@ -443,6 +463,30 @@ void XData::set_screen_size(Dimension width, Dimension height)
 {
     DIM2D_WIDTH(m_screen_size) = width;
     DIM2D_HEIGHT(m_screen_size) = height;
+}
+
+/**
+ * Converts from a raw keycode into a KeySym.
+ * @param keycode The raw keycode given by X.
+ * @return The KeySym represented by that keycode.
+ */
+KeySym XData::get_keysym(int keycode)
+{
+    KeySym *possible_keysyms;
+    int keysyms_per_keycode;
+
+    possible_keysyms = XGetKeyboardMapping(m_display, keycode, 1,
+        &keysyms_per_keycode);
+
+    // The man pages don't explicitly say if this is a possibility, so
+    // protect against it just in case
+    if (!keysyms_per_keycode)
+        return NoSymbol;
+
+    KeySym result = possible_keysyms[0];
+    XFree(possible_keysyms);
+
+    return result;
 }
 
 /**

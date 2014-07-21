@@ -100,6 +100,7 @@ public:
 
     void map_win(Window);
     void unmap_win(Window);
+    void request_close(Window);
     void destroy_win(Window);
 
     void get_attributes(Window, XWindowAttributes&);
@@ -118,8 +119,10 @@ public:
     Window get_transient_hint(Window);
     void get_icon_name(Window, std::string&);
 
+    KeySym get_keysym(int);
+
     void get_screen_size(Dimension&, Dimension&);
-    void set_Screen_size(Dimension, Dimension);
+    void set_screen_size(Dimension, Dimension);
 
 private:
     Atom intern_if_needed(const std::string&);
