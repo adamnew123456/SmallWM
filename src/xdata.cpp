@@ -400,7 +400,7 @@ Window XData::get_transient_hint(Window window)
  * @param window The window to get the name of.
  * @param[out] name The name of the window.
  */
-void get_icon_name(Window window, std::string name)
+void XData::get_icon_name(Window window, std::string name)
 {
     char *icon_name;
     XGetIconName(m_display, window, &icon_name)
@@ -424,12 +424,34 @@ void get_icon_name(Window window, std::string name)
 }
 
 /**
+ * Gets the current screen size.
+ * @param[out] width The width of the screen.
+ * @param[out] height The height of the screen.
+ */
+void XData::get_screen_size(Dimension &width, Dimension &height)
+{
+    width = DIM2D_WIDTH(m_screen_size);
+    height = DIM2D_HEIGHT(m_screen_size);
+}
+
+/**
+ * Sets the current screen size.
+ * @param width The width of the screen.
+ * @param height The height of the screen.
+ */
+void XData::set_screen_size(Dimension width, Dimension height)
+{
+    DIM2D_WIDTH(m_screen_size) = width;
+    DIM2D_HEIGHT(m_screen_size) = height;
+}
+
+/**
  * Interns an string, converting it into an atom and caching it. On
  * subsequent calls, the cache is used instead of going through Xlib.
  * @param atom The name of the atom to convert.
  * @return The converted atom.
  */
-Atom intern_if_needed(const std::string &atom_name)
+Atom XData::intern_if_needed(const std::string &atom_name)
 {
     if (m_atoms.count(atom_name) > 0)
         return m_atoms[atom_name];
@@ -444,7 +466,7 @@ Atom intern_if_needed(const std::string &atom_name)
  * @param color The MonoColor to convert from.
  * @return The equivalent Xlib color.
  */
-unsigned long decode_multicolor(MonoColor color)
+unsigned long XData::decode_multicolor(MonoColor color)
 {
     switch (color)
     {

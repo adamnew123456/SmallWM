@@ -63,6 +63,16 @@ public:
     {
         m_root = DefaultRootWindow(dpy);
         m_screen = DefaultScreen(dpy);
+
+        // Use RandR to figure out what the initial screen size is
+        XRRScreenConfiguration *config = XRRGetScreenInfo(dpy, root);
+
+        int _u1;
+        XRRScreenSize *size = XRRConfigSizes(config, &_u1);
+        m_screen_size = Dimension2D(size->width, size->height);
+        XFree(size);
+
+        XRRFreeScreenInfo(config);
     };
 
     XGC *create_gc(Window);
@@ -108,6 +118,9 @@ public:
     Window get_transient_hint(Window);
     void get_icon_name(Window, std::string&);
 
+    void get_screen_size(Dimension&, Dimension&);
+    void set_Screen_size(Dimension, Dimension);
+
 private:
     Atom intern_if_needed(const std::string&);
     unsigned long decode_monocolor(MonoColor);
@@ -123,6 +136,9 @@ private:
 
     /// The pre-defined atoms, which are accessible via a string
     std::map<std::string, Atom> m_atoms;
+
+    /// The size of the screen
+    Dimension2D m_screen_size;
 };
 
 #endif
