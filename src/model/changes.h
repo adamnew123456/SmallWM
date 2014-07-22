@@ -43,7 +43,7 @@ struct Change
     { return false; }
 };
 
-std::ostream &operator<<(std::ostream &out, const Change &change)
+static std::ostream &operator<<(std::ostream &out, const Change &change)
 {
     out << "[Change]";
     return out;
@@ -73,7 +73,7 @@ struct ChangeLayer : Change
     Layer layer;
 };
 
-std::ostream &operator<<(std::ostream &out, const ChangeLayer &change)
+static std::ostream &operator<<(std::ostream &out, const ChangeLayer &change)
 {
     out << "[ChangeLayer Window<" << change.window << 
         "> Layer(" << static_cast<int>(change.layer) << ")]";
@@ -104,7 +104,7 @@ struct ChangeFocus : Change
     Window next_focus;
 };
 
-std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
+static std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
 {
     out << "[ChangeFocus Window<" << change.prev_focus << "> ==> Window<" 
         << change.next_focus << ">]";
@@ -135,7 +135,7 @@ struct ChangeClientDesktop : Change
     const Desktop *desktop;
 };
 
-std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
+static std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
 {
     out << "[ChangeClientDesktop Window<" << change.window << "> Desktop(" 
         << *change.desktop << ")]";
@@ -165,7 +165,7 @@ struct ChangeCurrentDesktop : Change
     const Desktop *desktop;
 };
 
-std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)
+static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)
 {
     out << "[ChangeCurrentDesktop Desktop(" << *change.desktop << ")]";
     return out;
@@ -197,7 +197,7 @@ struct ChangeLocation : Change
     Dimension y;
 };
 
-std::ostream &operator<<(std::ostream &out, const ChangeLocation &change)
+static std::ostream &operator<<(std::ostream &out, const ChangeLocation &change)
 {
     out << "[ChangeLocation Window<" << change.window 
         << "> Location(" << change.x << "," << change.y << ")]";
@@ -230,7 +230,7 @@ struct ChangeSize : Change
     Dimension h;
 };
 
-std::ostream &operator<<(std::ostream &out, const ChangeSize &change)
+static std::ostream &operator<<(std::ostream &out, const ChangeSize &change)
 {
     out << "[ChangeSize Window<" << change.window 
         << "> Size(" << change.w << "," << change.h << ")]";

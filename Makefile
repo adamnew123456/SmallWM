@@ -24,13 +24,16 @@ TESTS=$(patsubst test/%.cpp,bin/test-%,$(wildcard test/*.cpp))
 CFILES:=$(wildcard src/*.cpp)
 OBJS:=$(patsubst src/%.cpp,obj/%.o,${CFILES})
 
+CFILES:=${CFILES} $(wildcard src/model/*.cpp)
+OBJS:=$(patsubst src/model/%.cpp,obj/model/%.o,${CFILES})
+
 CFILES:=${CFILES} inih/ini.c
 OBJS:=${OBJS} obj/ini.o
 
 # ${HEADERS} exists mostly to make building Doxygen output more consistent
 # since a change in the headers may require the API documentation to be
 # re-created.
-HEADERS=$(wildcard src/*.h)
+HEADERS=$(wildcard src/*.h src/model/*.h)
 
 all: bin/smallwm
 
@@ -45,6 +48,7 @@ bin:
 
 obj:
 	[ -d obj ] || mkdir obj
+	[ -d obj/model ] || mkdir obj/model
 
 test: ${TESTS}
 
@@ -60,6 +64,9 @@ obj/ini.o: obj inih/ini.c
 obj/%.o: obj
 
 obj/%.o: src/%.cpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+obj/model/%.o: src/model/%.cpp
 	${CXX} ${CXXFLAGS} -c $< -o $@
 
 # Getting unit tests to build is a bit awkward. Since I want to avoid
@@ -81,8 +88,8 @@ bin/test-configparse: bin/libUnitTest++.a obj/test-configparse.o obj/ini.o obj/c
 obj/test-configparse.o: obj test/configparse.cpp
 	${CXX} ${CXXFLAGS} -c test/configparse.cpp -o obj/test-configparse.o
 
-bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o
-	${CXX} ${CXXFLAGS} obj/test-client-model.o bin/libUnitTest++.a ${LINKER_FLAGS} -o bin/test-client-model
+bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o obj/model/client-model.o
+	${CXX} ${CXXFLAGS} obj/test-client-model.o bin/libUnitTest++.a obj/model/client-model.o ${LINKER_FLAGS} -o bin/test-client-model
 
 obj/test-client-model.o: obj test/client-model.cpp src/model/changes.h src/model/client-model.h src/model/desktop-type.h src/model/unique-multimap.h
 	${CXX} ${CXXFLAGS} -c test/client-model.cpp -o obj/test-client-model.o

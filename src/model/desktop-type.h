@@ -75,7 +75,7 @@ struct UserDesktop : public Desktop
     unsigned long long desktop;
 };
 
-std::ostream &operator<<(std::ostream &out, const UserDesktop &desktop)
+static std::ostream &operator<<(std::ostream &out, const UserDesktop &desktop)
 {
     out << "[UserDesktop " << desktop.desktop << "]";
     return out;
@@ -94,7 +94,7 @@ struct AllDesktops : public Desktop
     { return true; }
 };
 
-std::ostream &operator<<(std::ostream &out, const AllDesktops &desktop)
+static std::ostream &operator<<(std::ostream &out, const AllDesktops &desktop)
 {
     out << "[All Desktops]";
     return out;
@@ -112,7 +112,7 @@ struct IconDesktop : public Desktop
     { return true; }
 };
 
-std::ostream &operator<<(std::ostream &out, const IconDesktop &desktop)
+static std::ostream &operator<<(std::ostream &out, const IconDesktop &desktop)
 {
     out << "[Icon Desktop]";
     return out;
@@ -130,7 +130,7 @@ struct MovingDesktop : public Desktop
     { return true; }
 };
 
-std::ostream &operator<<(std::ostream &out, const MovingDesktop &desktop)
+static std::ostream &operator<<(std::ostream &out, const MovingDesktop &desktop)
 {
     out << "[Moving Desktop]";
     return out;
@@ -148,13 +148,13 @@ struct ResizingDesktop : public Desktop
     { return true; }
 };
 
-std::ostream &operator<<(std::ostream &out, const ResizingDesktop &desktop)
+static std::ostream &operator<<(std::ostream &out, const ResizingDesktop &desktop)
 {
     out << "[Resizing Desktop]";
     return out;
 }
 
-std::ostream &operator<<(std::ostream &out, const Desktop &desktop)
+static std::ostream &operator<<(std::ostream &out, const Desktop &desktop)
 {
     if (desktop.is_user_desktop())
         out << dynamic_cast<const UserDesktop&>(desktop);
