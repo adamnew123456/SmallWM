@@ -2,19 +2,27 @@
 #ifndef __SMALLWM_EVENTS__
 #define __SMALLWM_EVENTS__
 
-#include "clientmanager.h"
+#include "model/client-model.h"
 #include "configparse.h"
 #include "common.h"
-#include "shared.h"
+#include "xdata.h"
 
 /**
  * A dispatcher for handling the different type of X events.
+ *
+ * This serves as the linkage between raw Xlib events, and changes in the
+ * client model.
  */
 class XEvents
 {
 public:
-    XEvents(WMShared&, ClientManager&, KeyboardConfig&, int);
-    void run();
+    XEvents(WMConfig &config, XData &xdata, ClientModel &clients,
+            int randr_offset)
+        m_config(config), m_xdata(xdata), _clients(clients), 
+        m_randroffset(randr_offset), m_done(false),
+    {};
+
+    bool step();
 
     void handle_keypress();
     void handle_buttonpress();
@@ -34,14 +42,14 @@ private:
     /// Whether or not the user has terminated SmallWM
     bool m_done;
 
-    /// Shared window-manager data
-    WMShared &m_shared;
+    /// The configuration options that were given in the configuration file
+    WMConfig &m_config;
 
-    /// Interface to the window manager's clients
-    ClientManager &m_clients;
+    /// The data required to interface with Xlib
+    XData &m_xdata;
 
-    /// The master list of all keyboard shortcuts
-    KeyboardConfig &m_keyboard;
+    /// The data model which stores the clients and data about them
+    ClientModel m_clients;
 
     /// The offset for all RandR generated events
     int m_randroffset;
