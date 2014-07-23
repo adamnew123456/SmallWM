@@ -58,7 +58,7 @@ enum MonoColor
 class XData
 {
 public:
-    XData(Logger &logger, Display *dpy, Window root, int screen) :
+    XData(SysLog &logger, Display *dpy, Window root, int screen) :
         m_display(dpy)
     {
         m_root = DefaultRootWindow(dpy);
@@ -72,14 +72,14 @@ public:
         m_screen_size = Dimension2D(size->width, size->height);
         XFree(size);
 
-        XRRFreeScreenInfo(config);
+        XRRFreeScreenConfigInfo(config);
     };
 
     XGC *create_gc(Window);
-    Window create_window(bool):
+    Window create_window(bool);
 
     void change_property(Window, const std::string&, Atom, 
-            const unsigned char*, size_t):
+            const unsigned char*, size_t);
 
     void next_event(XEvent&);
     void get_latest_event(XEvent&, int);
