@@ -52,7 +52,7 @@ std::string WMConfig::get_config_path() const
 int WMConfig::config_parser(void *user, const char *c_section, 
         const char *c_name, const char *c_value)
 {
-    WMConfig *self = (WMConfig*)user;
+    WMConfig *self = static_cast<WMConfig*>(user);
     const std::string section(c_section);
     const std::string name(c_name);
     const std::string value(c_value);
@@ -105,7 +105,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
             bool old_value = self->show_icons;
             self->show_icons = 
                 try_parse_ulong(value.c_str(), 
-                     (unsigned long)old_value) != 0;
+                     static_cast<unsigned long>(old_value)) != 0;
         }
     }
 
@@ -123,7 +123,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
         // Catch an empty configuration setting (which returns NULL) before it
         // gets into the loop below, which will cause a crash. However, we still
         // have to assign the empty ClassAction, so we can't just return here.
-        if (option == (char*)0)
+        if (option == static_cast<char*>(0))
             goto set_actions;
 
         // The configuration values are stripped of spaces

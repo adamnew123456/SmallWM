@@ -10,7 +10,7 @@
 #include "actions.h"
 #include "configparse.h"
 
-std::string *config_path = (std::string*)0;
+std::string *config_path = static_cast<std::string*>(0);
 
 class CustomFileWMConfig : public WMConfig
 {
@@ -427,7 +427,8 @@ SUITE(WMConfigSuiteActions)
             config.reset();
 
             std::stringstream stream;
-            stream << "[actions]\ntest-class= layer:" << (int)layers[idx] << " \n";
+            stream << "[actions]\ntest-class= layer:" << 
+                static_cast<int>(layers[idx]) << " \n";
             write_config_file(*config_path, stream.str().c_str());
             config.load();
 
@@ -455,7 +456,8 @@ SUITE(WMConfigSuiteActions)
             config.reset();
 
             std::stringstream stream;
-            stream << "[actions]\ntest-class= layer:" << (int)layers[idx] << " \n";
+            stream << "[actions]\ntest-class= layer:" << 
+                static_cast<int>(layers[idx]) << " \n";
             write_config_file(*config_path, stream.str().c_str());
             config.load();
 
