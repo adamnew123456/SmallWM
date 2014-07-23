@@ -93,3 +93,9 @@ bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o obj/model/cli
 
 obj/test-client-model.o: obj test/client-model.cpp src/model/changes.h src/model/client-model.h src/model/desktop-type.h src/model/unique-multimap.h
 	${CXX} ${CXXFLAGS} -c test/client-model.cpp -o obj/test-client-model.o
+
+bin/test-x-model: bin/libUnitTest++.a obj/test-x-model.o obj/model/x-model.o
+	${CXX} ${CXXFLAGS} obj/test-x-model.o bin/libUnitTest++.a obj/model/x-model.o ${LINKER_FLAGS} -o bin/test-x-model
+
+obj/test-x-model.o: obj test/x-model.cpp src/model/x-model.h
+	${CXX} ${CXXFLAGS} -c test/x-model.cpp -o obj/test-x-model.o
