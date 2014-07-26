@@ -162,4 +162,108 @@ void XEvents::handle_keypress()
     case EXIT_WM:
         m_done = true;
         break;
+    }
+}
+
+/**
+ * Handles a button click, which can do one of five things:
+ *  - Launching a terminal
+ *  - Deiconifying an icon
+ *  - Start moving a window
+ *  - Start resizing a window
+ *  - Focusing a window
+ */
+void XEvents::handle_buttonpress()
+{
+    // We have to test both the window and the subwindow, because different
+    // events use different windows
+    bool is_client = false;
+    if (m_clients.is_client(m_event.xbutton.window))
+        is_client = true;
+
+    if (m_clients.is_client(m_event.xbutton.subwindow))
+        is_client = true;
+
+    Icon *icon = m_xmodel.find_icon_from_icon_window(m_event.xbutton.window);
+
+    // This is 
+    if (!(is_client|| icon) && m_event.xbutton.button == LAUNCH_BUTTON 
+            && m_event.xbutton.state == ACTION_MASK)
+    {
+        if (!fork())
+        {
+            /*
+             * Here's why 'exec' is used in two different ways. First, it is
+             * important to have /bin/sh process the shell command since it
+             * supports argument parsing, which eases our burden dramatically.
+             *
+             * Now, consider the process sequence as depicted below (where 'xterm'
+             * is the user's chosen shell).
+             *
+             * fork()
+             * [creates process] ==> execl(/bin/sh, -c, /bin/sh, exec xterm)
+             * # Somewhere in the /bin/sh source...
+             * [creates process] ==> execl(/usr/bin/xterm, /usr/bin/xterm)
+             *
+             * If we used std::system instead, then the first process after fork()
+             * would stick around to get the return code from the /bin/sh. If 'exec'
+             * were not used in the /bin/sh command line, then /bin/sh would stick
+             * around waiting for /usr/bin/xterm.
+             *
+             * So, to avoid an extra smallwm process sticking around, _or_ an 
+             * unnecessary /bin/sh process sticking around, use 'exec' twice.
+             */
+            std::string shell = std::string("exec ") + m_shared.shell;
+            execl("/bin/sh", "/bin/sh", "-c", shell.c_str(), NULL);
+            exit(1);
+        }
+    }
+    else if (icon)
+    {
+        // Any click on an icon, whether or not the action modifier is
+        // enabled or not, should deiconify a client
+        m_xmodel.unregister_icon(icon);
+        m_clients.deiconify(icon->client);
+        delete icon;
+    }
+    else if (is_client && m_event.xbutton.state == BUTTON_MASK)
+    {
+        if (m_event.xbutton.button != MOVE_BUTTON &&
+                m_event.xbutton.button != RESIZE_BUTTON)
+            return;
+
+        // The placeholder is important, because it allows us to do as little
+        // drawing as possible when it is resized. Create it here, since
+        // both branches below use this.
+        Window placeholder = m_xdata.create_window(true);
+
+        // Align the placeholder to the window it's replacing
+        XWindowAttributes attr;
+        m_xdata.get_attributes(m_event.xbutton.subwindow, attr);
+
+        m_xdata.move_window(placeholder, attr.x, attr.y);
+        m_xdata.resize_window(placeholder, attr.width, attr.height);
+
+        // Map this window onto the screen, bind the user's mouse to this window, and
+        // then make it visible
+        m_xdata.map_window(placeholder);
+        m_xdata.confine_pointer(placeholder);
+        m_xdata.raise(placeholder);
+    
+        // A left-click, with the action modifier, start resizing
+        if (m_event.xbutton.button == MOVE_BUTTON)
+        {
+            m_clients.start_moving(m_event.xbutton.subwindow);
+            m_xmodel.enter_move(m_event.xbutton.subwindow, placeholder);
+        }
+
+        // A right-click, with the action modifier, start resizing
+        if (m_event.xbutton.button == RESIZE_BUTTON)
+        {
+            m_clients.start_resizing(m_event.xbutton.subwindow);
+            m_xmodel.enter_resize(m_event.xbutton.subwindow, placeholder);
+        }
+    }
+    else if (is_client) // Any other click on a client focuses that client
+        m_clients.focus(m_event.xbutton.window);
 }

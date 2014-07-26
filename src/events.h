@@ -17,9 +17,9 @@ class XEvents
 {
 public:
     XEvents(WMConfig &config, XData &xdata, ClientModel &clients,
-            int randr_offset)
-        m_config(config), m_xdata(xdata), _clients(clients), 
-        m_randroffset(randr_offset), m_done(false),
+            XModel &xmodel, int randr_offset)
+        m_config(config), m_xdata(xdata), m_clients(clients),
+        m_xmodel(xmodel), m_randroffset(randr_offset), m_done(false),
     {};
 
     bool step();
@@ -49,7 +49,11 @@ private:
     XData &m_xdata;
 
     /// The data model which stores the clients and data about them
-    ClientModel m_clients;
+    ClientModel &m_clients;
+
+    /** The data model which stores information related to clients, but not
+     * about them. */
+    XModel &m_xmodel;
 
     /// The offset for all RandR generated events
     int m_randroffset;

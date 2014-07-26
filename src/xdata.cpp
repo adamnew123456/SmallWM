@@ -256,7 +256,7 @@ void XData::map_win(Window window)
  * Unmaps a window, causing it to no longer be displayed.
  * @param window The window to unmap.
  */
-void XData::unmap_window(Window window)
+void XData::unmap_win(Window window)
 {
     XUnmapWindow(m_display, window);
 }
