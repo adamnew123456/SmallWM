@@ -267,3 +267,38 @@ void XEvents::handle_buttonpress()
     else if (is_client) // Any other click on a client focuses that client
         m_clients.focus(m_event.xbutton.window);
 }
+
+/**
+ * Handles the release of a mouse button. This event is only expected when
+ * a placeholder is going to be released, so the only possible action is to
+ * stop moving/resizing.
+ */
+void XEvents::handle_buttonrelease()
+{
+    Window expected_placeholder = m_xmodel.get_move_resize_placeholder();
+    
+    // If this is *not* the current placeholder, then bail
+    if (expected_placeholder != m_event.xbutton.window)
+        return;
+
+    MoveResizeState state = x_model.get_move_resize_state()
+    Window client = x_model.get_move_resize_client();
+
+    // Figure out the attributes of the placeholder, so that way we can do
+    // the movements/resizes
+    XWindowAttributes attrs;
+    m_xdata.get_attributes(expected_placeholder, attrs);
+
+    switch (state)
+    {
+    case MR_MOVE:
+        m_clients.stop_moving(client, Dimension2D(attrs.x, attrs.y));
+        break;
+    case MR_RESIZE:
+        m_clients.stop_resizing(client, 
+            Dimension2D(attrs.width, attrs.height));
+        break;
+    }
+
+    x_model.exit_move_resize();
+}
