@@ -17,7 +17,7 @@
 #include "logging.h"
 
 /// A size of some kind.
-typedef unsigned int Dimension;
+typedef int Dimension;
 /// The extend of some window or other surface.
 typedef std::pair<Dimension,Dimension> Dimension2D;
 

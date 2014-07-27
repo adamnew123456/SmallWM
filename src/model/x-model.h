@@ -70,8 +70,10 @@ public:
     Icon *find_icon_from_client(Window);
     Icon *find_icon_from_icon_window(Window);
 
-    void enter_move(Window, Window);
-    void enter_resize(Window, Window);
+    void enter_move(Window, Window, Dimension2D);
+    void enter_resize(Window, Window, Dimension2D);
+
+    Dimension2D update_pointer(Dimension2D);
 
     Window get_move_resize_placeholder();
     Window get_move_resize_client();
@@ -88,6 +90,9 @@ private:
 
     /// The current data about moving or resizing
     MoveResize *m_moveresize;
+
+    /// The current pointer location
+    Dimension2D m_pointer;
 };
 
 #endif

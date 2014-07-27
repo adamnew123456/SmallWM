@@ -63,7 +63,7 @@ SUITE(XModelMemberSuite)
     {
         // Ensure that the getters return the correct values when a cleint
         // is being moved
-        model.enter_move(the_client, the_placeholder);
+        model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_MOVE);
@@ -72,7 +72,7 @@ SUITE(XModelMemberSuite)
     TEST_FIXTURE(XModelFixture, test_move_resize_getters_after_move)
     {
         // First, move a client and then check the values
-        model.enter_move(the_client, the_placeholder);
+        model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_MOVE);
@@ -89,7 +89,7 @@ SUITE(XModelMemberSuite)
     {
         // Ensure that the getters return the correct values when a cleint
         // is being moved
-        model.enter_resize(the_client, the_placeholder);
+        model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
@@ -98,7 +98,7 @@ SUITE(XModelMemberSuite)
     TEST_FIXTURE(XModelFixture, test_move_resize_getters_after_resize)
     {
         // First, move a client and then check the values
-        model.enter_resize(the_client, the_placeholder);
+        model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
@@ -114,13 +114,13 @@ SUITE(XModelMemberSuite)
     TEST_FIXTURE(XModelFixture, test_move_and_then_resize)
     {
         // Start by moving the client and testing the result
-        model.enter_move(the_client, the_placeholder);
+        model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_MOVE);
 
         // Then, try to resize and ensure that nothing changes
-        model.enter_resize(the_client, the_placeholder);
+        model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_MOVE);
@@ -129,13 +129,13 @@ SUITE(XModelMemberSuite)
     TEST_FIXTURE(XModelFixture, test_resize_and_then_move)
     {
         // Start by resizing the client and testing the result
-        model.enter_resize(the_client, the_placeholder);
+        model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
 
         // Then, try to move and ensure that nothing changes
-        model.enter_move(the_client, the_placeholder);
+        model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
