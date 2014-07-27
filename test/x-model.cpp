@@ -73,9 +73,6 @@ SUITE(XModelMemberSuite)
     {
         // First, move a client and then check the values
         model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
-        CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
-        CHECK_EQUAL(model.get_move_resize_client(), the_client);
-        CHECK_EQUAL(model.get_move_resize_state(), MR_MOVE);
 
         // Stop moving a client and ensure that the values are as they were 
         // originally
@@ -99,9 +96,6 @@ SUITE(XModelMemberSuite)
     {
         // First, move a client and then check the values
         model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
-        CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
-        CHECK_EQUAL(model.get_move_resize_client(), the_client);
-        CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
 
         // Stop moving a client and ensure that the values are as they were 
         // originally
@@ -115,9 +109,6 @@ SUITE(XModelMemberSuite)
     {
         // Start by moving the client and testing the result
         model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
-        CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
-        CHECK_EQUAL(model.get_move_resize_client(), the_client);
-        CHECK_EQUAL(model.get_move_resize_state(), MR_MOVE);
 
         // Then, try to resize and ensure that nothing changes
         model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
@@ -130,15 +121,52 @@ SUITE(XModelMemberSuite)
     {
         // Start by resizing the client and testing the result
         model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
-        CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
-        CHECK_EQUAL(model.get_move_resize_client(), the_client);
-        CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
 
         // Then, try to move and ensure that nothing changes
         model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
         CHECK_EQUAL(model.get_move_resize_placeholder(), the_placeholder);
         CHECK_EQUAL(model.get_move_resize_client(), the_client);
         CHECK_EQUAL(model.get_move_resize_state(), MR_RESIZE);
+    }
+
+    TEST_FIXTURE(XModelFixture, test_move_pointer_updates)
+    {
+        // Start by moving the client and testing the result
+        model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
+
+        // Update the pointer, and ensure that the difference is correct
+        Dimension2D diff;
+        diff = model.update_pointer(42, 42);
+        CHECK_EQUAL(DIM2D_X(diff), 42);
+        CHECK_EQUAL(DIM2D_Y(diff), 42);
+
+        // Make another move, and ensure that the relative difference is again
+        // correct
+        diff = model.update_pointer(0, 84); // (0, 84) - (42, 42) = (-42, 42)
+        CHECK_EQUAL(DIM2D_X(diff), -42);
+        CHECK_EQUAL(DIM2D_Y(diff), 42);
+
+        model.exit_move_resize();
+    }
+
+    TEST_FIXTURE(XModelFixture, test_resize_pointer_updates)
+    {
+        // Start by moving the client and testing the result
+        model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
+
+        // Update the pointer, and ensure that the difference is correct
+        Dimension2D diff;
+        diff = model.update_pointer(42, 42);
+        CHECK_EQUAL(DIM2D_X(diff), 42);
+        CHECK_EQUAL(DIM2D_Y(diff), 42);
+
+        // Make another move, and ensure that the relative difference is again
+        // correct
+        diff = model.update_pointer(0, 84); // (0, 84) - (42, 42) = (-42, 42)
+        CHECK_EQUAL(DIM2D_X(diff), -42);
+        CHECK_EQUAL(DIM2D_Y(diff), 42);
+
+        model.exit_move_resize();
     }
 };
 

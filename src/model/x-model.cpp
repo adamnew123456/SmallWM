@@ -83,14 +83,16 @@ void XModel::enter_resize(Window client, Window placeholder,
  * Note that, if no movement or resizing is currently going on, then the
  * return value will be (0, 0).
  */
-Dimension2D XModel::update_pointer(Dimension2D new_pointer)
+Dimension2D XModel::update_pointer(Dimension x, Dimension y)
 {
     if (!m_moveresize)
         return Dimension2D(0, 0);
 
-    Dimension2D diff(DIM2D_X(new_pointer) - DIM2D_X(m_pointer),
-                     DIM2D_Y(new_pointer) - DIM2D_Y(m_pointer));
-    m_pointer = new_pointer;
+    Dimension2D diff(x - DIM2D_X(m_pointer),
+                     y - DIM2D_Y(m_pointer));
+
+    DIM2D_X(m_pointer) = x;
+    DIM2D_Y(m_pointer) = y;
     return diff;
 }
 
