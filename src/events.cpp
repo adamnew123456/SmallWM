@@ -357,3 +357,51 @@ void XEvents::handle_motionnotify()
         break;
     }
 }
+
+/**
+ * This event is only ever called on icon windows, and causes the icon
+ * window to be redrawn.
+ */
+void XEvents::handle_expose()
+{
+    Icon *the_icon = m_xmodel.find_icon_from_icon_window(
+        m_event.xexpose.window);
+
+    if (!the_icon)
+        return;
+
+    // Avoid drawing over the current contents of the icon
+    the_icon->gc->clear();
+
+    int text_x_offset;
+    if (m_config.show_icons)
+    {
+        // Get the application's pixmap icon, and figure out where to place
+        // the text (since the icon goes to the left)
+        XWMHints hints;
+        m_xdata.get_wm_hints(the_icon->client, hints);
+
+        if (hints.flags & IconPixmapHint)
+        {
+            // Copy the pixmap into the left side of the icon, keeping
+            // its size. The width of the pixmap is the same as the
+            // X offset of the window name (no padding is done here).
+            Dimension pixmap_size = the_icon->gc->copy_pixmap(
+                hints.icon_pixmap, 0, 0);
+            text_x_offset = DIM2D_WIDTH(pixmap_size);
+        }
+        else
+            text_x_offset = 0;
+    }
+    else
+        text_x_offset = 0;
+        
+    std::string preferred_icon_name;
+    m_xdata.get_icon_name(the_icon->client, preferred_icon_name);
+
+    // The one thing that is strange here is that the Y offset is the entire
+    // icon's height. This is because Xlib draws the text, starting at the
+    // Y offset, from *bottom* to *top*. I don't know why.
+    the_icon->gc->draw_string(text_x_offset, m_config->icon_height,
+        preferred_icon_name);
+}

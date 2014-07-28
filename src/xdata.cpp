@@ -35,7 +35,7 @@ void XGC::draw_string(Dimension x, Dimension y, const std::string &text)
  * @param x The X coordinate of the target area.
  * @param y The Y coordinate of the target area.
  */
-void XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
+Dimension2D XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
 {
     // First, get the size of the pixmap that we're interested in. We need 
     // several other parameters since XGetGeometry is pretty general.
@@ -49,6 +49,10 @@ void XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
 
     XCopyArea(m_display, pixmap, m_window, m_gc, 0, 0, pix_width, pix_height,
         x, y);
+
+    // Return the size of the copied pixmap, since there isn't another way in
+    // the XGC definition to get this data
+    return Dimension2D(pix_width, pix_height);
 }
 
 /**

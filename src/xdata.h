@@ -27,7 +27,7 @@ public:
 
     void clear();
     void draw_string(Dimension, Dimension, const std::string&);
-    void copy_pixmap(Drawable, Dimension, Dimension);
+    Dimension2D copy_pixmap(Drawable, Dimension, Dimension);
 
 private:
     /** The raw X display - this is necessary to have since XData doesn't
@@ -109,7 +109,7 @@ public:
     void set_border_color(Window, MonoColor);
     void set_border_width(Window, Dimension);
 
-    void move_window(Window, int, int);
+    void move_window(Window, Dimension, Dimension);
     void resize_window(Window, Dimension, Dimension);
     void raise(Window);
     void restack(const std::vector<Window>&);
