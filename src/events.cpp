@@ -249,19 +249,26 @@ void XEvents::handle_buttonpress()
         m_xdata.map_window(placeholder);
         m_xdata.confine_pointer(placeholder);
         m_xdata.raise(placeholder);
+
+        // Figure out where the pointer is, since this is also important to
+        // both of the branches
+        Dimension ptr_x, ptr_y;
+        m_xdata.get_pointer_location(ptr_x, ptr_y);
+        Dimension2D ptr(ptr_x, ptr_y);
     
         // A left-click, with the action modifier, start resizing
         if (m_event.xbutton.button == MOVE_BUTTON)
         {
             m_clients.start_moving(m_event.xbutton.subwindow);
-            m_xmodel.enter_move(m_event.xbutton.subwindow, placeholder);
+            m_xmodel.enter_move(m_event.xbutton.subwindow, placeholder, ptr);
         }
 
         // A right-click, with the action modifier, start resizing
         if (m_event.xbutton.button == RESIZE_BUTTON)
         {
             m_clients.start_resizing(m_event.xbutton.subwindow);
-            m_xmodel.enter_resize(m_event.xbutton.subwindow, placeholder);
+            m_xmodel.enter_resize(m_event.xbutton.subwindow, placeholder,
+                ptr);
         }
     }
     else if (is_client) // Any other click on a client focuses that client
@@ -301,4 +308,52 @@ void XEvents::handle_buttonrelease()
     }
 
     x_model.exit_move_resize();
+}
+
+/**
+ * Handles the motion of the pointer. The only time that this ever applies is
+ * when the user has moved the placeholder window - at all other times, this
+ * event is ignored.
+ */
+void XEvents::handle_motionnotify()
+{
+    // Get the placeholder's current geometry, since we need to modify the
+    // placeholder relative to the way it is now
+    Window placeholder = m_xmodel.get_move_resize_placeholder();
+    if (placeholder == None)
+        return;
+    XWindowAttributes attr;
+    m_xdata.get_attributes(placeholder, attr);
+
+    // Avoid needless updates by getting the most recent version of this
+    // event
+    m_xdata.get_latest_event(m_event, MotionNotify);
+
+    // Get the difference relative to the previous position
+    Dimension ptr_x, ptr_y;
+    m_xdata.get_pointer_location(ptr_x, ptr_y);
+
+    Dimension2D relative_change = m_xmodel.update_pointer(ptr_x, ptr_y);
+
+    switch (m_xmodel.get_move_resize_state)
+    {
+    case MR_MOVE:
+        // Update the position of the placeholder
+        m_xdata.move_window(placeholder, 
+            attr.x + DIM2D_X(relative_change), 
+            attr.y + DIM2D_Y(relative_change));
+        break;
+    case MR_RESIZE:
+        // Update the location being careful to avoid making the placeholder
+        // have a negative size
+        if (attr.width + DIM2D_X(relative_change) <= 0)
+            DIM2D_X(relative_change) = 0;
+        if (attr.height + DIM2D_Y(relative_change) <= 0)
+            DIM2D_Y(relative_change) = 0;
+
+        m_xdata.resize_window(placeholder,
+            attr.width + DIM2D_X(relative_change),
+            attr.height + DIM2D_Y(relative_change));
+        break;
+    }
 }
