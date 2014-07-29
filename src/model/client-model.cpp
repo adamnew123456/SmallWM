@@ -176,6 +176,14 @@ void ClientModel::change_size(Window client, Dimension width, Dimension height)
 }
 
 /**
+ * Gets the currently focused window.
+ */
+Window ClientModel::get_focused()
+{
+    return m_focused;
+}
+
+/**
  * Changes the focus to another window. Note that this fails if the client
  * is not currently visible.
  */

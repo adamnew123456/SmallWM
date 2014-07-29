@@ -36,6 +36,9 @@ SUITE(ClientModelMemberSuite)
         // Make sure that a is now listed as a client
         CHECK_EQUAL(true, model.is_client(a));
 
+        // Make sure that a is now focused
+        CHECK_EQUAL(a, model.get_focused());
+
         // Check the event stream for the most recent events
         ClientModel::change_iter iterator = model.changes_begin();
 
@@ -77,6 +80,9 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+
+            // Since ChangeFocus was fired, ensure that the focus was updated correctly
+            CHECK_EQUAL(None, model.get_focused());
         }
         iterator++;
 
@@ -399,6 +405,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
         }
 
         iterator++;
@@ -526,6 +534,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
         }
 
         iterator++;
@@ -690,6 +700,8 @@ SUITE(ClientModelMemberSuite)
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(a, None), 
                 *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
         }
         iterator++;
 
@@ -726,6 +738,8 @@ SUITE(ClientModelMemberSuite)
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(None, a), 
                 *the_change);
+
+            CHECK_EQUAL(a, model.get_focused());
         }
         iterator++;
 
@@ -780,6 +794,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
         }
         iterator++;
 
@@ -820,6 +836,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+
+            CHECK_EQUAL(a, model.get_focused());
         }
         iterator++;
         CHECK_EQUAL(model.changes_end(), iterator);
@@ -894,6 +912,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
         }
         iterator++;
 
@@ -937,6 +957,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+
+            CHECK_EQUAL(a, model.get_focused());
         }
         iterator++;
         CHECK_EQUAL(model.changes_end(), iterator);
@@ -1017,6 +1039,8 @@ SUITE(ClientModelMemberSuite)
             const ChangeFocus *the_change =
                 dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+
+            CHECK_EQUAL(a, model.get_focused());
         }
         iterator++;
         CHECK_EQUAL(model.changes_end(), iterator);
@@ -1063,6 +1087,43 @@ SUITE(ClientModelMemberSuite)
         model.flush_changes();
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_focus_unfocus)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // First, ensure that a is focused
+        CHECK_EQUAL(a, model.get_focused());
+
+        // Then, unfocus a and check for the event
+        model.unfocus();
+        
+        ClientModel::change_iter iterator = model.changes_begin();
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Refocus and ensure that another event is fired
+        model.focus(a);
+
+        iterator = model.changes_begin();
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_location_size_changers)
     {
         model.add_client(a, IS_VISIBLE, 
@@ -1100,7 +1161,7 @@ SUITE(ClientModelMemberSuite)
         model.flush_changes();
 
         // Finally, try to use an invalid size, and ensure that no change is
-        // propogated
+        // propagated
         model.change_size(a, -1, -1);
 
         iterator = model.changes_begin();

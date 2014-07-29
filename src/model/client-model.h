@@ -94,6 +94,7 @@ public:
     void change_location(Window, Dimension, Dimension);
     void change_size(Window, Dimension, Dimension);
 
+    Window get_focused();
     void focus(Window);
     void unfocus();
     void unfocus_if_focused(Window);
