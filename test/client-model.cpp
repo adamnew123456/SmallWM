@@ -99,9 +99,6 @@ SUITE(ClientModelMemberSuite)
             // Add a new client, and ensure that it is present
             model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
 
-            // Make sure that a is now listed as a client
-            CHECK_EQUAL(true, model.is_client(a));
-
             // Check the event stream for the most recent events
             iterator = model.changes_begin();
 
@@ -127,8 +124,6 @@ SUITE(ClientModelMemberSuite)
 
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
-
-        CHECK_EQUAL(false, model.is_client(a));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_visibility)
@@ -1064,6 +1059,51 @@ SUITE(ClientModelMemberSuite)
         }
         iterator++;
 
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_location_size_changers)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // First, move the window manually and ensure a change happens
+        model.change_location(a, 100, 100);
+
+        ClientModel::change_iter iterator = model.changes_begin();
+        CHECK((*iterator)->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(*iterator);
+            CHECK_EQUAL(ChangeLocation(a, 100, 100), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Then, cause a resize and check for the event
+        model.change_size(a, 100, 100);
+
+        iterator = model.changes_begin();
+        CHECK((*iterator)->is_size_change());
+        {
+            const ChangeSize *the_change =
+                dynamic_cast<const ChangeSize*>(*iterator);
+            CHECK_EQUAL(ChangeSize(a, 100, 100), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // Finally, try to use an invalid size, and ensure that no change is
+        // propogated
+        model.change_size(a, -1, -1);
+
+        iterator = model.changes_begin();
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
     }
