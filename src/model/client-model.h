@@ -47,7 +47,7 @@ public:
      */
     ClientModel(unsigned long long max_desktops) :
         m_max_desktops(max_desktops),
-        m_focused(None),
+        m_focused(None), m_drop_changes(false),
         // Initialize all the desktops
         ALL_DESKTOPS(new AllDesktops()), 
         ICON_DESKTOP(new IconDesktop()),
@@ -119,6 +119,9 @@ public:
     void start_resizing(Window);
     void stop_resizing(Window, Dimension2D);
 
+    void begin_dropping_changes();
+    void end_dropping_changes();
+
 protected:
     void push_change(change_ptr);
     void move_to_desktop(Window, desktop_ptr, bool);
@@ -143,6 +146,9 @@ private:
     user_desktop_ptr m_current_desktop;
     /// The currently focused client
     Window m_focused;
+
+    /// Whether or not to *not* propagate changes
+    bool m_drop_changes;
 };
 
 #endif

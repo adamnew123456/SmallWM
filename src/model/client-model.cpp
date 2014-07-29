@@ -461,7 +461,8 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
  */
 void ClientModel::push_change(change_ptr change)
 {
-    m_changes.push_back(change);
+    if (!m_drop_changes)
+        m_changes.push_back(change);
 }
 
 /**
@@ -479,4 +480,22 @@ void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
         unfocus_if_focused(client);
 
     push_change(new ChangeClientDesktop(client, new_desktop));
+}
+
+/**
+ * Starts ignoring changes, until `end_dropping_changes` is called. This is
+ * used to ignore changes which occur as a result of specific methods, without
+ * having to take some sort of copy-and-restore strategy.
+ */
+void ClientModel::begin_dropping_changes()
+{
+    m_drop_changes = true;
+}
+
+/**
+ * Stops ignoring changes, undoing the effects of `begin_dropping_changes`.
+ */
+void ClientModel::end_dropping_changes()
+{
+    m_drop_changes = false;
 }

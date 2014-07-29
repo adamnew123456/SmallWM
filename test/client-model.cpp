@@ -86,6 +86,51 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(false, model.is_client(a));
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_change_dropping)
+    {
+        // Make sure that there are no clients by default
+        CHECK_EQUAL(false, model.is_client(a));
+        CHECK_EQUAL(false, model.is_client(b));
+
+        ClientModel::change_iter iterator;
+
+        model.begin_dropping_changes();
+        {
+            // Add a new client, and ensure that it is present
+            model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+
+            // Make sure that a is now listed as a client
+            CHECK_EQUAL(true, model.is_client(a));
+
+            // Check the event stream for the most recent events
+            iterator = model.changes_begin();
+
+            // Ensure that no events have passed by since we're dropping changes
+            CHECK_EQUAL(model.changes_end(), iterator);
+            model.flush_changes();
+        }
+        model.end_dropping_changes();
+
+        // Then, remove the added client. Ensure that a 'ChangeFocus' event was
+        // fired which includes the now-destroyed client.
+        model.remove_client(a);
+        iterator = model.changes_begin();
+
+        // Ensure that, now that we're no longer dropping changes, that a change
+        // is fired
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        CHECK_EQUAL(false, model.is_client(a));
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_visibility)
     {
         // Add a new client and ensure that it is present
