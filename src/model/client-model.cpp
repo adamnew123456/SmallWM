@@ -137,12 +137,14 @@ void ClientModel::add_client(Window client, InitialState state,
 /**
  * Removes a client.
  *
- * Note that this doesn't put out any events, since this method should
- * only be called once the client is destroyed
+ * Note that this method will put out a ChangeFocus event, but that event will
+ * have a nonexistent 'prev_focus' field (pointing to the client that is
+ * destroyed). Other than that event, however, no other notification will be
+ * delivered that this window was removed.
  */
 void ClientModel::remove_client(Window client)
 {
-    // A destroyed window cannot be focused
+    // A destroyed window cannot be focused.
     unfocus_if_focused(client);
 
     // Remove all the data associated with the client

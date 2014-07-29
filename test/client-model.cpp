@@ -50,6 +50,7 @@ SUITE(ClientModelMemberSuite)
         iterator++;
 
         // Secondly, it is stacked relative to other windows
+        CHECK((*iterator)->is_layer_change());
         {
             const ChangeLayer *the_change = dynamic_cast<const ChangeLayer*>(*iterator);
             CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
@@ -57,6 +58,7 @@ SUITE(ClientModelMemberSuite)
         iterator++;
 
         // Make sure it was focused
+        CHECK((*iterator)->is_focus_change());
         {
             const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
@@ -67,8 +69,20 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
 
-        // Then, remove the added client
+        // Then, remove the added client. Ensure that a 'ChangeFocus' event was
+        // fired which includes the now-destroyed client.
         model.remove_client(a);
+        iterator = model.changes_begin();
+        CHECK((*iterator)->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
         CHECK_EQUAL(false, model.is_client(a));
     }
 
