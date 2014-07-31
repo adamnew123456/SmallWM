@@ -52,8 +52,11 @@ obj:
 
 test: ${TESTS}
 
+tags: ${HEADRES} ${CFILES}
+	ctags --c++-kinds=+p --fields=+iaS --extra=+q --language-force=c++ -R src
+
 clean:
-	rm -rf bin obj doc
+	rm -rf bin obj doc tags
 
 bin/smallwm: bin obj ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} ${LINKERFLAGS} -o bin/smallwm
