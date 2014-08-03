@@ -122,7 +122,7 @@ public:
     KeySym get_keysym(int);
 
     void get_screen_size(Dimension&, Dimension&);
-    void set_screen_size(Dimension, Dimension);
+    void update_screen_size();
 
 private:
     Atom intern_if_needed(const std::string&);

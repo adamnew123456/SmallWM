@@ -464,3 +464,12 @@ void XEvents::handle_destroynotify()
 
     m_clients.remove_client(destroyed_window);
 }
+
+/**
+ * Handles screen resizing events by updating the screen dimensions
+ * when X RandR sends us events.
+ */
+void XEvents::handle_rrnotify()
+{
+    m_xdata.update_screen_size();
+}

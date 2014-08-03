@@ -459,14 +459,20 @@ void XData::get_screen_size(Dimension &width, Dimension &height)
 }
 
 /**
- * Sets the current screen size.
- * @param width The width of the screen.
- * @param height The height of the screen.
+ * Updates the current screen size by querying X RandR.
  */
-void XData::set_screen_size(Dimension width, Dimension height)
+void XData::update_screen_size()
 {
-    DIM2D_WIDTH(m_screen_size) = width;
-    DIM2D_HEIGHT(m_screen_size) = height;
+    XRRScreenConfiguration *screen_config = XRRGetScreenInfo(m_display,
+        m_root);
+
+    // Even though it seems like this should get a list of sizes, it gets the
+    // current size as well as the number of total sizes
+    int _;
+    XRRScreenSize *size = XRRConfigSizes(screen_config, &_);
+
+    DIM2D_WIDTH(m_screen_size) = size->width;;
+    DIM2D_HEIGHT(m_screen_size) = size->height;
 }
 
 /**
