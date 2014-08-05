@@ -296,6 +296,23 @@ void ClientModel::toggle_stick(Window client)
 }
 
 /**
+ * Moves a client onto the current desktop.
+ *
+ * Note that this will not work if the client is on:
+ *  - The "all" desktop
+ *  - The "moving/resizing" desktops
+ *  - The "icon" desktop
+ */
+void ClientModel::client_reset_desktop(Window client)
+{
+    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    if (!old_desktop->is_user_desktop())
+        return;
+
+    move_to_desktop(client, m_current_desktop, false);
+}
+
+/**
  * Moves a client onto the next desktop.
  */
 void ClientModel::client_next_desktop(Window client)

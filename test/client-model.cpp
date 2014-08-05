@@ -467,6 +467,46 @@ SUITE(ClientModelMemberSuite)
 
         CHECK_EQUAL(model.changes_end(), iterator);
         model.flush_changes();
+
+        // Move the client, and then reset its desktop to the current one, and
+        // ensure that we get the change
+        model.client_next_desktop(a);
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1]), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        model.client_reset_desktop(a);
+        iterator = model.changes_begin();
+
+        CHECK((*iterator)->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
+                *the_change);
+        }
+        iterator++;
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
+
+        // With the client's desktop reset, we shouldn't get any changes from
+        // resetting the desktop again
+        model.client_reset_desktop(a);
+        iterator = model.changes_begin();
+
+        CHECK_EQUAL(model.changes_end(), iterator);
+        model.flush_changes();
     }
 
     TEST_FIXTURE(ClientModelFixture, test_bad_client_desktop_change)
@@ -489,6 +529,12 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.changes_begin(), model.changes_end());
         FLUSH_AFTER(model.deiconify(a));
 
+        FLUSH_AFTER(model.iconify(a));
+        model.client_reset_desktop(a);
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.deiconify(a));
+
         // Secondly, moving clients cannot be changed
         FLUSH_AFTER(model.start_moving(a));
         model.client_next_desktop(a);
@@ -502,6 +548,12 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.changes_begin(), model.changes_end());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
+        FLUSH_AFTER(model.start_moving(a));
+        model.client_reset_desktop(a);
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
+
         // Neither can resizing clients
         FLUSH_AFTER(model.start_resizing(a));
         model.client_next_desktop(a);
@@ -511,6 +563,12 @@ SUITE(ClientModelMemberSuite)
 
         FLUSH_AFTER(model.start_resizing(a));
         model.client_prev_desktop(a);
+
+        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
+
+        FLUSH_AFTER(model.start_resizing(a));
+        model.client_reset_desktop(a);
 
         CHECK_EQUAL(model.changes_begin(), model.changes_end());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));

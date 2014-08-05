@@ -107,6 +107,7 @@ public:
     void set_layer(Window, Layer);
 
     void toggle_stick(Window);
+    void client_reset_desktop(Window);
     void client_next_desktop(Window);
     void client_prev_desktop(Window);
     void next_desktop();
