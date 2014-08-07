@@ -465,14 +465,17 @@ void XData::update_screen_size()
 {
     XRRScreenConfiguration *screen_config = XRRGetScreenInfo(m_display,
         m_root);
-
-    // Even though it seems like this should get a list of sizes, it gets the
-    // current size as well as the number of total sizes
+   
+    // First, we have to retrieve the list of all *possible* sizes, and then
+    // pick out the current size from that
     int _;
-    XRRScreenSize *size = XRRConfigSizes(screen_config, &_);
+    XRRScreenSize *sizes = XRRConfigSizes(screen_config, &_);
 
-    DIM2D_WIDTH(m_screen_size) = size->width;;
-    DIM2D_HEIGHT(m_screen_size) = size->height;
+    Rotation __;
+    SizeID current_size_idx = XRRCurrentConfiguration(screen_config, &__);
+
+    DIM2D_WIDTH(m_screen_size) = sizes[current_size_idx].width;
+    DIM2D_HEIGHT(m_screen_size) = size[current_size_idx].height;
 }
 
 /**
