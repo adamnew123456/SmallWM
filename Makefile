@@ -25,7 +25,7 @@ CFILES:=$(wildcard src/*.cpp)
 OBJS:=$(patsubst src/%.cpp,obj/%.o,${CFILES})
 
 CFILES:=${CFILES} $(wildcard src/model/*.cpp)
-OBJS:=$(patsubst src/model/%.cpp,obj/model/%.o,${CFILES})
+OBJS:=${OBJS} $(patsubst src/model/%.cpp,obj/model/%.o,${CFILES})
 
 CFILES:=${CFILES} inih/ini.c
 OBJS:=${OBJS} obj/ini.o
@@ -38,7 +38,7 @@ HEADERS=$(wildcard src/*.h src/model/*.h)
 all: bin/smallwm
 
 # Used to probe for compiler errors, without linking everything
-check: ${OBJS}
+check: obj ${OBJS}
 
 doc: ${HEADERS} ${SRCS}
 	doxygen
