@@ -43,7 +43,7 @@ Dimension2D XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
     int _u2;
     unsigned int _u3;
 
-    Dimension pix_width, pix_height;
+    unsigned int pix_width, pix_height;
     XGetGeometry(m_display, pixmap, &_u1, &_u2, &_u2,
             &pix_width, &pix_height, &_u3, &_u3);
 
@@ -59,7 +59,7 @@ Dimension2D XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
  * Creates a new graphics context for a given window.
  * @return A new XGC for the given window.
  */
-XGC *create_gc(Window window)
+XGC *XData::create_gc(Window window)
 {
     return new XGC(m_display, window);
 }
@@ -95,7 +95,7 @@ Window XData::create_window(bool ignore)
         set_attributes(win, attr, CWOverrideRedirect);
     }
 
-    return window;
+    return win;
 }
 
 /**
@@ -117,9 +117,9 @@ void XData::change_property(Window window, const std::string &prop,
  * Gets the next event from the X server.
  * @param[in] event The place to store the event.
  */
-void XData::next_event(XData &data)
+void XData::next_event(XEvent &data)
 {
-    XNextEvent(m_dispplay, &data);
+    XNextEvent(m_display, &data);
 }
 
 /**
@@ -127,7 +127,7 @@ void XData::next_event(XData &data)
  * @param[in] event The place to store the event.
  * @param type The type of the event to iterate through.
  */
-void XData::get_latest_event(XData &data, int type)
+void XData::get_latest_event(XEvent &data, int type)
 {
     while (XCheckTypedEvent(m_display, type, &data));
 }
@@ -142,7 +142,7 @@ void XData::add_hotkey(KeySym key)
     // X grabs on keycodes, not on KeySyms, so we have to do the conversion
     int keycode = XKeysymToKeycode(m_display, key);
 
-    XGrabKey(m_display, keycode, WM_MODIFIER, m_root, true, 
+    XGrabKey(m_display, keycode, ACTION_MASK, m_root, true, 
         GrabModeAsync, GrabModeAsync);
 }
 
@@ -152,7 +152,7 @@ void XData::add_hotkey(KeySym key)
  */
 void XData::add_hotkey_mouse(unsigned int button)
 {
-    XGrabButton(m_display, button, WM_MODIFIER, m_root, true,
+    XGrabButton(m_display, button, ACTION_MASK, m_root, true,
             ButtonPressMask | ButtonReleaseMask,
             GrabModeAsync, GrabModeAsync, None, None);
 }
@@ -164,18 +164,26 @@ void XData::add_hotkey_mouse(unsigned int button)
  */
 void XData::confine_pointer(Window window)
 {
-    XGrabButton(m_display, AnyButton, AnyModifier, window, true,
-            ButtonPressMask | ButtonReleaseMask,
-            GrabModeAsync, GrabModeAsync, None, None);
+    if (m_confined == None)
+    {
+        XGrabButton(m_display, AnyButton, AnyModifier, window, true,
+                ButtonPressMask | ButtonReleaseMask,
+                GrabModeAsync, GrabModeAsync, None, None);
+        m_confined = window;
+    }
 }
 
 /**
  * Stops confining the pointer to the window.
  * @param winodw The window to release.
  */
-void XData::stop_confining_pointer(Window window)
+void XData::stop_confining_pointer()
 {
-    XUngrabButton(m_display, AnyButton, AnyModifie, window);
+    if (m_confined != None)
+    {
+        XUngrabButton(m_display, AnyButton, AnyModifier, m_confined);
+        m_confined = None;
+    }
 }
 
 /**
@@ -203,7 +211,7 @@ void XData::get_windows(std::vector<Window> &windows)
     for (int idx = 0; idx < nchildren; idx++)
     {
         if (children[idx] != m_root)
-            windows.push(children[idx]);
+            windows.push_back(children[idx]);
     }
 
     XFree(children);
@@ -219,7 +227,7 @@ void XData::get_pointer_location(Dimension &x, Dimension &y)
     Window _u1;
     int _u2;
     unsigned int _u3;
-    XQueryPointer(m_shared.display, m_shared.root, &_u1, &_u1, 
+    XQueryPointer(m_display, m_root, &_u1, &_u1, 
             &x, &y, &_u2, &_u2, &_u3);
 }
 
@@ -232,7 +240,7 @@ Window XData::get_input_focus()
     Window new_focus;
     int _unused;
 
-    XGetInputFocus(m_shared.display, &new_focus, &_unused);
+    XGetInputFocus(m_display, &new_focus, &_unused);
     return new_focus;
 }
 
@@ -310,7 +318,7 @@ void XData::get_attributes(Window window, XWindowAttributes &attr)
  * @param attr The values to set as the attributes.
  * @param flag Which attributes are being changed.
  */
-void XData::set_attributes(Window window, const XSetWindowAttributes &attr,
+void XData::set_attributes(Window window, XSetWindowAttributes &attr,
         unsigned long mask)
 {
     XChangeWindowAttributes(m_display, window, mask, &attr);
@@ -333,7 +341,7 @@ void XData::set_border_color(Window window, MonoColor color)
  */
 void XData::set_border_width(Window window, Dimension size)
 {
-    XSetWindowBorderWidth(window, size);
+    XSetWindowBorderWidth(m_display, window, size);
 }
 
 /**
@@ -373,7 +381,10 @@ void XData::raise(Window window)
  */
 void XData::restack(const std::vector<Window> &windows)
 {
-    XRestackWindow(m_display, windows.begin(), windows.size());
+    // We have to do some juggling to get a non-const pointer from a const 
+    // iteartor
+    Window *win_ptr = const_cast<Window*>(&(*windows.begin()));
+    XRestackWindows(m_display, win_ptr, windows.size());
 }
 
 /**
@@ -424,10 +435,10 @@ Window XData::get_transient_hint(Window window)
  * @param window The window to get the name of.
  * @param[out] name The name of the window.
  */
-void XData::get_icon_name(Window window, std::string name)
+void XData::get_icon_name(Window window, std::string &name)
 {
     char *icon_name;
-    XGetIconName(m_display, window, &icon_name)
+    XGetIconName(m_display, window, &icon_name);
     if (icon_name)
     {
         name.assign(icon_name);
@@ -435,7 +446,7 @@ void XData::get_icon_name(Window window, std::string name)
         return;
     }
    
-    XFetchName(m_shared.display, icon->client, &icon_name)
+    XFetchName(m_display, window, &icon_name);
     
     if (icon_name)
     {
@@ -464,11 +475,11 @@ void XData::get_class(Window win, std::string &xclass)
     
     if (hint.res_class)
     {
-        name.assign(hint.res_class)
+        xclass.assign(hint.res_class);
         XFree(hint.res_class);
     }
     else
-        name.clear();
+        xclass.clear();
 }
 
 /**
@@ -496,10 +507,12 @@ void XData::update_screen_size()
     XRRScreenSize *sizes = XRRConfigSizes(screen_config, &_);
 
     Rotation __;
-    SizeID current_size_idx = XRRCurrentConfiguration(screen_config, &__);
+    SizeID current_size_idx = XRRConfigCurrentConfiguration(screen_config, &__);
 
     DIM2D_WIDTH(m_screen_size) = sizes[current_size_idx].width;
-    DIM2D_HEIGHT(m_screen_size) = size[current_size_idx].height;
+    DIM2D_HEIGHT(m_screen_size) = sizes[current_size_idx].height;
+
+    XRRFreeScreenConfigInfo(screen_config);
 }
 
 /**
@@ -547,7 +560,7 @@ Atom XData::intern_if_needed(const std::string &atom_name)
  * @param color The MonoColor to convert from.
  * @return The equivalent Xlib color.
  */
-unsigned long XData::decode_multicolor(MonoColor color)
+unsigned long XData::decode_monocolor(MonoColor color)
 {
     switch (color)
     {

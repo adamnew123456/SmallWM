@@ -3,6 +3,7 @@
 #define __SMALLWM_XDATA__
 
 #include <cstring>
+#include <map>
 #include <vector>
 
 #include "common.h"
@@ -59,20 +60,12 @@ class XData
 {
 public:
     XData(SysLog &logger, Display *dpy, Window root, int screen) :
-        m_display(dpy)
+        m_display(dpy), m_confined(None)
     {
         m_root = DefaultRootWindow(dpy);
         m_screen = DefaultScreen(dpy);
 
-        // Use RandR to figure out what the initial screen size is
-        XRRScreenConfiguration *config = XRRGetScreenInfo(dpy, root);
-
-        int _u1;
-        XRRScreenSize *size = XRRConfigSizes(config, &_u1);
-        m_screen_size = Dimension2D(size->width, size->height);
-        XFree(size);
-
-        XRRFreeScreenConfigInfo(config);
+        update_screen_size();
     };
 
     XGC *create_gc(Window);
@@ -104,17 +97,16 @@ public:
     void destroy_win(Window);
 
     void get_attributes(Window, XWindowAttributes&);
-    void set_attributes(Window, const XSetWindowAttributes&,
+    void set_attributes(Window, XSetWindowAttributes&,
         unsigned long);
     void set_border_color(Window, MonoColor);
     void set_border_width(Window, Dimension);
 
     void move_window(Window, Dimension, Dimension);
     void resize_window(Window, Dimension, Dimension);
-    void raise(Window);
-    void restack(const std::vector<Window>&);
+    void raise(Window); void restack(const std::vector<Window>&);
 
-    void get_wm_hints(Window, XWMHints);
+    void get_wm_hints(Window, XWMHints&);
     void get_size_hints(Window, XSizeHints&);
     Window get_transient_hint(Window);
     void get_icon_name(Window, std::string&);
@@ -143,6 +135,9 @@ private:
 
     /// The size of the screen
     Dimension2D m_screen_size;
+
+    /// The window the pointer is confined to, or Nont
+    Window m_confined;
 };
 
 #endif
