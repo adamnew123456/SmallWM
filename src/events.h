@@ -30,12 +30,14 @@ public:
     void handle_motionnotify();
     void handle_mapnotify();
     void handle_expose();
-    void handle_configurenotify();
     void handle_destroynotify();
 
     void handle_rrnotify();
 
 private:
+    void maximize_client(Window);
+    void snap_client(Window, SnapDir);
+
     /// The currently active event
     XEvent m_event;
 
@@ -57,6 +59,6 @@ private:
 
     /// The offset for all RandR generated events
     int m_randroffset;
-};
+}
 
 #endif

@@ -66,10 +66,12 @@ void XEvents::handle_keypress()
     switch (action)
     {
     case CLIENT_NEXT_DESKTOP:
-        is_clietn && m_clients.client_next_desktop(client);
+        if (is_client)
+             m_clients.client_next_desktop(client);
         break;
     case CLIENT_PREV_DESKTOP:
-        is_client && m_clients.client_prev_desktop(client);
+        if (is_client)
+             m_clients.client_prev_desktop(client);
         break;
     case NEXT_DESKTOP:
         m_clients.next_desktop();
@@ -78,73 +80,64 @@ void XEvents::handle_keypress()
         m_clients.prev_desktop();
         break;
     case TOGGLE_STICK:
-        is_client && m_clients.toggle_stick(client);
+        if (is_client)
+             m_clients.toggle_stick(client);
         break;
     case ICONIFY:
-        is_client && m_clients.iconify(client);
+        if (is_client)
+             m_clients.iconify(client);
         break;
     case DEICONIFY:
-        is_client && m_clients.deiconify(client);
+        if (is_client)
+             m_clients.deiconify(client);
         break;
     case MAXIMIZE:
         if (is_client)
-        {
-            m_clients.change_location(client, 0, m_config.icon_height);
-            m_clients.change_size(client, scr_width, scr_height);
-        }; 
+            maximize_client(client);
         break;
     case REQUEST_CLOSE:
-        is_client && m_xdata.request_close(client);
+        if (is_client)
+            m_xdata.request_close(client);
         break;
     case FORCE_CLOSE:
-        is_client && m_xdata.destroy_win(client);
+        if (is_client)
+            m_xdata.destroy_win(client);
         break;
     case K_SNAP_TOP:
         if (is_client)
-        {
-            m_clients.change_location(client, 0, m_config.icon_height);
-            m_clients.change_size(client, scr_width, workspace_height / 2);
-        }
+            snap_client(client, SNAP_TOP);
         break;
     case K_SNAP_BOTTOM:
         if (is_client)
-        {
-            m_clients.change_location(client, 0, 
-                m_config.icon_height + (workspace_height / 2));
-            m_clients.change_size(client, scr_width, workspace_height / 2);
-        }
+            snap_client(client, SNAP_BOTTOM);
         break;
     case K_SNAP_LEFT:
         if (is_client)
-        {
-            m_clients.change_location(client, 0, m_config.icon_height);
-            m_clients.change_size(client, scr_width / 2, workspace_height);
-        }
+            snap_client(client, SNAP_LEFT);
         break;
     case K_SNAP_RIGHT:
         if (is_client)
-        {
-            m_clients.change_location(client, scr_width / 2, 
-                m_config.icon_height);
-            m_clients.change_size(client, scr_width / 2, workspace_height);
-        }
+            snap_client(client, SNAP_RIGHT);
         break;
-
     case LAYER_ABOVE:
-        is_client && m_clients.up_layer(client);
+        if (is_client)
+             m_clients.up_layer(client);
         break;
     case LAYER_BELOW:
-        is_client && m_clients.down_layer(client);
+        if (is_client)
+             m_clients.down_layer(client);
         break;
     case LAYER_TOP:
-        is_client && m_clients.set_layer(client, MAX_LAYER);
+        if (is_client)
+             m_clients.set_layer(client, MAX_LAYER);
         break;
     case LAYER_BOTTOM:
-        is_client && m_clients.set_layer(client, MIN_LAYER);
+        if (is_client)
+             m_clients.set_layer(client, MIN_LAYER);
         break;
 
 #define LAYER_SET(l) case LAYER_##l: \
-        is_client && m_clients.set_layer(client, l); \
+        if (is_client) m_clients.set_layer(client, l); \
         break;
 
     LAYER_SET(1);
@@ -311,6 +304,115 @@ void XEvents::handle_buttonrelease()
 }
 
 /**
+ * Handles windows which have just shown themselves.
+ *
+ * Note that this can happen for any number of reasons. This method handles
+ * the following scenarios:
+ *
+ *  - A genuinely new client which we want to manage
+ *  - A genuinely new client, which happens to be a dialog window
+ *  - A window which we aren't interested in managing
+ *  - A client which is remapping itself, possibly from another desktop
+ */
+void XEvents::handle_mapnotify()
+{
+    Window being_mapped = m_event.xmap.window;
+
+    // First, test if this client is already known to us - if it is, then
+    // move it onto the current desktop
+    if (m_clients.is_client(being_mapped))
+    {
+        Desktop const *mapped_desktop = m_clients.find_desktop(being_mapped);
+
+        // Icons must be uniconified
+        if (mapped_desktop->is_icon_desktop())
+        {
+            Icon *icon = m_xmodel.find_icon_from_client(being_mapped);
+            m_xmodel.unregister_icon(icon);
+
+            m_clients.deiconify(being_mapped);
+        }
+
+        // Moving/resizing clients must stop being moved/resized
+        if (mapped_desktop->is_moving_desktop() || mapped_desktop->is_resizing_desktop())
+        {
+            Window placeholder = m_xmodel.get_move_resize_placeholder();
+            m_xmodel.exit_move_resize();
+
+            XWindowAttributes placeholder_attr;
+            m_xdata.get_attributes(placeholder, placeholder_attr);
+
+            if (mapped_desktop->is_moving_desktop())
+                m_clients.stop_moving(being_mapped, 
+                    Dimension2D(placeholder_attr.x, placeholder_attr.y));
+            else if (mapped_desktop->is_resizing_deskop())
+                m_clients.stop_resizing(being_mapped, 
+                    Dimension2D(placeholder_attr.width, placeholder_attr.height));
+        }
+
+        // Clients which are currently stuck on all desktops don't need to have 
+        // anything done to them. Everybody else has to be moved onto the 
+        // current desktop.
+        if (!mapped_desktop->is_all_desktop())
+            m_clients.client_reset_desktop(being_mapped);
+    }
+
+    // So, this isn't an existing client. We have to figure out now if this is
+    // even a client *at all* - override_redirect indicates if this client does
+    // (false) or does not (true) want to be managed
+    XWindowAttributes win_attr;
+    m_xdata.get_attributes(being_mapped, win_attr);
+
+    if (win_attr.override_redirect)
+        return;
+
+    // This is a new, manageable client - register it with the client database.
+    // This requires we know 3 things:
+    //  - What the client wants, with regards to its initial state - either
+    //    visible or iconified
+    //  - The client's position (we know this one)
+    //  - The client's size (we know this one too)
+    //
+    //  The information about the initial state is given by XWMHints
+    XWMHints hints;
+    m_xdata.get_wm_hints(being_mapped, hints);
+
+    InitialState init_state = IS_VISIBLE;
+    if (hints.flags & StateHint && hints.initial_state == IconicState)
+        init_state = IS_HIDDEN;
+
+    m_clients.add_client(being_mapped, init_state,
+            Dimension2D(win_attr.x, win_attr.y), 
+            Dimension2D(win_attr.width, win_attr.height));
+
+    // If the client is a dialog, this will be represented in the transient 
+    // hint (which is None if the client is not a dialog, or not-None if it is)
+    if (m_xdata.get_transient_hint(being_mapped) != None)
+        m_clients.set_layer(being_mapped, DIALOG_LAYER);
+
+    // Finally, execute the actions tied to the window's class
+    std::string win_class;
+    m_xdata.get_class(being_mapped, win_class);
+
+    if (m_config.classactions.count(win_class) > 0 && init_state != IS_HIDDEN)
+    {
+        ClassActions &action = m_config.classactions[win_class];
+
+        if (action.actions & ACT_STICK)
+            m_clients.toggle_stick(being_mapped);
+
+        if (action.actions & ACT_MAXIMIZE)
+            maximize_client(being_mapped);
+
+        if (action.actions & ACT_SETLAYER)
+            m_clients.set_layer(being_mapped, action.layer);
+
+        if (action.actions & ACT_SNAP)
+            snap_client(being_mapped, action.snap);
+    }
+}
+
+/**
  * Handles the motion of the pointer. The only time that this ever applies is
  * when the user has moved the placeholder window - at all other times, this
  * event is ignored.
@@ -472,4 +574,53 @@ void XEvents::handle_destroynotify()
 void XEvents::handle_rrnotify()
 {
     m_xdata.update_screen_size();
+}
+
+/**
+ * Maximizes a client, taking up the whole screen, with the exception of one
+ * row of the icon bar.
+ * @param window The window to maximize.
+ */
+void XEvents::maximize_client(Window window)
+{
+
+    Dimension scr_width, scr_height;
+    m_xdata.get_screen_size(scr_width, scr_height);
+
+    m_clients.change_location(window, 0, m_config.icon_height);
+    m_clients.change_size(client, scr_width, scr_height - m_config.icon_height);
+}
+
+/**
+ * Snaps the client to a particular half of the screen, respecting the icon row.
+ * @param window The window to snap.
+ * @param side The side of the screen to snap to.
+ */
+void XEvents::snap_client(Window window, SnapDir side)
+{
+    Dimension scr_width, scr_height;
+    m_xdata.get_screen_size(scr_width, scr_height);
+
+    Dimension workspace_height = scr_height - m_config.icon_height;
+
+    switch (side)
+    {
+    case K_SNAP_TOP:
+        m_clients.change_location(window, 0, m_config.icon_height);
+        m_clients.change_size(client, scr_width, workspace_height);
+        break;
+    case K_SNAP_BOTTOM:
+        m_clients.change_location(window, 0, 
+            m_config.icon_height + (workspace_height / 2));
+        m_clients.change_size(window, scr_width, workspace_height / 2);
+        break;
+    case K_SNAP_LEFT:
+        m_clients.change_location(window, 0, m_config.icon_height);
+        m_clients.change_size(window, scr_width / 2, workspace_height);
+        break;
+    case K_SNAP_RIGHT:
+        m_clients.change_location(window, scr_width / 2, m_config.icon_height);
+        m_clients.change_size(window, scr_width / 2, workspace_height);
+        break;
+    }
 }
