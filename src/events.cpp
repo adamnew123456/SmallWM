@@ -62,7 +62,7 @@ void XEvents::handle_keypress()
     // the size of the screen
     Dimension workspace_height = scr_height - m_config.icon_height;
 
-    KeyboardAction action = m_config.key_commands.reverse_bindings[key];
+    KeyboardAction action = m_config.key_commands.keysym_to_action[key];
     switch (action)
     {
     case CLIENT_NEXT_DESKTOP:
@@ -86,10 +86,6 @@ void XEvents::handle_keypress()
     case ICONIFY:
         if (is_client)
              m_clients.iconify(client);
-        break;
-    case DEICONIFY:
-        if (is_client)
-             m_clients.deiconify(client);
         break;
     case MAXIMIZE:
         if (is_client)
@@ -206,7 +202,7 @@ void XEvents::handle_buttonpress()
              * So, to avoid an extra smallwm process sticking around, _or_ an 
              * unnecessary /bin/sh process sticking around, use 'exec' twice.
              */
-            std::string shell = std::string("exec ") + m_shared.shell;
+            std::string shell = std::string("exec ") + m_config.shell;
             execl("/bin/sh", "/bin/sh", "-c", shell.c_str(), NULL);
             exit(1);
         }
@@ -219,7 +215,7 @@ void XEvents::handle_buttonpress()
         m_clients.deiconify(icon->client);
         delete icon;
     }
-    else if (is_client && m_event.xbutton.state == BUTTON_MASK)
+    else if (is_client && m_event.xbutton.state == ACTION_MASK)
     {
         if (m_event.xbutton.button != MOVE_BUTTON &&
                 m_event.xbutton.button != RESIZE_BUTTON)
@@ -239,7 +235,7 @@ void XEvents::handle_buttonpress()
 
         // Map this window onto the screen, bind the user's mouse to this window, and
         // then make it visible
-        m_xdata.map_window(placeholder);
+        m_xdata.map_win(placeholder);
         m_xdata.confine_pointer(placeholder);
         m_xdata.raise(placeholder);
 
@@ -281,8 +277,8 @@ void XEvents::handle_buttonrelease()
     if (expected_placeholder != m_event.xbutton.window)
         return;
 
-    MoveResizeState state = x_model.get_move_resize_state()
-    Window client = x_model.get_move_resize_client();
+    MoveResizeState state = m_xmodel.get_move_resize_state();
+    Window client = m_xmodel.get_move_resize_client();
 
     // Figure out the attributes of the placeholder, so that way we can do
     // the movements/resizes
@@ -300,7 +296,7 @@ void XEvents::handle_buttonrelease()
         break;
     }
 
-    x_model.exit_move_resize();
+    m_xmodel.exit_move_resize();
 }
 
 /**
@@ -345,7 +341,7 @@ void XEvents::handle_mapnotify()
             if (mapped_desktop->is_moving_desktop())
                 m_clients.stop_moving(being_mapped, 
                     Dimension2D(placeholder_attr.x, placeholder_attr.y));
-            else if (mapped_desktop->is_resizing_deskop())
+            else if (mapped_desktop->is_resizing_desktop())
                 m_clients.stop_resizing(being_mapped, 
                     Dimension2D(placeholder_attr.width, placeholder_attr.height));
         }
@@ -437,7 +433,7 @@ void XEvents::handle_motionnotify()
 
     Dimension2D relative_change = m_xmodel.update_pointer(ptr_x, ptr_y);
 
-    switch (m_xmodel.get_move_resize_state)
+    switch (m_xmodel.get_move_resize_state())
     {
     case MR_MOVE:
         // Update the position of the placeholder
@@ -488,7 +484,7 @@ void XEvents::handle_expose()
             // Copy the pixmap into the left side of the icon, keeping
             // its size. The width of the pixmap is the same as the
             // X offset of the window name (no padding is done here).
-            Dimension pixmap_size = the_icon->gc->copy_pixmap(
+            Dimension2D pixmap_size = the_icon->gc->copy_pixmap(
                 hints.icon_pixmap, 0, 0);
             text_x_offset = DIM2D_WIDTH(pixmap_size);
         }
@@ -504,7 +500,7 @@ void XEvents::handle_expose()
     // The one thing that is strange here is that the Y offset is the entire
     // icon's height. This is because Xlib draws the text, starting at the
     // Y offset, from *bottom* to *top*. I don't know why.
-    the_icon->gc->draw_string(text_x_offset, m_config->icon_height,
+    the_icon->gc->draw_string(text_x_offset, m_config.icon_height,
         preferred_icon_name);
 }
 
@@ -536,7 +532,7 @@ void XEvents::handle_destroynotify()
         m_clients.end_dropping_changes();
 
         m_xmodel.unregister_icon(as_icon);
-        delete icon;
+        delete as_icon;
     }
 
     if (m_xmodel.get_move_resize_client() == destroyed_window)
@@ -588,7 +584,7 @@ void XEvents::maximize_client(Window window)
     m_xdata.get_screen_size(scr_width, scr_height);
 
     m_clients.change_location(window, 0, m_config.icon_height);
-    m_clients.change_size(client, scr_width, scr_height - m_config.icon_height);
+    m_clients.change_size(window, scr_width, scr_height - m_config.icon_height);
 }
 
 /**
@@ -607,7 +603,7 @@ void XEvents::snap_client(Window window, SnapDir side)
     {
     case K_SNAP_TOP:
         m_clients.change_location(window, 0, m_config.icon_height);
-        m_clients.change_size(client, scr_width, workspace_height);
+        m_clients.change_size(window, scr_width, workspace_height);
         break;
     case K_SNAP_BOTTOM:
         m_clients.change_location(window, 0, 

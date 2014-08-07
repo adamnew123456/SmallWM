@@ -3,6 +3,7 @@
 #define __SMALLWM_EVENTS__
 
 #include "model/client-model.h"
+#include "model/x-model.h"
 #include "configparse.h"
 #include "common.h"
 #include "xdata.h"
@@ -17,9 +18,9 @@ class XEvents
 {
 public:
     XEvents(WMConfig &config, XData &xdata, ClientModel &clients,
-            XModel &xmodel, int randr_offset)
+            XModel &xmodel, int randr_offset) :
         m_config(config), m_xdata(xdata), m_clients(clients),
-        m_xmodel(xmodel), m_randroffset(randr_offset), m_done(false),
+        m_xmodel(xmodel), m_randroffset(randr_offset), m_done(false)
     {};
 
     bool step();
@@ -59,6 +60,6 @@ private:
 
     /// The offset for all RandR generated events
     int m_randroffset;
-}
+};
 
 #endif
