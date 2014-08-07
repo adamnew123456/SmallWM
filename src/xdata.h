@@ -118,6 +118,7 @@ public:
     void get_size_hints(Window, XSizeHints&);
     Window get_transient_hint(Window);
     void get_icon_name(Window, std::string&);
+    void get_class(Window, std::string&);
 
     KeySym get_keysym(int);
 

@@ -448,6 +448,30 @@ void XData::get_icon_name(Window window, std::string name)
 }
 
 /**
+ * Gets the window's "class" (an X term, not mine), a text string which is mean
+ * to uniquely identify what application a window is being created by.
+ * @param windwo The window to get the class of.
+ * @param[out] xclass The X class of the window.
+ */
+void XData::get_class(Window win, std::string &xclass)
+{
+    XClassHint hint;
+    XGetClassHint(m_display, win, &hint);
+    
+    if (hint.res_name)
+        XFree(hint.res_name);
+
+    
+    if (hint.res_class)
+    {
+        name.assign(hint.res_class)
+        XFree(hint.res_class);
+    }
+    else
+        name.clear();
+}
+
+/**
  * Gets the current screen size.
  * @param[out] width The width of the screen.
  * @param[out] height The height of the screen.
