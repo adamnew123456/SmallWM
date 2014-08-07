@@ -1,4 +1,5 @@
 /** @file */
+#if 0
 #include <csignal>
 #include <iostream>
 #include <sys/types.h>
@@ -192,3 +193,4 @@ int main()
 
     return 0;
 }
+#endif
