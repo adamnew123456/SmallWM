@@ -40,3 +40,71 @@ void ClientModelEvents::handle_layer_change()
 {
     m_should_relayer = true;
 }
+
+/**
+ * Actually does the relayering.
+ *
+ * This involves sorting the clients, and then sticking the icons and 
+ * move/resize placeholder on the top.
+ */
+void ClientModelEvents::do_relayer()
+{
+    std::vector<Window> ordered_windows;
+    m_clients.get_visible_in_layer_order(ordered_windows);
+
+    // Figure out the currently focused client, and where it's at. We'll need
+    // this information in order to place it above its peers.
+    Window focused_client = m_clients.get_focused();
+    Layer focused_layer;
+    if (focused_client != None)
+        focused_layer = m_clients.find_layer(focused_client);
+
+    for (std::vector<Window>::iterator client_iter = ordered_windows.begin();
+            client_iter != ordered_windows.end();
+            client_iter++)
+    {
+        Window current_client = *client_iter;
+        Layer current_layer = m_clients.find_layer(current_client);
+
+        // We have to check if we're at the point where we can put up the 
+        // focused window - this happens when we've passed the layer that the 
+        // focused window is on. We want to put the foucsed window above all of
+        // its peers, so before putting up the first client on the next layer,
+        // put up the focused window
+        if (focused_client != None &&
+            current_layer == focused_layer + 1)
+        {
+            m_xdata.raise(focused_client);
+
+            // Make sure to erase the focused client, so that we don't raise
+            // it more than once
+            focused_client = None;
+        }
+
+        if (current_client != focused_client)
+            m_xdata.raise(current_client);
+    }
+
+    // If we haven't cleared the focused window, then we need to raise it before
+    // moving on
+    if (focused_client != None)
+        m_xdata.raise(focused_client);
+
+    // Now, raise all the clients since they should always be above all other
+    // windows so they aren't obscured
+    std::vector<Icon*> icon_list;
+    m_xmodel.get_icons(icon_list);
+
+    for (std::vector<Icon*>::iterator icon = icon_list.begin();
+            icon != icon_list.end();
+            icon++)
+    {
+        Window icon_win = (*icon)->icon;
+        m_xdata.raise(icon_win);
+    }
+
+    // Finally, raise the placeholder, if there is one
+    Window placeholder_win = m_xmodel.get_move_resize_placeholder();
+    if (placeholder_win != None)
+        m_xdata.raise(placeholder_win);
+}

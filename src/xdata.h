@@ -104,7 +104,8 @@ public:
 
     void move_window(Window, Dimension, Dimension);
     void resize_window(Window, Dimension, Dimension);
-    void raise(Window); void restack(const std::vector<Window>&);
+    void raise(Window); 
+    void restack(const std::vector<Window>&);
 
     void get_wm_hints(Window, XWMHints&);
     void get_size_hints(Window, XSizeHints&);
