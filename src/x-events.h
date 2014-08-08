@@ -46,6 +46,7 @@ public:
 
     bool step();
 
+private:
     void handle_keypress();
     void handle_buttonpress();
     void handle_buttonrelease();
@@ -56,7 +57,6 @@ public:
 
     void handle_rrnotify();
 
-private:
     void maximize_client(Window);
     void snap_client(Window, SnapDir);
 
