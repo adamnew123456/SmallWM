@@ -6,8 +6,8 @@
  */
 void ClientModelEvents::handle_queued_changes()
 {
-    for (ClientModel::change_iter change_iter = model.changes_begin();
-            change_iter != model.changes_end();
+    for (ClientModel::change_iter change_iter = m_clients.changes_begin();
+            change_iter != m_clients.changes_end();
             change_iter++)
     {
         m_change = *change_iter;

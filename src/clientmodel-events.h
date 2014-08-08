@@ -18,9 +18,10 @@
 class ClientModelEvents
 {
 public:
-    ClientModelEvents(WMConfig &config, XData &xata, ClientModel &clients, 
+    ClientModelEvents(WMConfig &config, XData &xdata, ClientModel &clients, 
         XModel &xmodel) :
-    m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel)
+    m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
+    m_change(0)
     {};
 
     void handle_queued_changes();
@@ -34,7 +35,7 @@ private:
     void handle_size_change();
 
     /// The change that is currently being processed
-    Change *const m_change;
+    Change const *m_change;
 
     /// The configuration options that were given in the configuration file
     WMConfig &m_config;
@@ -49,3 +50,4 @@ private:
      * about them. */
     XModel &m_xmodel;
 };
+#endif
