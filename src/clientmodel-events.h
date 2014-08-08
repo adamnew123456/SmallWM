@@ -21,12 +21,14 @@ public:
     ClientModelEvents(WMConfig &config, XData &xdata, ClientModel &clients, 
         XModel &xmodel) :
     m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-    m_change(0)
+    m_change(0), m_should_relayer(false)
     {};
 
     void handle_queued_changes();
 
 private:
+    void do_relayer();
+
     void handle_layer_change();
     void handle_focus_change();
     void handle_client_desktop_change();
@@ -49,5 +51,10 @@ private:
     /** The data model which stores information related to clients, but not
      * about them. */
     XModel &m_xmodel;
+
+    /** Whether or not to relayer the visible windows - this allows this class
+     * to avoid restacking windows on every `ChangeLayer`, and instead only do 
+     * it once at the end of `handle_queued_changes`. */
+    bool m_should_relayer;
 };
 #endif

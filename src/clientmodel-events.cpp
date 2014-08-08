@@ -6,6 +6,8 @@
  */
 void ClientModelEvents::handle_queued_changes()
 {
+    m_should_relayer = false;
+
     for (ClientModel::change_iter change_iter = m_clients.changes_begin();
             change_iter != m_clients.changes_end();
             change_iter++)
@@ -25,4 +27,16 @@ void ClientModelEvents::handle_queued_changes()
         else if (m_change->is_size_change())
             handle_size_change();
     }
+
+    if (m_should_relayer)
+        do_relayer();
+}
+
+/**
+ * Sets a flag so that relayering occurs later - this avoid relayering on
+ * every ChangeLayer event.
+ */
+void ClientModelEvents::handle_layer_change()
+{
+    m_should_relayer = true;
 }
