@@ -540,6 +540,23 @@ KeySym XData::get_keysym(int keycode)
 }
 
 /**
+ * Converts a KeySym into a string.
+ * @param keysym The KeySym to convert.
+ * @param[out] as_string The string version of the KeySym.
+ */
+void XData::keysym_to_string(KeySym keysym, std::string &as_string)
+{
+    // Interestingly, the pointer here references some kind of table in static
+    // memory, so we can't free it
+    char *keysym_str = XKeysymToString(keysym);
+
+    if (!keysym_str)
+        as_string.clear();
+    else
+        as_string.assign(keysym_str);
+}
+
+/**
  * Interns an string, converting it into an atom and caching it. On
  * subsequent calls, the cache is used instead of going through Xlib.
  * @param atom The name of the atom to convert.

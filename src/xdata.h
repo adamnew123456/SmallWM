@@ -113,6 +113,7 @@ public:
     void get_class(Window, std::string&);
 
     KeySym get_keysym(int);
+    void keysym_to_string(KeySym, std::string&);
 
     void get_screen_size(Dimension&, Dimension&);
     void update_screen_size();
