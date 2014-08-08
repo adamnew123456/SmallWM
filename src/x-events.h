@@ -1,6 +1,6 @@
 /** @file */
-#ifndef __SMALLWM_EVENTS__
-#define __SMALLWM_EVENTS__
+#ifndef __SMALLWM_X_EVENTS__
+#define __SMALLWM_X_EVENTS__
 
 #include "model/client-model.h"
 #include "model/x-model.h"

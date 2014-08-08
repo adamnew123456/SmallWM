@@ -1,4 +1,4 @@
-#include "events.h"
+#include "x-events.h"
 
 /**
  * Runs a single iteration of the event loop, by capturing an X event and
