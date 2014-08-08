@@ -2,6 +2,7 @@
 #ifndef __SMALLWM_X_MODEL__
 #define __SMALLWM_X_MODEL__
 #include <map>
+#include <vector>
 
 #include "common.h"
 #include "xdata.h"
@@ -69,6 +70,7 @@ public:
 
     Icon *find_icon_from_client(Window);
     Icon *find_icon_from_icon_window(Window);
+    void get_icons(std::vector<Icon*>&);
 
     void enter_move(Window, Window, Dimension2D);
     void enter_resize(Window, Window, Dimension2D);

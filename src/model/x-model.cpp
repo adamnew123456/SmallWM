@@ -43,6 +43,17 @@ Icon* XModel::find_icon_from_icon_window(Window icon_win)
 }
 
 /**
+ * Gets a list of all of the icons.
+ */
+void XModel::get_icons(std::vector<Icon*> &icons)
+{
+    for (std::map<Window,Icon*>::iterator iter = m_clients_to_icons.begin();
+            iter != m_clients_to_icons.end();
+            iter++)
+        icons.push_back(iter->second);
+}
+
+/**
  * Registers that a client is being moved, recording the client and the
  * placeholder, and recording the current pointer location.
  *

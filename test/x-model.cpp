@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <UnitTest++.h>
 #include "model/x-model.h"
 
@@ -31,6 +33,32 @@ SUITE(XModelMemberSuite)
 
         CHECK_EQUAL(model.find_icon_from_client(the_client), icon_data);
         CHECK_EQUAL(model.find_icon_from_icon_window(the_icon), icon_data);
+
+        std::vector<Icon*> icons;
+        model.get_icons(icons);
+        CHECK_EQUAL(icons.size(), 1);
+        CHECK_EQUAL(icons[0], icon_data);
+
+        delete icon_data;
+    }
+
+    TEST_FIXTURE(XModelFixture, test_icon_list_with_multiple_icons)
+    {
+        Icon *icon_data = new Icon(the_client, the_icon, NULL_OF(XGC));
+        model.register_icon(icon_data);
+
+        const Window the_other_client = 4,
+              the_other_icon = 5;
+        Icon *icon_data2 = new Icon(the_other_client, the_other_icon, NULL_OF(XGC));
+        model.register_icon(icon_data2);
+
+        std::vector<Icon*> icons;
+        model.get_icons(icons);
+        CHECK_EQUAL(icons.size(), 2);
+        CHECK_EQUAL(*(std::find(icons.begin(), icons.end(), icon_data)),
+                    icon_data);
+        CHECK_EQUAL(*(std::find(icons.begin(), icons.end(), icon_data2)),
+                    icon_data2);
     }
 
     TEST_FIXTURE(XModelFixture, test_icon_getters_with_removed_icon)
