@@ -42,6 +42,53 @@ void ClientModelEvents::handle_layer_change()
 }
 
 /**
+ * Changes the focus from one window to another.
+ *
+ * The focus model used by SmallWM is click-to-focus, so clicks must be
+ * captured on unfocused clients, while focused clients should not be captured.
+ */
+void ClientModelEvents::handle_focus_change()
+{
+    ChangeFocus const *change_event = dynamic_cast<ChangeFocus const*>(m_change);
+
+    // First, unfocus whatever the model says is unfoucsed. Note that the
+    // client which is being unfocused may not exist anymore.
+    Window unfocused_client = change_event->prev_focus;
+    if (m_clients.is_client(unfocused_client))
+    {
+        // Since this window will possibly be focused later, capture the clicks
+        // going to it so we know when it needs to be focused again
+        m_xdata.set_border_color(unfocused_client, X_WHITE);
+        m_xdata.grab_mouse(unfocused_client);
+    }
+
+    Window focused_client = change_event->next_focus;
+    if (focused_client == None)
+    {
+        // We can't set the border color of a nonexistent window, so just set
+        // the focus to None
+        m_xdata.set_input_focus(None);
+    }
+    else
+    {
+        // Since this is now focused, let the client process events in by 
+        // ungrabbing the mouse and setting the keyboard focus
+        if (m_xdata.set_input_focus(focused_client))
+        {
+            m_xdata.set_border_color(unfocused_client, X_BLACK);
+            m_xdata.ungrab_mouse(focused_client);
+        }
+        else
+        {
+            // If we failed to actually do the focus, then we have to
+            // update the client model to keep it in sync with what our idea
+            // of the focus is
+            m_clients.unfocus();
+        }
+    }
+}
+
+/**
  * Actually does the relayering.
  *
  * This involves sorting the clients, and then sticking the icons and 
@@ -68,7 +115,7 @@ void ClientModelEvents::do_relayer()
 
         // We have to check if we're at the point where we can put up the 
         // focused window - this happens when we've passed the layer that the 
-        // focused window is on. We want to put the foucsed window above all of
+        // focused window is on. We want to put the focused window above all of
         // its peers, so before putting up the first client on the next layer,
         // put up the focused window
         if (focused_client != None &&
