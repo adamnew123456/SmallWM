@@ -82,6 +82,8 @@ public:
 
     void confine_pointer(Window);
     void stop_confining_pointer();
+    void grab_mouse(Window);
+    void ungrab_mouse(Window);
 
     void select_input(Window, long);
 

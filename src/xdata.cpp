@@ -166,9 +166,10 @@ void XData::confine_pointer(Window window)
 {
     if (m_confined == None)
     {
-        XGrabButton(m_display, AnyButton, AnyModifier, window, true,
-                ButtonPressMask | ButtonReleaseMask,
-                GrabModeAsync, GrabModeAsync, None, None);
+        XGrabPointer(m_display, window, true, 
+            PointerMotionmask | ButtonReleaseMask,
+            GrabModeAsync, GrabModeAsync,
+            None, None, CurrentTime);
         m_confined = window;
     }
 }
@@ -184,6 +185,28 @@ void XData::stop_confining_pointer()
         XUngrabButton(m_display, AnyButton, AnyModifier, m_confined);
         m_confined = None;
     }
+}
+
+/**
+ * Captures all the mouse clicks going to a window, rather than sending it off
+ * to the application itself. 
+ * @param window The window to intercept clicks from.
+ */
+void XData::grab_mouse(Window window)
+{
+    XGrabButton(m_display, AnyButton, AnyModifier, window, true,
+            ButtonPressMask | ButtonReleaseMask,
+            GrabModeAsync, GrabModeAsync, None, None);
+}
+
+/**
+ * Stops grabbing the clicks going to a window and lets the application handle
+ * the clicks itself.
+ * @param window The window to stop intercepting clicks from.
+ */
+void XData::ungrab_mouse(Window window)
+{
+    XUngrabButton(m_display, AnyButton, AnyModifier, window);
 }
 
 /**
