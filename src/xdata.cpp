@@ -167,7 +167,7 @@ void XData::confine_pointer(Window window)
     if (m_confined == None)
     {
         XGrabPointer(m_display, window, true, 
-            PointerMotionmask | ButtonReleaseMask,
+            PointerMotionMask | ButtonReleaseMask,
             GrabModeAsync, GrabModeAsync,
             None, None, CurrentTime);
         m_confined = window;
