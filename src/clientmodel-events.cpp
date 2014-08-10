@@ -89,6 +89,71 @@ void ClientModelEvents::handle_focus_change()
 }
 
 /**
+ * This changes the currently visible desktop, which involves figuring out
+ * which windows are visible on the current desktop, which are not, and then
+ * showing those that are visible and hiding those that are not.
+ */
+void ClientModelEvents::handle_current_desktop_change()
+{
+    ChangeCurrentDesktop const *change = 
+        dynamic_cast<ChangeCurrentDesktop const*>(m_change);
+
+    std::vector<Window> old_desktop_list;
+    std::vector<Window> new_desktop_list;
+
+
+    // The output size will have, at most, the size of its largest input
+    size_t max_output_size = std::max(old_desktop_list.size(), 
+        new_desktop_list.size());
+
+    // std::set_difference requires sorted inputs
+    std::sort(old_desktop_list.begin(), old_desktop_list.end());
+    std::sort(new_desktop_list.begin(), new_desktop_list.end());
+
+    std::vector<Window> to_make_invisible;
+    std::vector<Window> to_make_visible;
+   
+    // Fill out all of the output vectors to the length of the input iterators,
+    // so that std::set_difference has somewhere to put the data
+    to_make_invisible.resize(max_output_size, None);
+    to_make_visible.resize(max_output_size, None);
+
+    // The old -> new set difference will produce the list of windows
+    // which are on the old desktop, but not this one - these need to be
+    // hidden
+    std::set_difference(
+        old_desktop_list.begin(), old_desktop_list.end(),
+        new_desktop_list.begin(), new_desktop_list.end(),
+        to_make_invisible.begin());
+
+    for (std::vector<Window>::iterator to_hide = to_make_invisible.begin();
+            /* The extra check that the iterator is not None is necessary,
+             * since the vector was padded with None when it was resized.
+             */
+            to_hide != to_make_invisible.end() && *to_hide != None; 
+            to_hide++)
+        m_xdata.unmap_win(*to_hide);
+
+    // The new -> old set difference will produce the list of windows which
+    // are on the new desktop, but not on the old - these need to be made
+    // visible
+    std::set_difference(
+        new_desktop_list.begin(), new_desktop_list.end(),
+        old_desktop_list.begin(), old_desktop_list.end(),
+        to_make_invisible.begin());
+
+    for (std::vector<Window>::iterator to_show = to_make_visible.begin();
+            to_show != to_make_visible.end() && *to_show != None;
+            to_show++)
+        m_xdata.map_win(*to_show);
+
+    // Since we've made some windows visible and some others invisible, we've
+    // invalidated the previous stacking order, so restack everything according
+    // to what is now visible
+    do_relayer();
+}
+
+/**
  * Actually does the relayering.
  *
  * This involves sorting the clients, and then sticking the icons and 

@@ -2,6 +2,9 @@
 #ifndef __SMALLWM_CLIENTMODEL_EVENTS__
 #define __SMALLWM_CLIENTMODEL_EVENTS__
 
+#include <algorithm>
+#include <vector>
+
 #include "model/client-model.h"
 #include "model/x-model.h"
 #include "configparse.h"
