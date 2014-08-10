@@ -114,12 +114,12 @@ void ClientModel::add_client(Window client, InitialState state,
     {
         case IS_VISIBLE:
             m_desktops.add_member(m_current_desktop, client);
-            push_change(new ChangeClientDesktop(client, 
+            push_change(new ChangeClientDesktop(client, 0,
                         m_current_desktop));
             break;
         case IS_HIDDEN:
             m_desktops.add_member(ICON_DESKTOP, client);
-            push_change(new ChangeClientDesktop(client, ICON_DESKTOP));
+            push_change(new ChangeClientDesktop(client, 0, ICON_DESKTOP));
             break;
     }
 
@@ -352,6 +352,8 @@ void ClientModel::next_desktop()
 {
     unsigned long long desktop_index = 
         (m_current_desktop->desktop + 1) % m_max_desktops;
+
+    user_desktop_ptr old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
     // We can't change while a window is being moved or resized
@@ -363,7 +365,7 @@ void ClientModel::next_desktop()
     if (m_focused != None && !is_visible(m_focused))
         unfocus();
 
-    push_change(new ChangeCurrentDesktop(m_current_desktop));
+    push_change(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
 }
 
 /**
@@ -376,6 +378,8 @@ void ClientModel::prev_desktop()
     unsigned long long desktop_index = 
         (m_current_desktop->desktop - 1 + m_max_desktops) 
         % m_max_desktops;
+
+    user_desktop_ptr old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
     // We can't change while a window is being moved or resized
@@ -387,7 +391,7 @@ void ClientModel::prev_desktop()
     if (m_focused != None && !is_visible(m_focused))
         unfocus();
 
-    push_change(new ChangeCurrentDesktop(m_current_desktop));
+    push_change(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
 }
 
 /**
@@ -504,7 +508,7 @@ void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
     if (unfocus && !is_visible(client))
         unfocus_if_focused(client);
 
-    push_change(new ChangeClientDesktop(client, new_desktop));
+    push_change(new ChangeClientDesktop(client, old_desktop, new_desktop));
 }
 
 /**

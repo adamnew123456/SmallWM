@@ -114,8 +114,8 @@ static std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
 /// Indicates a change in the desktop of a client
 struct ChangeClientDesktop : Change
 {
-    ChangeClientDesktop(Window win, const Desktop *new_desktop) :
-        window(win), desktop(new_desktop)
+    ChangeClientDesktop(Window win, const Desktop *old_desktop, const Desktop *new_desktop) :
+        window(win), prev_desktop(old_desktop), next_desktop(new_desktop)
     {};
 
     bool is_client_desktop_change() const
@@ -128,25 +128,27 @@ struct ChangeClientDesktop : Change
 
         const ChangeClientDesktop &cast_other = dynamic_cast<const ChangeClientDesktop&>(other);
         return (cast_other.window == window &&
-                *cast_other.desktop == *desktop);
+                *cast_other.prev_desktop == *prev_desktop &&
+                *cast_other.next_desktop == *next_desktop);
     }
 
     Window window;
-    const Desktop *desktop;
+    const Desktop *prev_desktop;
+    const Desktop *next_desktop;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
 {
     out << "[ChangeClientDesktop Window<" << change.window << "> Desktop(" 
-        << *change.desktop << ")]";
+        << *change.prev_desktop << "-->" << *change.next_desktop <<  ")]";
     return out;
 }
 
 /// Indicates a change in the currently visible desktop
 struct ChangeCurrentDesktop : Change
 {
-    ChangeCurrentDesktop(const Desktop *new_desktop) :
-        desktop(new_desktop)
+    ChangeCurrentDesktop(const Desktop *old_desktop, const Desktop *new_desktop) :
+        prev_desktop(old_desktop), next_desktop(new_desktop)
     {};
 
     bool is_current_desktop_change() const
@@ -159,15 +161,18 @@ struct ChangeCurrentDesktop : Change
 
         const ChangeCurrentDesktop &cast_other = 
             dynamic_cast<const ChangeCurrentDesktop&>(other);
-        return *cast_other.desktop == *desktop;
+        return (*cast_other.prev_desktop == *prev_desktop &&
+                *cast_other.next_desktop == *next_desktop);
     }
 
-    const Desktop *desktop;
+    const Desktop *prev_desktop;
+    const Desktop *next_desktop;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)
 {
-    out << "[ChangeCurrentDesktop Desktop(" << *change.desktop << ")]";
+    out << "[ChangeCurrentDesktop Desktop(" << *change.prev_desktop << "-->" << 
+        *change.next_desktop << ")]";
     return out;
 }
 

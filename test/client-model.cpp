@@ -48,7 +48,7 @@ SUITE(ClientModelMemberSuite)
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
             const Desktop *desktop(new UserDesktop(0));
-            CHECK_EQUAL(ChangeClientDesktop(a, desktop), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, 0, desktop), *the_change);
         }
         iterator++;
 
@@ -414,7 +414,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1]), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), *the_change);
         }
         iterator++;
 
@@ -429,7 +429,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1], model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -445,7 +445,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[max_desktops - 1]), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[max_desktops - 1]), *the_change);
         }
         iterator++;
 
@@ -460,7 +460,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[max_desktops - 1], model.USER_DESKTOPS[0]), 
                 *the_change);
         }
         iterator++;
@@ -477,7 +477,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1]), 
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), 
                 *the_change);
         }
         iterator++;
@@ -492,7 +492,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1], model.USER_DESKTOPS[0]), 
                 *the_change);
         }
         iterator++;
@@ -601,7 +601,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeCurrentDesktop *the_change = 
                 dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[1]), 
+            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), 
                 *the_change);
         }
         iterator++;
@@ -617,8 +617,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeCurrentDesktop *the_change = 
                 dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeCurrentDesktop(model.
-                USER_DESKTOPS[0]), *the_change);
+            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[1],
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -634,8 +634,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeCurrentDesktop *the_change = 
                 dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeCurrentDesktop(model.
-                USER_DESKTOPS[max_desktops - 1]), *the_change);
+            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], 
+                model.USER_DESKTOPS[max_desktops - 1]), *the_change);
         }
         iterator++;
 
@@ -650,8 +650,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeCurrentDesktop *the_change = 
                 dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeCurrentDesktop(model.
-                USER_DESKTOPS[0]), *the_change);
+            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[max_desktops - 1],
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -713,8 +713,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeCurrentDesktop *the_change = 
                 dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[1]), 
-                *the_change);
+            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], 
+                model.USER_DESKTOPS[1]), *the_change);
         }
         iterator++;
 
@@ -731,7 +731,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1]), 
+            CHECK_EQUAL(ChangeClientDesktop(a, model.ALL_DESKTOPS, model.USER_DESKTOPS[1]), 
                 *the_change);
         }
         iterator++;
@@ -767,8 +767,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.ICON_DESKTOP), 
-                *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
+                model.ICON_DESKTOP), *the_change);
         }
         iterator++;
 
@@ -785,8 +785,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]),
-                *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.ICON_DESKTOP, 
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -861,7 +861,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.MOVING_DESKTOP), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
+                model.MOVING_DESKTOP), *the_change);
         }
         iterator++;
 
@@ -877,7 +878,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.MOVING_DESKTOP, 
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -979,8 +981,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP),
-                *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
+                model.RESIZING_DESKTOP), *the_change);
         }
         iterator++;
 
@@ -997,8 +999,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
-                *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP, 
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -1087,8 +1089,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), 
-                *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP, 
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
@@ -1121,7 +1123,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.ALL_DESKTOPS), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
+                model.ALL_DESKTOPS), *the_change);
         }
         iterator++;
 
@@ -1137,7 +1140,8 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(*iterator);
-            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0]), *the_change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.ALL_DESKTOPS, 
+                model.USER_DESKTOPS[0]), *the_change);
         }
         iterator++;
 
