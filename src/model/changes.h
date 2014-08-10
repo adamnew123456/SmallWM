@@ -127,9 +127,30 @@ struct ChangeClientDesktop : Change
             return false;
 
         const ChangeClientDesktop &cast_other = dynamic_cast<const ChangeClientDesktop&>(other);
+
+        // This is important - the way that desktop equality is checked below
+        // is that either:
+        //
+        // (1) Both 'prev_desktop' members are NULL OR
+        // (2) Both derefences 'prev_desktop' members are equal.
+        //
+        // If one or the other is NULL, but not both, proceeding onto (2) would
+        // cause the program to crash. We want to avoid that outcome, so the
+        // possibility of either being NULL without them both being NULL is
+        // handled here.
+        if ((cast_other.prev_desktop == 0 && prev_desktop != 0) ||
+                (cast_other.prev_desktop != 0 && prev_desktop == 0))
+            return false;
+
+        if ((cast_other.next_desktop == 0 && next_desktop != 0) ||
+                (cast_other.next_desktop != 0 && next_desktop == 0))
+            return false;
+
         return (cast_other.window == window &&
-                *cast_other.prev_desktop == *prev_desktop &&
-                *cast_other.next_desktop == *next_desktop);
+                (cast_other.prev_desktop == prev_desktop ||
+                 *cast_other.prev_desktop == *prev_desktop) &&
+                (cast_other.next_desktop == next_desktop ||
+                 *cast_other.next_desktop == *next_desktop));
     }
 
     Window window;
@@ -161,8 +182,19 @@ struct ChangeCurrentDesktop : Change
 
         const ChangeCurrentDesktop &cast_other = 
             dynamic_cast<const ChangeCurrentDesktop&>(other);
-        return (*cast_other.prev_desktop == *prev_desktop &&
-                *cast_other.next_desktop == *next_desktop);
+
+        if ((cast_other.prev_desktop == 0 && prev_desktop != 0) ||
+                (cast_other.prev_desktop != 0 && prev_desktop == 0))
+            return false;
+
+        if ((cast_other.next_desktop == 0 && next_desktop != 0) ||
+                (cast_other.next_desktop != 0 && next_desktop == 0))
+            return false;
+
+        return ((cast_other.prev_desktop == prev_desktop ||
+                 *cast_other.prev_desktop == *prev_desktop) &&
+                (cast_other.next_desktop == next_desktop ||
+                 *cast_other.next_desktop == *next_desktop));
     }
 
     const Desktop *prev_desktop;
