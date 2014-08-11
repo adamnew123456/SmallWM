@@ -101,7 +101,6 @@ void ClientModelEvents::handle_current_desktop_change()
     std::vector<Window> old_desktop_list;
     std::vector<Window> new_desktop_list;
 
-
     // The output size will have, at most, the size of its largest input
     size_t max_output_size = std::max(old_desktop_list.size(), 
         new_desktop_list.size());
@@ -151,6 +150,28 @@ void ClientModelEvents::handle_current_desktop_change()
     // invalidated the previous stacking order, so restack everything according
     // to what is now visible
     do_relayer();
+}
+
+/**
+ * Handles a change in location for a particular window.
+ */
+void ClientModelEvents::handle_location_change()
+{
+    ChangeLocation const *change = 
+        dynamic_cast<ChangeLocation const*>(m_change);
+
+    XMoveWindow(change->window, change->x, change->y);
+}
+
+/**
+ * Handles a change in size for a particular window.
+ */
+void ClientModelEvents::handle_size_change()
+{
+    ChangeSize const *change = 
+        dynamic_cast<ChangeSize const*>(m_change);
+
+    XResizeWIndow(change->window, change->w, change->h);
 }
 
 /**
