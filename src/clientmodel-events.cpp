@@ -160,7 +160,7 @@ void ClientModelEvents::handle_location_change()
     ChangeLocation const *change = 
         dynamic_cast<ChangeLocation const*>(m_change);
 
-    XMoveWindow(change->window, change->x, change->y);
+    m_xdata.move_window(change->window, change->x, change->y);
 }
 
 /**
@@ -171,7 +171,7 @@ void ClientModelEvents::handle_size_change()
     ChangeSize const *change = 
         dynamic_cast<ChangeSize const*>(m_change);
 
-    XResizeWIndow(change->window, change->w, change->h);
+    m_xdata.resize_window(change->window, change->w, change->h);
 }
 
 /**
