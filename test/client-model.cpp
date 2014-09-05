@@ -209,6 +209,46 @@ SUITE(ClientModelMemberSuite)
         CHECK(model.is_visible(a));
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_desktop_visibility)
+    {
+        // First, make sure that the first desktop is visible, and
+        // no other desktops are
+        CHECK(model.is_visible_desktop(model.USER_DESKTOPS[0]));
+        CHECK(model.is_visible_desktop(model.ALL_DESKTOPS));
+        
+        for (unsigned long long desktop = 0; desktop < max_desktops;
+             desktop++)
+        {
+            if (desktop == 0)
+                continue;
+            CHECK(!model.is_visible_desktop(model.USER_DESKTOPS[desktop]));
+        }
+
+        CHECK(!model.is_visible_desktop(model.ICON_DESKTOP));
+        CHECK(!model.is_visible_desktop(model.MOVING_DESKTOP));
+        CHECK(!model.is_visible_desktop(model.RESIZING_DESKTOP));
+
+        // Now, move to the next desktop and ensure that the same is true
+        // of all the visibility states but that USER_DESKTOPS[1] is visible
+        // and USER_DESKTOPS[0] is not
+        model.next_desktop();
+
+        CHECK(model.is_visible_desktop(model.USER_DESKTOPS[1]));
+        CHECK(model.is_visible_desktop(model.ALL_DESKTOPS));
+        
+        for (unsigned long long desktop = 0; desktop < max_desktops;
+             desktop++)
+        {
+            if (desktop == 1)
+                continue;
+            CHECK(!model.is_visible_desktop(model.USER_DESKTOPS[desktop]));
+        }
+
+        CHECK(!model.is_visible_desktop(model.ICON_DESKTOP));
+        CHECK(!model.is_visible_desktop(model.MOVING_DESKTOP));
+        CHECK(!model.is_visible_desktop(model.RESIZING_DESKTOP));
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_finder_functions)
     {
         // Make sure that the `find_*` functions return the correct results

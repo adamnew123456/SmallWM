@@ -83,6 +83,7 @@ public:
 
     bool is_client(Window);
     bool is_visible(Window);
+    bool is_visible_desktop(desktop_ptr);
 
     void get_clients_of(desktop_ptr, std::vector<Window>&);
     void get_visible_clients(std::vector<Window>&);

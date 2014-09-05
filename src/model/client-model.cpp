@@ -57,6 +57,20 @@ bool ClientModel::is_visible(Window client)
 }
 
 /**
+ * Returns whether a particular desktop as a whole is visible.
+ */
+bool ClientModel::is_visible_desktop(desktop_ptr desktop)
+{
+    if (desktop->is_all_desktop())
+        return true;
+
+    if (desktop->is_user_desktop())
+        return *desktop == *m_current_desktop;
+
+    return false;
+}
+
+/**
  * Gets a list of all of the clients on a desktop.
  */
 void ClientModel::get_clients_of(desktop_ptr desktop,
