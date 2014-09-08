@@ -46,6 +46,18 @@ private:
     void handle_location_change();
     void handle_size_change();
 
+    void handle_new_client_desktop_change(const Desktop*, Window);
+    void handle_client_change_from_user_desktop(const Desktop*, const Desktop*, 
+                                                Window);
+    void handle_client_change_from_all_desktop(const Desktop*, const Desktop*, 
+                                                Window);
+    void handle_client_change_from_icon_desktop(const Desktop*, const Desktop*, 
+                                                Window);
+    void handle_client_change_from_moving_desktop(const Desktop*, const Desktop*, 
+                                                Window);
+    void handle_client_change_from_resizing_desktop(const Desktop*, const Desktop*, 
+                                                Window);
+
     /// The change that is currently being processed
     Change const *m_change;
 

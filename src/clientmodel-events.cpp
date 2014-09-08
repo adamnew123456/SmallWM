@@ -94,6 +94,211 @@ void ClientModelEvents::handle_focus_change()
 }
 
 /**
+ * This changes the desktop of a client whose desktop should be changed.
+ *
+ * This method consists mostly of dispatches to other methods which handle
+ * each case. These cases are:
+ *
+ *   UserDesktop -> UserDesktop
+ *   UserDesktop -> AllDesktops
+ *   UserDesktop -> IconDesktop
+ *   UserDesktop -> MovingDesktop
+ *   UserDesktop -> ResizingDesktop
+ *
+ *   AllDesktops -> UserDesktop
+ *   AllDesktops -> IconDesktop
+ *   AllDesktops -> MovingDesktop
+ *   AllDesktops -> ResizingDesktop
+ *
+ *   IconDesktop -> UserDesktop
+ *
+ *   MovingDesktop -> UserDesktop
+ *
+ *   ResizingDesktop -> UserDesktop
+ */
+void ClientModelEvents::handle_client_desktop_change()
+{
+    ChangeClientDesktop const *change =
+        dynamic_cast<ChangeClientDesktop const*>(m_change);
+
+    const Desktop *old_desktop = change->prev_desktop;
+    const Desktop *new_desktop = change->next_desktop;
+    Window client = change->window;
+    
+    // The previous desktop can be NULL if this client has been freshly mapped
+    if (!old_desktop)
+        handle_new_client_desktop_change(new_desktop, client);
+    else if (old_desktop->is_user_desktop())
+        handle_client_change_from_user_desktop(old_desktop, new_desktop,
+                                               client);
+    else if (old_desktop->is_all_desktop())
+        handle_client_change_from_all_desktop(old_desktop, new_desktop,
+                                              client);
+    else if (old_desktop->is_icon_desktop())
+        handle_client_change_from_icon_desktop(old_desktop, new_desktop,
+                                               client);
+    else if (old_desktop->is_moving_desktop())
+        handle_client_change_from_moving_desktop(old_desktop, new_desktop,
+                                                 client);
+    else if (old_desktop->is_resizing_desktop())
+        handle_client_change_from_resizing_desktop(old_desktop, new_desktop,
+                                                   client);
+    else
+        m_logger.set_priority(LOG_WARNING) <<
+            "Unanticipated switch by " << client << " from " <<
+            old_desktop  << " to " << new_desktop << SysLog::endl;
+}
+
+/**
+ * Sets the desktop of a newly created client.
+ *
+ * In this state, the only possibilities are either a UserDesktop or an
+ * IconDesktop if the window starts out minimized.
+ */
+void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desktop,
+                                                         Window client)
+{
+    if (new_desktop->is_user_desktop())
+    {
+        bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
+        if (will_be_visible)
+        {
+            m_should_relayer = true;
+            m_clients.focus(client);
+        }
+    }
+    else if (new_desktop->is_icon_desktop())
+    {
+        Icon *icon_info = create_new_icon(client);
+
+        m_clients.unfocus_if_focused(client);
+        m_xdata.unmap_win(client);
+
+        m_xmodel.register_icon(icon_info);
+    }
+    else
+    {
+        m_logger.set_priority(LOG_WARNING) <<
+            "New client " << client << " asked to start on desktop " <<
+            new_desktop << "- making an icon instead"
+            << SysLog::endl;
+
+        // Since the API doesn't allow us to get the current desktop, and
+        // we can't reset it since `ClientModel::client_reset_desktop` requires
+        // that the client have a previous desktop, just make it an icon.
+        handle_new_client_desktop_change(m_clients.ICON_DESKTOP, client);
+    }
+}
+
+/**
+ * Changes the desktop of a client from a user desktop to some other kind of
+ * desktop.
+ *
+ * Windows can generally move from user desktops to any other kind of desktop,
+ * since user desktops are the starting point for every window.
+ */
+void ClientModelEvents::handle_client_change_from_user_desktop(
+                        const Desktop *old_desktop,
+                        const Desktop *new_desktop,
+                        Window client)
+{
+    if (new_desktop->is_user_desktop())
+    {
+        bool is_currently_visible = m_clients.is_visible_desktop(old_desktop);
+        bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
+
+        if (is_currently_visible && !will_be_visible)
+        {
+            m_clients.unfocus_if_focused(client);
+            m_xdata.unmap_win(client);
+        }
+        else if (!is_currently_visible && will_be_visible)
+        {
+            m_xdata.map_win(client);
+            m_clients.focus(client);
+        }
+        else if (!is_currently_visible && !will_be_visible)
+        {
+            // Do nothing here - the client will still be invisible and
+            // thus will not alter the focus
+        }
+        else
+            m_logger.set_priority(LOG_WARNING) <<
+                "If client is switched from a " << old_desktop << " to "
+                << new_desktop << " then it cannot be visible in both places."
+                << SysLog::endl;
+            /*
+             * This is because there is only ever one visible desktop - to
+             * have a window be visible on more than one desktop would
+             * somehow break that invariant.
+             */
+    }
+    else if (new_desktop->is_all_desktop())
+    {
+        bool is_visible = m_clients.is_visible_desktop(old_desktop);
+
+        if (!is_visible)
+        {
+            m_xdata.map_win(client);
+            m_clients.focus(client);
+        }
+    } 
+    else if (new_desktop->is_icon_desktop())
+    {
+        bool is_visible = m_clients.is_visible_desktop(old_desktop);
+        Icon *icon_info = create_new_icon(client);
+
+        m_clients.unfocus_if_focused(client);
+        if (is_visible)
+            m_xdata.unmap_win(client);
+
+        m_xmodel.register_icon(icon_info);
+    }
+    else if (new_desktop->is_moving_desktop())
+        start_moving(client);
+    else if (new_desktop->is_resizing_desktop())
+        start_resizing(client);
+}
+
+/**
+ * Changes the desktop of a client from the 'all' desktop to some other kind
+ * of desktop.
+ *
+ * Most of this code is the same as in the user desktop changes, since
+ * windows from the 'all' desktop can generally move to any other kind of
+ * desktop as well.
+ */
+void ClientModelEvents::handle_client_change_from_all_desktop(
+                        const Desktop *old_desktop,
+                        const Desktop *new_desktop,
+                        Window client)
+{
+    if (new_desktop->is_user_desktop())
+    {
+        bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
+
+        if (!will_be_visible)
+        {
+            m_clients.unfocus_if_focused(client);
+            m_xdata.unmap_win(client);
+        }
+    }
+    else if (new_desktop->is_icon_desktop())
+    {
+        Icon *icon_info = create_new_icon(client);
+
+        m_clients.unfocus_if_focused(client);
+        m_xdata.unmap_win(client);
+
+        m_xmodel.register_icon(icon_info);
+    }
+    else if (new_desktop->is_moving_desktop())
+        start_moving(client);
+    else if (new_desktop->is_resizing_desktop())
+        start_resizing(client);
+}
+
+/**
  * This changes the currently visible desktop, which involves figuring out
  * which windows are visible on the current desktop, which are not, and then
  * showing those that are visible and hiding those that are not.
