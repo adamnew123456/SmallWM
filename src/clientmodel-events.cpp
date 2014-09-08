@@ -7,6 +7,7 @@
 void ClientModelEvents::handle_queued_changes()
 {
     m_should_relayer = false;
+    m_should_reposition_icons = false;
 
     for (ClientModel::change_iter change_iter = m_clients.changes_begin();
             change_iter != m_clients.changes_end();
@@ -27,9 +28,13 @@ void ClientModelEvents::handle_queued_changes()
         else if (m_change->is_size_change())
             handle_size_change();
     }
+    m_clients.flush_changes();
 
     if (m_should_relayer)
         do_relayer();
+
+    if (m_should_reposition_icons)
+        reposition_icons();
 }
 
 /**
@@ -149,7 +154,7 @@ void ClientModelEvents::handle_current_desktop_change()
     // Since we've made some windows visible and some others invisible, we've
     // invalidated the previous stacking order, so restack everything according
     // to what is now visible
-    do_relayer();
+    m_should_relayer = true;
 }
 
 /**
@@ -223,7 +228,7 @@ void ClientModelEvents::do_relayer()
     if (focused_client != None)
         m_xdata.raise(focused_client);
 
-    // Now, raise all the clients since they should always be above all other
+    // Now, raise all the icons since they should always be above all other
     // windows so they aren't obscured
     std::vector<Icon*> icon_list;
     m_xmodel.get_icons(icon_list);
@@ -236,7 +241,7 @@ void ClientModelEvents::do_relayer()
         m_xdata.raise(icon_win);
     }
 
-    // Finally, raise the placeholder, if there is one
+    // Don't obscure the placeholder, since the user is actively working with it
     Window placeholder_win = m_xmodel.get_move_resize_placeholder();
     if (placeholder_win != None)
         m_xdata.raise(placeholder_win);

@@ -9,6 +9,7 @@
 #include "model/x-model.h"
 #include "configparse.h"
 #include "common.h"
+#include "logging.h"
 #include "xdata.h"
 
 /**
@@ -21,16 +22,18 @@
 class ClientModelEvents
 {
 public:
-    ClientModelEvents(WMConfig &config, XData &xdata, ClientModel &clients, 
-        XModel &xmodel) :
-    m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-    m_change(0), m_should_relayer(false)
+    ClientModelEvents(WMConfig &config, SysLog &logger, 
+        XData &xdata, ClientModel &clients, XModel &xmodel) :
+        m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
+        m_logger(logger), m_change(0), m_should_relayer(false), 
+        m_should_reposition_icons(false)
     {};
 
     void handle_queued_changes();
 
 private:
     void do_relayer();
+    void reposition_icons();
 
     void handle_layer_change();
     void handle_focus_change();
@@ -55,9 +58,17 @@ private:
      * about them. */
     XModel &m_xmodel;
 
+    /// The event handler's logger
+    SysLog &m_logger;
+
     /** Whether or not to relayer the visible windows - this allows this class
      * to avoid restacking windows on every `ChangeLayer`, and instead only do 
      * it once at the end of `handle_queued_changes`. */
     bool m_should_relayer;
+    
+    /** Similar to `m_should_relayer`, this indicates whether the change handler
+     * should reposition all the icon windows at the end of `handle_queued_changes`.
+     */
+    bool m_should_reposition_icons;
 };
 #endif
