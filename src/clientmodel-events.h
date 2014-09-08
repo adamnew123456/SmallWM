@@ -32,6 +32,10 @@ public:
     void handle_queued_changes();
 
 private:
+    Icon *create_new_icon(Window);
+    Window create_placeholder(Window);
+    void start_moving(Window);
+    void start_resizing(Window);
     void do_relayer();
     void reposition_icons();
 

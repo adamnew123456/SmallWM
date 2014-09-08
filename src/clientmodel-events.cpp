@@ -180,6 +180,96 @@ void ClientModelEvents::handle_size_change()
 }
 
 /**
+ * Creates a new icon for a client window, returning the created Icon.
+ *
+ * @param client The client to create the icon for.
+ * @return A pointer to the created Icon.
+ */
+Icon *ClientModelEvents::create_new_icon(Window client)
+{
+    Window icon_window = m_xdata.create_window(true);
+    m_xdata.resize_window(icon_window, m_config.icon_width, 
+                          m_config.icon_height);
+    m_xdata.map_win(icon_window);
+
+    XGC *gc = m_xdata.create_gc(icon_window);
+    return new Icon(client, icon_window, gc);
+}
+
+/**
+ * Creates and configures a placeholder window, used for moving/resizing a
+ * client.
+ *
+ * @param client The client to create the placeholder for.
+ * @return The placeholder window.
+ */
+Window ClientModelEvents::create_placeholder(Window client)
+{
+    XWindowAttributes client_attrs;
+    m_xdata.get_attributes(client, client_attrs);
+
+    // The placeholder should be ignored (create_window(true)) because it
+    // is not an actual client, but an internal window that doesn't need
+    // to be managed
+    Window placeholder = m_xdata.create_window(true);
+    m_xdata.move_window(client, client_attrs.x, client_attrs.y);
+    m_xdata.resize_window(client, client_attrs.width, client_attrs.height);
+
+    // With the window in place, show it and make sure that the cursor is
+    // glued to it, to make sure that all of the movements are captured
+    m_xdata.map_win(placeholder);
+    m_xdata.confine_pointer(placeholder);
+
+    // Since we need the placeholder to move up, go ahead and schedule a
+    // relayering
+    m_should_relayer = true;
+
+    return placeholder;
+}
+
+/**
+ * Handles the necessary work to start moving a client.
+ *
+ * @param client The client window to start moving.
+ */
+void ClientModelEvents::start_moving(Window client)
+{
+    Window placeholder = create_placeholder(client);
+
+    // The placeholder needed the client's position and size - now that the
+    // placeholder is open, we can hide the client
+    m_clients.unfocus_if_focused(client);
+    m_xdata.unmap_win(client);
+
+    Dimension pointer_x, pointer_y;
+    m_xdata.get_pointer_location(pointer_x, pointer_y);
+
+    m_xmodel.enter_move(client, placeholder, Dimension2D(pointer_x,
+                                                         pointer_y));
+}
+
+/**
+ * Handles the necessary work to start resizing a client.
+ *
+ * @param client The client window to start resizing.
+ */
+void ClientModelEvents::start_resizing(Window client)
+{
+    Window placeholder = create_placeholder(client);
+
+    // The placeholder needed the client's position and size - now that the
+    // placeholder is open, we can hide the client
+    m_clients.unfocus_if_focused(client);
+    m_xdata.unmap_win(client);
+
+    Dimension pointer_x, pointer_y;
+    m_xdata.get_pointer_location(pointer_x, pointer_y);
+
+    m_xmodel.enter_resize(client, placeholder, Dimension2D(pointer_x, 
+                                                           pointer_y));
+}
+
+/**
  * Actually does the relayering.
  *
  * This involves sorting the clients, and then sticking the icons and 
