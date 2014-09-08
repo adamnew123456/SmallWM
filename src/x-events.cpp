@@ -175,7 +175,6 @@ void XEvents::handle_buttonpress()
 
     Icon *icon = m_xmodel.find_icon_from_icon_window(m_event.xbutton.window);
 
-    // This is 
     if (!(is_client|| icon) && m_event.xbutton.button == LAUNCH_BUTTON 
             && m_event.xbutton.state == ACTION_MASK)
     {
@@ -221,44 +220,13 @@ void XEvents::handle_buttonpress()
                 m_event.xbutton.button != RESIZE_BUTTON)
             return;
 
-        // The placeholder is important, because it allows us to do as little
-        // drawing as possible when it is resized. Create it here, since
-        // both branches below use this.
-        Window placeholder = m_xdata.create_window(true);
-
-        // Align the placeholder to the window it's replacing
-        XWindowAttributes attr;
-        m_xdata.get_attributes(m_event.xbutton.subwindow, attr);
-
-        m_xdata.move_window(placeholder, attr.x, attr.y);
-        m_xdata.resize_window(placeholder, attr.width, attr.height);
-
-        // Map this window onto the screen, bind the user's mouse to this window, and
-        // then make it visible
-        m_xdata.map_win(placeholder);
-        m_xdata.confine_pointer(placeholder);
-        m_xdata.raise(placeholder);
-
-        // Figure out where the pointer is, since this is also important to
-        // both of the branches
-        Dimension ptr_x, ptr_y;
-        m_xdata.get_pointer_location(ptr_x, ptr_y);
-        Dimension2D ptr(ptr_x, ptr_y);
-    
         // A left-click, with the action modifier, start resizing
         if (m_event.xbutton.button == MOVE_BUTTON)
-        {
             m_clients.start_moving(m_event.xbutton.subwindow);
-            m_xmodel.enter_move(m_event.xbutton.subwindow, placeholder, ptr);
-        }
 
         // A right-click, with the action modifier, start resizing
         if (m_event.xbutton.button == RESIZE_BUTTON)
-        {
             m_clients.start_resizing(m_event.xbutton.subwindow);
-            m_xmodel.enter_resize(m_event.xbutton.subwindow, placeholder,
-                ptr);
-        }
     }
     else if (is_client) // Any other click on a client focuses that client
         m_clients.focus(m_event.xbutton.window);
