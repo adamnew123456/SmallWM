@@ -317,6 +317,81 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
 }
 
 /**
+ * Changes the desktop of a client from the moving desktop to some other kind
+ * of desktop. The only supported target desktop is a user desktop.
+ */
+void ClientModelEvents::handle_client_change_from_moving_desktop(
+                        const Desktop *old_desktop,
+                        const Desktop *new_desktop,
+                        Window client)
+{
+    if (new_desktop->is_user_desktop())
+    {
+        Window placeholder = m_xmodel.get_move_resize_placeholder();
+        if (placeholder == None)
+            m_logger.set_priority(LOG_ERR) <<
+                "Tried to stop moving a client (" << client << ") "
+                "that is not currently moving." << SysLog::endl;
+        else
+        {
+            XWindowAttributes placeholder_attr;
+            m_xdata.get_attributes(placeholder, placeholder_attr);
+            m_xdata.move_window(client, placeholder_attr.x, 
+                                placeholder_attr.y);
+
+            m_xdata.unmap_win(placeholder);
+            m_xdata.exit_move_resize();
+
+            bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
+            if (will_be_visible)
+            {
+                m_xdata.map_win(client);
+                m_xdata.focus(client);
+                m_should_relayer = 1;
+            }
+        }
+    }
+}
+
+/**
+ * Changes the desktop of a client from the resizing desktop to some other
+ * kind of desktop (as with `handle_client_change_from_moving_desktop`, only
+ * user desktops are supported targets).
+ */
+void ClientModelEvents::handle_client_change_from_resizing_desktop(
+                        const Desktop *old_desktop,
+                        const Desktop *new_desktop,
+                        Window client)
+{
+    if (new_desktop->is_user_desktop())
+    {
+        Window placeholder = m_xmodel.get_move_resize_placeholder();
+        if (placeholder == None)
+            m_logger.set_priority(LOG_ERR) <<
+                "Tried to stop resizing a client (" << client << ") "
+                "that is not currently resizing." << SysLog::endl;
+        else
+        {
+            XWindowAttributes placeholder_attr;
+            m_xdata.get_attributes(placeholder, placeholder_attr);
+            m_xdata.resize_window(client, placeholder_attr.width,
+                                placeholder_attr.height);
+
+            m_xdata.unmap_win(placeholder);
+            m_xdata.exit_move_resize();
+
+            bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
+            if (will_be_visible)
+            {
+                m_xdata.map_win(client);
+                m_xdata.focus(client);
+                m_should_relayer = 1;
+            }
+        }
+    }
+}
+
+/**
  * This changes the currently visible desktop, which involves figuring out
  * which windows are visible on the current desktop, which are not, and then
  * showing those that are visible and hiding those that are not.
