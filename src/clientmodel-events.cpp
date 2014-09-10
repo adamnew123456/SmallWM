@@ -308,7 +308,7 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
             if (will_be_visible)
             {
                 m_xdata.map_win(client);
-                m_xdata.focus(client);
+                m_clients.focus(client);
                 m_should_relayer = 1;
             }
             m_should_reposition_icons = true;
@@ -340,13 +340,13 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
                                 placeholder_attr.y);
 
             m_xdata.unmap_win(placeholder);
-            m_xdata.exit_move_resize();
+            m_xmodel.exit_move_resize();
 
             bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
             if (will_be_visible)
             {
                 m_xdata.map_win(client);
-                m_xdata.focus(client);
+                m_clients.focus(client);
                 m_should_relayer = 1;
             }
         }
@@ -378,13 +378,13 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
                                 placeholder_attr.height);
 
             m_xdata.unmap_win(placeholder);
-            m_xdata.exit_move_resize();
+            m_xmodel.exit_move_resize();
 
             bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
             if (will_be_visible)
             {
                 m_xdata.map_win(client);
-                m_xdata.focus(client);
+                m_clients.focus(client);
                 m_should_relayer = 1;
             }
         }
