@@ -303,7 +303,14 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
             delete icon->gc;
             delete icon;
 
-            m_xdata.map_win(client);
+            bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
+
+            if (will_be_visible)
+            {
+                m_xdata.map_win(client);
+                m_xdata.focus(client);
+                m_should_relayer = 1;
+            }
             m_should_reposition_icons = true;
         }
     }
