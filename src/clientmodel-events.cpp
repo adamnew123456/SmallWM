@@ -402,7 +402,7 @@ void ClientModelEvents::handle_size_change()
  * @param do_unmap `true` to unmap the client, `false` to not unmap it.
  *                 Useful if the client is already unmapped for some reason.
  */
-Icon *ClientModelEvents::register_new_icon(Window client, bool do_unmap)
+void ClientModelEvents::register_new_icon(Window client, bool do_unmap)
 {
     Window icon_window = m_xdata.create_window(true);
     m_xdata.resize_window(icon_window, m_config.icon_width, 

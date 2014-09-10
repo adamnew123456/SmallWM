@@ -32,7 +32,7 @@ public:
     void handle_queued_changes();
 
 private:
-    void register_new_icon(Window);
+    void register_new_icon(Window, bool);
     Window create_placeholder(Window);
     void start_moving(Window);
     void start_resizing(Window);
