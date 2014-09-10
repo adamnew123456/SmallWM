@@ -168,14 +168,7 @@ void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desk
         }
     }
     else if (new_desktop->is_icon_desktop())
-    {
-        Icon *icon_info = create_new_icon(client);
-
-        m_clients.unfocus_if_focused(client);
-        m_xdata.unmap_win(client);
-
-        m_xmodel.register_icon(icon_info);
-    }
+        register_new_icon(client, true);
     else
     {
         m_logger.set_priority(LOG_WARNING) <<
@@ -246,13 +239,7 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
     else if (new_desktop->is_icon_desktop())
     {
         bool is_visible = m_clients.is_visible_desktop(old_desktop);
-        Icon *icon_info = create_new_icon(client);
-
-        m_clients.unfocus_if_focused(client);
-        if (is_visible)
-            m_xdata.unmap_win(client);
-
-        m_xmodel.register_icon(icon_info);
+        register_new_icon(client, is_visible);
     }
     else if (new_desktop->is_moving_desktop())
         start_moving(client);
@@ -284,14 +271,7 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
         }
     }
     else if (new_desktop->is_icon_desktop())
-    {
-        Icon *icon_info = create_new_icon(client);
-
-        m_clients.unfocus_if_focused(client);
-        m_xdata.unmap_win(client);
-
-        m_xmodel.register_icon(icon_info);
-    }
+        register_new_icon(client, true);
     else if (new_desktop->is_moving_desktop())
         start_moving(client);
     else if (new_desktop->is_resizing_desktop())
@@ -385,12 +365,14 @@ void ClientModelEvents::handle_size_change()
 }
 
 /**
- * Creates a new icon for a client window, returning the created Icon.
+ * Iconifies a client window, creating and registering a new icon while
+ * hiding the client.
  *
  * @param client The client to create the icon for.
- * @return A pointer to the created Icon.
+ * @param do_unmap `true` to unmap the client, `false` to not unmap it.
+ *                 Useful if the client is already unmapped for some reason.
  */
-Icon *ClientModelEvents::create_new_icon(Window client)
+Icon *ClientModelEvents::register_new_icon(Window client, bool do_unmap)
 {
     Window icon_window = m_xdata.create_window(true);
     m_xdata.resize_window(icon_window, m_config.icon_width, 
@@ -398,7 +380,13 @@ Icon *ClientModelEvents::create_new_icon(Window client)
     m_xdata.map_win(icon_window);
 
     XGC *gc = m_xdata.create_gc(icon_window);
-    return new Icon(client, icon_window, gc);
+    Icon *the_icon = new Icon(client, icon_window, gc);
+
+    m_clients.unfocus_if_focused(client);
+    if (do_unmap)
+        m_xdata.unmap_win(client);
+
+    m_xmodel.register_icon(the_icon);
 }
 
 /**
