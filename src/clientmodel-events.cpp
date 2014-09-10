@@ -279,6 +279,36 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
 }
 
 /**
+ * Changes the desktop of a client from the icon desktop to some other kind of
+ * desktop. In fact, the only target desktop that this method will do accept
+ * is a user desktop.
+ */
+void ClientModelEvents::handle_client_change_from_icon_desktop(
+                        const Desktop *old_desktop,
+                        const Desktop *new_desktop,
+                        Window client)
+{
+    if (new_desktop->is_user_desktop())
+    {
+        // Get the relevant icon information, and destroy it
+        Icon *icon = m_xmodel.find_icon_from_client(client);
+
+        if (!icon)
+            m_logger.set_priority(LOG_ERR) <<
+                "Tried to de-iconify a client (" << client << ") "
+                "that is not currently iconified." << SysLog::endl;
+        else
+        {
+            m_xdata.unmap_win(icon->icon);
+            delete icon;
+
+            m_xdata.map_win(client);
+            m_should_reposition_icons = true;
+        }
+    }
+}
+
+/**
  * This changes the currently visible desktop, which involves figuring out
  * which windows are visible on the current desktop, which are not, and then
  * showing those that are visible and hiding those that are not.

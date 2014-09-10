@@ -210,9 +210,7 @@ void XEvents::handle_buttonpress()
     {
         // Any click on an icon, whether or not the action modifier is
         // enabled or not, should deiconify a client
-        m_xmodel.unregister_icon(icon);
         m_clients.deiconify(icon->client);
-        delete icon;
     }
     else if (is_client && m_event.xbutton.state == ACTION_MASK)
     {

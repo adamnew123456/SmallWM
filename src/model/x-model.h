@@ -16,6 +16,12 @@ struct Icon
         client(_client), icon(_icon), gc(_gc)
     {};
 
+    ~Icon()
+    {
+        if (gc != NULL)
+            delete gc;
+    }
+
     /// The window that the icon "stands for"
     Window client;
 
