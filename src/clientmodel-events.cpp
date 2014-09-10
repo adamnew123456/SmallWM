@@ -300,6 +300,7 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
         else
         {
             m_xdata.unmap_win(icon->icon);
+            delete icon->gc;
             delete icon;
 
             m_xdata.map_win(client);
