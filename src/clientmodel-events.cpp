@@ -642,3 +642,35 @@ void ClientModelEvents::do_relayer()
     if (placeholder_win != None)
         m_xdata.raise(placeholder_win);
 }
+
+/**
+ * Repositions icon windows after one has been added or removed.
+ *
+ * Icon windows are arranged in rows, starting from the top left and going
+ * toward the bottom right.
+ */
+void ClientModelEvents::reposition_icons()
+{
+    Dimension x = 0, y = 0;
+
+    const Dimension icon_width = m_config.icon_width,
+                    icon_height = m_config.icon_height;
+    Dimension screen_width, screen_height;
+    m_xdata.get_screen_size(screen_width, screen_height);
+
+    std::vector<Icon*> icon_list;
+    m_xmodel.get_icons(icon_list);
+    for (std::vector<Icon*>::iterator icon_iter = icon_list.begin();
+         icon_iter != icon_list.end(); icon_iter++)
+    {
+        Icon *the_icon = *icon_iter;
+        if (x + icon_width > screen_width)
+        {
+            x = 0;
+            y += icon_height;
+        }
+
+        m_xdata.move_window(the_icon->icon, x, y);
+        x += icon_width;
+    }
+}
