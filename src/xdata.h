@@ -2,6 +2,7 @@
 #ifndef __SMALLWM_XDATA__
 #define __SMALLWM_XDATA__
 
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <vector>
@@ -60,13 +61,16 @@ class XData
 {
 public:
     XData(SysLog &logger, Display *dpy, Window root, int screen) :
-        m_display(dpy), m_confined(None)
+        m_display(dpy), m_logger(logger), m_confined(None)
     {
         m_root = DefaultRootWindow(dpy);
         m_screen = DefaultScreen(dpy);
 
+        init_xrandr();
         update_screen_size();
     };
+
+    void init_xrandr();
 
     XGC *create_gc(Window);
     Window create_window(bool);
@@ -121,9 +125,15 @@ public:
     void get_screen_size(Dimension&, Dimension&);
     void update_screen_size();
 
+    /// The event code X adds to each XRandR event (used by XEvents)
+    int randr_event_offset;
+
 private:
     Atom intern_if_needed(const std::string&);
     unsigned long decode_monocolor(MonoColor);
+
+    /// The logging interface
+    SysLog &m_logger;
 
     /// The connection to the X server
     Display *m_display;

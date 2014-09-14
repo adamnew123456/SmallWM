@@ -1,4 +1,3 @@
-/** @file */
 #if 0
 #include <csignal>
 #include <iostream>
@@ -9,50 +8,10 @@
 #include "configparse.h"
 #include "clientmanager.h"
 #include "common.h"
-#include "events.h"
-#include "shared.h"
-
-/**
- * Registers to receive RandR events, and returns the offset at which RandR 
- * events start.
- *
- * @return The RandR event offset
- */
-int register_xrandr(WMShared &shared)
-{
-    // Initialize XRandR
-    int xrandr_evt_base, xrandr_err_base;
-    Bool xrandr_state = XRRQueryExtension(shared.display, &xrandr_evt_base, &xrandr_err_base);
-    if (xrandr_state == false)
-    {
-        shared.logger.set_priority(LOG_ERR) << 
-            "Unable to initialize XRandR extension - terminating" << SysLog::endl;
-        shared.logger.stop();
-
-        std::exit(3);
-    }
-    else
-    {
-        // Version 1.4 is about two-ish years old now, so this version seems
-        // to be a reasonable choice
-        int major_version = 1, minor_version = 4;
-        XRRQueryVersion(shared.display, &major_version, &minor_version);
-
-        // Get the initial screen information
-        int nsizes;
-        XRRScreenConfiguration *screen_config = XRRGetScreenInfo(shared.display, shared.root);
-        XRRScreenSize *screen_size = XRRConfigSizes(screen_config, &nsizes);
-
-        shared.screen_size = Dimension2D(screen_size->width, screen_size->height);
-
-        // Register the event hook to update the screen information later
-        XRRSelectInput(shared.display, shared.root,
-                RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask 
-                | RROutputChangeNotifyMask | RROutputPropertyNotifyMask);
-    }
-    
-    return xrandr_evt_base;
-}
+#include "logging.h"
+#include "model/client-model.h"
+#include "model/x-model.h"
+#include "xdata.h"
 
 /**
  * Copies over data which is common to WMConfig and WMShared

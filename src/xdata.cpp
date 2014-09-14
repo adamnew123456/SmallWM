@@ -56,6 +56,38 @@ Dimension2D XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
 }
 
 /**
+ * Initializes XRandR on the current display.
+ *
+ * Note that SmallWM *depends* upon XRandR support, so it will die if it is not
+ * present.
+ */
+void XData::init_xrandr()
+{
+    int _;
+    bool randr_state = XRRQueryExtension(m_display, &randr_event_offset, &_);
+
+    if (randr_state == false)
+    {
+        m_logger.set_priority(LOG_ERR) <<
+            "Unable to initialize XRandR extension - terminating" << SysLog::endl;
+        m_logger.stop();
+
+        std::exit(1);
+    }
+
+    // Version 1.4 is about 2 years, so even though it probably has more
+    // than we require, it seems like a good starting point
+    int major_version = 1, minor_version = 4;
+    XRRQueryVersion(m_display, &major_version, &minor_version);
+
+    // Make sure that we receive screen change events, so that way XEvents
+    // can handle them
+    XRRSelectInput(m_display, m_root,
+            RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask 
+            | RROutputChangeNotifyMask | RROutputPropertyNotifyMask);
+}
+
+/**
  * Creates a new graphics context for a given window.
  * @return A new XGC for the given window.
  */
