@@ -14,60 +14,6 @@
 #include "xdata.h"
 
 /**
- * Copies over data which is common to WMConfig and WMShared
- *
- * @param config The configuration data loaded from file
- * @param shared The shared location to copy into
- * @param clients The client manager to copy the actions into
- */
-void copy_config(WMConfig &config, WMShared &shared, ClientManager &clients)
-{
-
-    shared.logger.set_identity("smallwm");
-    shared.logger.set_priority(LOG_INFO);
-    shared.logger.set_facility(LOG_USER);
-    shared.logger.set_log_mask(config.log_mask);
-    shared.logger.start();
-
-    shared.shell = config.shell;
-    shared.icon_size = Dimension2D(config.icon_width, config.icon_height);
-    shared.border_width = config.border_width;
-    shared.max_desktops = config.num_desktops;
-    shared.show_icons = config.show_icons;
-
-    for (std::map<std::string,ClassActions>::iterator actions_iter 
-            = config.classactions.begin();
-            actions_iter != config.classactions.end();
-            actions_iter++)
-    {
-        clients.register_action(actions_iter->first, actions_iter->second);
-    }
-}
-
-/**
- * Interns all necessary X atoms.
- */
-const int n_atoms = 4;
-void intern_atoms(WMShared &shared)
-{
-    const char *atom_names[n_atoms] = {
-        "WM_PROTOCOLS",
-        "WM_DELETE_WINDOW",
-        "WM_STATE",
-        "SMALLWM_LAYER"
-    };
-
-    Atom atoms[n_atoms];
-
-    XInternAtoms(shared.display, const_cast<char**>(atom_names), n_atoms, false, atoms);
-    for (int i = 0; i < n_atoms; i++)
-    {
-        std::string atom_as_string(atom_names[i]);
-        shared.atoms[atom_as_string] = atoms[i];
-    }
-}
-
-/**
  * Reap dead child processes to avoid zombies.
  * @param signal The UNIX signal being sent to this process.
  */
