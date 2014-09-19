@@ -1,17 +1,17 @@
-#if 0
 #include <csignal>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 #include "actions.h"
+#include "clientmodel-events.h"
 #include "configparse.h"
-#include "clientmanager.h"
 #include "common.h"
 #include "logging.h"
 #include "model/client-model.h"
 #include "model/x-model.h"
 #include "xdata.h"
+#include "x-events.h"
 
 /**
  * Reap dead child processes to avoid zombies.
@@ -33,18 +33,12 @@ int x_error_handler(Display *display, XErrorEvent *event)
     char err_desc[500];
     XGetErrorText(display, event->error_code, err_desc, 500);
 
-    std::cout << "X Error\n";
-/*
- * If you want diagnostics, then go ahead and uncomment this. However, SmallWM
- * will trigger X errors that aren't fatal, and much of the output will be
- * garbage.
- *
-    std::cout << "X Error: {\n\tdisplay = " << XDisplayName(NULL) 
-        << "\n\tserial = " << event->serial
-        << "\n\terror = '" << err_desc 
-        << "'\n\trequest = " << (int)event->request_code 
-        << "\n\tminor = " << (int)event->minor_code << "\n}\n";
-*/
+    std::cerr << "X Error: \n"
+        "\tdisplay = " << XDisplayName(NULL) << "'\n"
+        "\tserial = " << event->serial << "'\n"
+        "\terror = '" << err_desc << "\n"
+        "\trequest = " << static_cast<int>(event->request_code) << "\n"
+        "\tminor = " << static_cast<int>(event->minor_code) << "\n";
 
     return 0;
 }
@@ -57,45 +51,52 @@ int main()
     WMConfig config;
     config.load();
 
-    WMShared shared;
-    ClientManager clients(shared);
-    copy_config(config, shared, clients);
+    SysLog logger;
+    logger.set_identity("SmallWM");
+    logger.set_facility(LOG_USER);
+    logger.set_log_mask(LOG_UPTO(config.log_mask));
 
-    shared.display = XOpenDisplay(NULL);
-    if (!shared.display)
+    Display *display = XOpenDisplay(NULL);
+    if (!display)
     {
-        shared.logger.set_priority(LOG_ERR) << 
+        logger.set_priority(LOG_ERR) << 
             "Could not open X display - terminating" << SysLog::endl;
-        shared.logger.stop();
+        logger.stop();
 
         std::exit(2);
     }
 
-    shared.root = DefaultRootWindow(shared.display);
-    shared.screen = DefaultScreen(shared.display);
+    Window default_root = DefaultRootWindow(display);
+    XData xdata(logger, display, default_root, DefaultScreen(display));
+    xdata.select_input(default_root, 
+        PointerMotionMask | StructureNotifyMask | SubstructureNotifyMask);
 
-    XSelectInput(shared.display, shared.root, 
-            PointerMotionMask | StructureNotifyMask | SubstructureNotifyMask);
+    ClientModel clients(config.num_desktops);
+    std::vector<Window> existing_windows;
+    xdata.get_windows(existing_windows);
 
-    Window _unused1;
-    Window *children;
-    unsigned int nchildren;
-
-    XQueryTree(shared.display, shared.root, &_unused1, &_unused1, &children, &nchildren);
-    int idx;
-    for (idx = 0; idx < nchildren; idx++)
+    for (std::vector<Window>::iterator win_iter = existing_windows.begin();
+         win_iter != existing_windows.end();
+         win_iter++)
     {
-        if (children[idx] != shared.root)
-            clients.create(children[idx]);
+        if (*win_iter != default_root)
+        {
+            XWindowAttributes attrs;
+            xdata.get_attributes(*win_iter, attrs);
+
+            clients.add_client(*win_iter, IS_VISIBLE, 
+                               Dimension2D(attrs.x, attrs.y),
+                               Dimension2D(attrs.width, attrs.height));
+        }
     }
 
-    XFree(children);
+    XModel xmodel;
 
-    intern_atoms(shared);
-    int randr_offset = register_xrandr(shared);
-    XEvents events(shared, clients, config.key_commands, randr_offset);
-    events.run();
+    XEvents x_events(config, xdata, clients, xmodel);
+    ClientModelEvents client_events(config, logger, xdata, clients, xmodel);
+
+    while (x_events.step())
+        client_events.handle_queued_changes();
 
     return 0;
 }
-#endif
