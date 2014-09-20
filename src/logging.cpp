@@ -107,9 +107,7 @@ SysLog &SysLog::operator<<(SysLogManipulator manipulator)
 SysLog& SysLog::endl(SysLog &stream)
 {
     if (stream.m_started)
-    {
-        syslog(stream.m_priority, stream.m_formatter.str().c_str());
-    }
+        syslog(stream.m_priority, "%s", stream.m_formatter.str().c_str());
         
     stream.m_formatter.str("");
     return stream;
