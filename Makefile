@@ -21,14 +21,17 @@ TESTS=$(patsubst test/%.cpp,bin/test-%,$(wildcard test/*.cpp))
 # If we do the naive thing and just use += on the second set, then inih/ini.c
 # is included in ${OBJS} because the $(patsubst ...) expression cannot match
 # it.
-CFILES:=$(wildcard src/*.cpp)
-OBJS:=$(patsubst src/%.cpp,obj/%.o,${CFILES})
+BASE_CFILES:=$(wildcard src/*.cpp)
+BASE_OBJS:=$(patsubst src/%.cpp,obj/%.o,${BASE_CFILES})
 
-CFILES:=${CFILES} $(wildcard src/model/*.cpp)
-OBJS:=${OBJS} $(patsubst src/model/%.cpp,obj/model/%.o,${CFILES})
+MODEL_CFILES:=$(wildcard src/model/*.cpp)
+MODEL_OBJS:=$(patsubst src/model/%.cpp,obj/model/%.o,${MODEL_CFILES})
 
-CFILES:=${CFILES} inih/ini.c
-OBJS:=${OBJS} obj/ini.o
+INI_CFILES:=inih/ini.c
+INI_OBJS:=obj/ini.o
+
+CFILES:=${BASE_CFILES} ${MODEL_CFILES} ${INI_CFILES}
+OBJS:=${BASE_OBJS} ${MODEL_OBJS} ${INI_OBJS}
 
 # ${HEADERS} exists mostly to make building Doxygen output more consistent
 # since a change in the headers may require the API documentation to be
@@ -60,6 +63,7 @@ clean:
 	rm -rf bin obj doc tags
 
 bin/smallwm: bin obj ${OBJS}
+	echo ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} ${LINKERFLAGS} -o bin/smallwm
 
 obj/ini.o: obj inih/ini.c
