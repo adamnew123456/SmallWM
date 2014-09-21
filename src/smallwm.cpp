@@ -55,6 +55,7 @@ int main()
     logger.set_identity("SmallWM");
     logger.set_facility(LOG_USER);
     logger.set_log_mask(LOG_UPTO(config.log_mask));
+    logger.start();
 
     Display *display = XOpenDisplay(NULL);
     if (!display)
