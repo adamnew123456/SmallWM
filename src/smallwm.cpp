@@ -76,24 +76,18 @@ int main()
     std::vector<Window> existing_windows;
     xdata.get_windows(existing_windows);
 
+    XModel xmodel;
+    XEvents x_events(config, xdata, clients, xmodel);
+
     for (std::vector<Window>::iterator win_iter = existing_windows.begin();
          win_iter != existing_windows.end();
          win_iter++)
     {
         if (*win_iter != default_root)
-        {
-            XWindowAttributes attrs;
-            xdata.get_attributes(*win_iter, attrs);
-
-            clients.add_client(*win_iter, IS_VISIBLE, 
-                               Dimension2D(attrs.x, attrs.y),
-                               Dimension2D(attrs.width, attrs.height));
-        }
+            x_events.add_window(*win_iter);
     }
 
-    XModel xmodel;
 
-    XEvents x_events(config, xdata, clients, xmodel);
     ClientModelEvents client_events(config, logger, xdata, clients, xmodel);
 
     while (x_events.step())

@@ -48,6 +48,10 @@ public:
 
     bool step();
 
+    // Note that this is exposed because smallwm.cpp has to import existing
+    // windows when main() runs
+    void add_window(Window);
+
 private:
     void handle_keypress();
     void handle_buttonpress();
