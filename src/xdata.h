@@ -113,7 +113,7 @@ public:
     void raise(Window); 
     void restack(const std::vector<Window>&);
 
-    void get_wm_hints(Window, XWMHints&);
+    bool get_wm_hints(Window, XWMHints&);
     void get_size_hints(Window, XSizeHints&);
     Window get_transient_hint(Window);
     void get_icon_name(Window, std::string&);

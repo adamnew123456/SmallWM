@@ -446,22 +446,29 @@ void XData::restack(const std::vector<Window> &windows)
  * Gets the XWMHints structure corresponding to the given window.
  * @param window The window to get the hints for.
  * @param[out] hints The storage for the hints.
+ * @return True if the window has hints, False otherwise.
  */
-void XData::get_wm_hints(Window window, XWMHints &hints)
+bool XData::get_wm_hints(Window window, XWMHints &hints)
 {
     XWMHints *returned_hints = XGetWMHints(m_display, window);
 
     // Since we have to get rid of this later, and it is an unnecessary
     // complication to return it, we'll just copy it and get rid of the
     // pointer that was returned to us
-    std::memcpy(&hints, returned_hints, sizeof(XWMHints));
+    if (returned_hints)
+    {
+        std::memcpy(&hints, returned_hints, sizeof(XWMHints));
 
-    XFree(returned_hints);
+        XFree(returned_hints);
+        return true;
+    }
+    else
+        return false;
 }
 
 /***
  * Gets the XSizeHints structure corresponding to the given window.
- * @param window THe window to get the hints for.
+ * @param window The window to get the hints for.
  * @param[out] hints The storage for the hints.
  */
 void XData::get_size_hints(Window window, XSizeHints &hints)
@@ -521,20 +528,22 @@ void XData::get_icon_name(Window window, std::string &name)
  */
 void XData::get_class(Window win, std::string &xclass)
 {
-    XClassHint hint;
-    XGetClassHint(m_display, win, &hint);
+    XClassHint *hint = XAllocClassHint();
+    XGetClassHint(m_display, win, hint);
     
-    if (hint.res_name)
-        XFree(hint.res_name);
+    if (hint->res_name)
+        XFree(hint->res_name);
 
     
-    if (hint.res_class)
+    if (hint->res_class)
     {
-        xclass.assign(hint.res_class);
-        XFree(hint.res_class);
+        xclass.assign(hint->res_class);
+        XFree(hint->res_class);
     }
     else
         xclass.clear();
+
+    XFree(hint);
 }
 
 /**

@@ -352,9 +352,9 @@ void XEvents::handle_expose()
         // Get the application's pixmap icon, and figure out where to place
         // the text (since the icon goes to the left)
         XWMHints hints;
-        m_xdata.get_wm_hints(the_icon->client, hints);
+        bool has_hints = m_xdata.get_wm_hints(the_icon->client, hints);
 
-        if (hints.flags & IconPixmapHint)
+        if (has_hints && hints.flags & IconPixmapHint)
         {
             // Copy the pixmap into the left side of the icon, keeping
             // its size. The width of the pixmap is the same as the
