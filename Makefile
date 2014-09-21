@@ -63,7 +63,6 @@ clean:
 	rm -rf bin obj doc tags
 
 bin/smallwm: bin obj ${OBJS}
-	echo ${OBJS}
 	${CXX} ${CXXFLAGS} ${OBJS} ${LINKERFLAGS} -o bin/smallwm
 
 obj/ini.o: obj inih/ini.c
