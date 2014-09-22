@@ -53,7 +53,7 @@ void ClientModelEvents::handle_focus_change()
 {
     ChangeFocus const *change_event = dynamic_cast<ChangeFocus const*>(m_change);
 
-    // First, unfocus whatever the model says is unfoucsed. Note that the
+    // First, unfocus whatever the model says is foucsed. Note that the
     // client which is being unfocused may not exist anymore.
     Window unfocused_client = change_event->prev_focus;
     if (m_clients.is_client(unfocused_client))
@@ -336,6 +336,7 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
             m_xdata.move_window(client, placeholder_attr.x, 
                                 placeholder_attr.y);
 
+            m_xdata.stop_confining_pointer();
             m_xdata.unmap_win(placeholder);
             m_xmodel.exit_move_resize();
 
@@ -372,8 +373,9 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
             XWindowAttributes placeholder_attr;
             m_xdata.get_attributes(placeholder, placeholder_attr);
             m_xdata.resize_window(client, placeholder_attr.width,
-                                placeholder_attr.height);
+                                  placeholder_attr.height);
 
+            m_xdata.stop_confining_pointer();
             m_xdata.unmap_win(placeholder);
             m_xmodel.exit_move_resize();
 
@@ -515,8 +517,9 @@ Window ClientModelEvents::create_placeholder(Window client)
     // is not an actual client, but an internal window that doesn't need
     // to be managed
     Window placeholder = m_xdata.create_window(true);
-    m_xdata.move_window(client, client_attrs.x, client_attrs.y);
-    m_xdata.resize_window(client, client_attrs.width, client_attrs.height);
+    m_xdata.move_window(placeholder, client_attrs.x, client_attrs.y);
+    m_xdata.resize_window(placeholder, client_attrs.width, 
+                          client_attrs.height);
 
     // With the window in place, show it and make sure that the cursor is
     // glued to it, to make sure that all of the movements are captured
