@@ -9,7 +9,6 @@ void ClientModelEvents::handle_queued_changes()
     m_should_relayer = false;
     m_should_reposition_icons = false;
 
-    m_change = m_clients.get_next_change();
     while ((m_change = m_clients.get_next_change()) != 0)
     {
         if (m_change->is_layer_change())
@@ -26,7 +25,6 @@ void ClientModelEvents::handle_queued_changes()
             handle_size_change();
 
         delete m_change;
-        m_change = m_clients.get_next_change();
     }
 
     if (m_should_relayer)
