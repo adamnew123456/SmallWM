@@ -50,7 +50,10 @@ void XModel::get_icons(std::vector<Icon*> &icons)
     for (std::map<Window,Icon*>::iterator iter = m_clients_to_icons.begin();
             iter != m_clients_to_icons.end();
             iter++)
-        icons.push_back(iter->second);
+    {
+        if (iter->second != 0)
+            icons.push_back(iter->second);
+    }
 }
 
 /**
