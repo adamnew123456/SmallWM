@@ -38,6 +38,8 @@ bool XEvents::step()
 
     if (m_event.type == DestroyNotify)
         handle_destroynotify();
+
+    return true;
 }
 
 /**
