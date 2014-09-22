@@ -260,11 +260,9 @@ void XEvents::handle_buttonrelease()
         break;
     case MR_RESIZE:
         m_clients.stop_resizing(client, 
-            Dimension2D(attrs.width, attrs.height));
+                                Dimension2D(attrs.width, attrs.height));
         break;
     }
-
-    m_xmodel.exit_move_resize();
 }
 
 /**
