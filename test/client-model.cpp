@@ -40,54 +40,61 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(a, model.get_focused());
 
         // Check the event stream for the most recent events
-        ClientModel::change_iter iterator = model.changes_begin();
+        const Change * change = model.get_next_change();
 
         // First, the window appears on a desktop
-        CHECK((*iterator)->is_client_desktop_change());
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             const Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(ChangeClientDesktop(a, 0, desktop), *the_change);
         }
-        iterator++;
+        delete change;
 
         // Secondly, it is stacked relative to other windows
-        CHECK((*iterator)->is_layer_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_layer_change());
         {
-            const ChangeLayer *the_change = dynamic_cast<const ChangeLayer*>(*iterator);
+            const ChangeLayer *the_change = dynamic_cast<const ChangeLayer*>(change);
             CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
         }
-        iterator++;
+        delete change;
 
         // Make sure it was focused
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
-            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
         }
-        iterator++;
+        delete change;
 
         // Finally, this is the end of the event stream
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Then, remove the added client. Ensure that a 'ChangeFocus' event was
         // fired which includes the now-destroyed client.
         model.remove_client(a);
-        iterator = model.changes_begin();
-        CHECK((*iterator)->is_focus_change());
+
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
-            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
 
             // Since ChangeFocus was fired, ensure that the focus was updated correctly
             CHECK_EQUAL(None, model.get_focused());
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         CHECK_EQUAL(false, model.is_client(a));
     }
@@ -98,38 +105,36 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(false, model.is_client(a));
         CHECK_EQUAL(false, model.is_client(b));
 
-        ClientModel::change_iter iterator;
+        const Change * change;
 
         model.begin_dropping_changes();
         {
             // Add a new client, and ensure that it is present
             model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
 
-            // Check the event stream for the most recent events
-            iterator = model.changes_begin();
-
             // Ensure that no events have passed by since we're dropping changes
-            CHECK_EQUAL(model.changes_end(), iterator);
-            model.flush_changes();
+            change = model.get_next_change();
+            CHECK_EQUAL(change, static_cast<const Change *>(0));
         }
         model.end_dropping_changes();
 
         // Then, remove the added client. Ensure that a 'ChangeFocus' event was
         // fired which includes the now-destroyed client.
         model.remove_client(a);
-        iterator = model.changes_begin();
 
         // Ensure that, now that we're no longer dropping changes, that a change
         // is fired
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
-            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_visibility)
@@ -356,56 +361,55 @@ SUITE(ClientModelMemberSuite)
 
         // Up
         model.up_layer(a);
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_layer_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_layer_change());
         {
             const ChangeLayer *the_change = 
-                dynamic_cast<const ChangeLayer*>(*iterator);
+                dynamic_cast<const ChangeLayer*>(change);
             CHECK_EQUAL(ChangeLayer(a, DEF_LAYER + 1), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Down
         model.down_layer(a);
-        iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_layer_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_layer_change());
         {
             const ChangeLayer *the_change = 
-                dynamic_cast<const ChangeLayer*>(*iterator);
+                dynamic_cast<const ChangeLayer*>(change);
             CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Set the layer
         model.set_layer(a, MIN_LAYER);
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_layer_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_layer_change());
         {
             const ChangeLayer *the_change = 
-                dynamic_cast<const ChangeLayer*>(*iterator);
+                dynamic_cast<const ChangeLayer*>(change);
             CHECK_EQUAL(ChangeLayer(a, MIN_LAYER), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Set the layer to the same layer, and ensure that no change is
         // fired
         model.set_layer(a, MIN_LAYER);
-        iterator = model.changes_begin();
-
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_layer_extremes)
@@ -419,14 +423,14 @@ SUITE(ClientModelMemberSuite)
 
         // Then, try to move it up and ensure no changes occurred
         model.down_layer(a);
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
 
         // Put the client on the bottom and run the same test, backwards
         model.set_layer(a, MAX_LAYER);
         model.flush_changes();
 
         model.up_layer(a);
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_client_desktop_change)
@@ -437,116 +441,123 @@ SUITE(ClientModelMemberSuite)
 
         // First, move the client ahead and make sure it changes accordingly
         model.client_next_desktop(a);
-        ClientModel::change_iter iterator = model.changes_begin();
 
         // The client should lose the focus, since it will not be visible soon
-        CHECK((*iterator)->is_focus_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
 
             CHECK_EQUAL(None, model.get_focused());
         }
+        delete change;
 
-        iterator++;
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the client behind and make sure it returns to its current position
         model.client_prev_desktop(a);
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1], model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the client back one more time and make sure that it wraps to
         // the last desktop
         model.client_prev_desktop(a);
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[max_desktops - 1]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the client ahead and make sure that it wraps to the first desktop
         model.client_next_desktop(a);
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[max_desktops - 1], model.USER_DESKTOPS[0]), 
                 *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the client, and then reset its desktop to the current one, and
         // ensure that we get the change
         model.client_next_desktop(a);
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), 
                 *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         model.client_reset_desktop(a);
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[1], model.USER_DESKTOPS[0]), 
                 *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // With the client's desktop reset, we shouldn't get any changes from
         // resetting the desktop again
         model.client_reset_desktop(a);
-        iterator = model.changes_begin();
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_bad_client_desktop_change)
@@ -560,57 +571,57 @@ SUITE(ClientModelMemberSuite)
         FLUSH_AFTER(model.iconify(a));
         model.client_next_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.deiconify(a));
 
         FLUSH_AFTER(model.iconify(a));
         model.client_prev_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.deiconify(a));
 
         FLUSH_AFTER(model.iconify(a));
         model.client_reset_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.deiconify(a));
 
         // Secondly, moving clients cannot be changed
         FLUSH_AFTER(model.start_moving(a));
         model.client_next_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_moving(a));
         model.client_prev_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_moving(a));
         model.client_reset_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // Neither can resizing clients
         FLUSH_AFTER(model.start_resizing(a));
         model.client_next_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(a));
         model.client_prev_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(a));
         model.client_reset_desktop(a);
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
 #undef FLUSH_AFTER
@@ -624,79 +635,85 @@ SUITE(ClientModelMemberSuite)
 
         // Move to the next desktop
         model.next_desktop();
-        ClientModel::change_iter iterator = model.changes_begin();
 
         // The current should lose the focus, since it will not be visible soon
-        CHECK((*iterator)->is_focus_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
 
             CHECK_EQUAL(None, model.get_focused());
         }
+        delete change;
 
-        iterator++;
-        CHECK((*iterator)->is_current_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_current_desktop_change());
         {
             const ChangeCurrentDesktop *the_change = 
-                dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
+                dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), 
                 *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the current behind and make sure it returns to its current position
         model.prev_desktop();
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_current_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_current_desktop_change());
         {
             const ChangeCurrentDesktop *the_change = 
-                dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
+                dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[1],
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the desktop back one more time and make sure that it wraps to
         // the last
         model.prev_desktop();
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_current_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_current_desktop_change());
         {
             const ChangeCurrentDesktop *the_change = 
-                dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
+                dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], 
                 model.USER_DESKTOPS[max_desktops - 1]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Move the desktop ahead and make sure that it wraps to the first
         model.next_desktop();
-        iterator = model.changes_begin();
 
-        CHECK((*iterator)->is_current_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_current_desktop_change());
         {
             const ChangeCurrentDesktop *the_change = 
-                dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
+                dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[max_desktops - 1],
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_bad_desktop_change)
@@ -710,26 +727,26 @@ SUITE(ClientModelMemberSuite)
         FLUSH_AFTER(model.start_moving(a));
         model.next_desktop();
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_moving(a));
         model.prev_desktop();
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // The desktop can't be changed while a window is resizing
         FLUSH_AFTER(model.start_resizing(a));
         model.next_desktop();
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(a));
         model.prev_desktop();
 
-        CHECK_EQUAL(model.changes_begin(), model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 #undef FLUSH_AFTER
     }
@@ -747,37 +764,37 @@ SUITE(ClientModelMemberSuite)
 
         model.next_desktop();
 
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_current_desktop_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_current_desktop_change());
         {
             const ChangeCurrentDesktop *the_change = 
-                dynamic_cast<const ChangeCurrentDesktop*>(*iterator);
+                dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], 
                 model.USER_DESKTOPS[1]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Unstick it, and ensure that it was moved onto the current desktop.
         // This should not cause any focus changes.
         model.toggle_stick(a);
 
-        iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.ALL_DESKTOPS, model.USER_DESKTOPS[1]), 
                 *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_iconify)
@@ -790,59 +807,63 @@ SUITE(ClientModelMemberSuite)
         // we get the notification about the desktop change.
         model.iconify(a);
 
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_focus_change());
+        Change const * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change = 
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), 
                 *the_change);
 
             CHECK_EQUAL(None, model.get_focused());
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
                 model.ICON_DESKTOP), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Then, deiconify it - ensure that it lands on the current desktop,
         // and that it regains the focus once it is on the current desktop.
         model.deiconify(a);
 
-        iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.ICON_DESKTOP, 
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change = 
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(None, a), 
                 *the_change);
 
             CHECK_EQUAL(a, model.get_focused());
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_bad_iconify)
@@ -854,23 +875,20 @@ SUITE(ClientModelMemberSuite)
 #define FLUSH_AFTER(expr) expr ; model.flush_changes()
         // A window which is not iconified, cannot be deiconified
         model.deiconify(a);
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
 
         // A window cannot be iconified while it is being moved
         FLUSH_AFTER(model.start_moving(a));
         model.iconify(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // A window cannot be iconified while it is being resized
         FLUSH_AFTER(model.start_resizing(a));
         model.iconify(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 #undef FLUSH_AFER
     }
@@ -885,63 +903,70 @@ SUITE(ClientModelMemberSuite)
         // its desktop changes
         model.start_moving(a);
 
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_focus_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
 
             CHECK_EQUAL(None, model.get_focused());
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change =
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
                 model.MOVING_DESKTOP), *the_change);
-        }
-        iterator++;
+        } 
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Stop moving the client, and ensure that we get a move event back after the client is restored.
         model.stop_moving(a, Dimension2D(42, 43));
 
-        iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change =
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.MOVING_DESKTOP, 
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_location_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
         {
             const ChangeLocation *the_change =
-                dynamic_cast<const ChangeLocation*>(*iterator);
+                dynamic_cast<const ChangeLocation*>(change);
             CHECK_EQUAL(ChangeLocation(a, 42, 43), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
 
             CHECK_EQUAL(a, model.get_focused());
         }
-        iterator++;
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        delete change;
+
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_bad_moving)
@@ -953,23 +978,20 @@ SUITE(ClientModelMemberSuite)
 #define FLUSH_AFTER(expr) expr ; model.flush_changes()
         // A window which is not moving, cannot cease moving
         model.stop_moving(a, Dimension2D(1, 1));
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
 
         // A window cannot be moved while it is iconified
         FLUSH_AFTER(model.iconify(a));
         model.start_moving(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.deiconify(a));
 
         // A window cannot be moved while it is being resized
         FLUSH_AFTER(model.start_resizing(a));
         model.start_moving(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         // A window cannot be moved while *any* other window is being resized
@@ -981,15 +1003,13 @@ SUITE(ClientModelMemberSuite)
         FLUSH_AFTER(model.start_moving(b));
         model.start_moving(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(b, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(b));
         model.start_moving(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(b, Dimension2D(1, 1)));
         
 #undef FLUSH_AFER
@@ -1005,64 +1025,71 @@ SUITE(ClientModelMemberSuite)
         // it its desktop changes
         model.start_resizing(a);
 
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_focus_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
 
             CHECK_EQUAL(None, model.get_focused());
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change =
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
                 model.RESIZING_DESKTOP), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Stop moving the client, and ensure that we get a move event back 
         // after the client is restored.
         model.stop_resizing(a, Dimension2D(42, 43));
 
-        iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change =
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP, 
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_size_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_size_change());
         {
             const ChangeSize *the_change =
-                dynamic_cast<const ChangeSize*>(*iterator);
+                dynamic_cast<const ChangeSize*>(change);
             CHECK_EQUAL(ChangeSize(a, 42, 43), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
 
             CHECK_EQUAL(a, model.get_focused());
         }
-        iterator++;
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        delete change;
+
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_bad_resizing)
@@ -1074,23 +1101,20 @@ SUITE(ClientModelMemberSuite)
 #define FLUSH_AFTER(expr) expr ; model.flush_changes()
         // A window which is not resizing, cannot cease resizing
         model.stop_resizing(a, Dimension2D(1, 1));
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
 
         // A window cannot be resized while it is iconified
         FLUSH_AFTER(model.iconify(a));
         model.start_resizing(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.deiconify(a));
 
         // A window cannot be resized while it is being moved
         FLUSH_AFTER(model.start_moving(a));
         model.start_resizing(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // A window cannot be moved while *any* other window is being resized
@@ -1102,15 +1126,13 @@ SUITE(ClientModelMemberSuite)
         FLUSH_AFTER(model.start_moving(b));
         model.start_resizing(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_moving(b, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(b));
         model.start_resizing(a);
 
-        CHECK_EQUAL(model.changes_begin(), 
-            model.changes_end());
+        CHECK_EQUAL(model.get_next_change(), static_cast<const Change*>(0));
         FLUSH_AFTER(model.stop_resizing(b, Dimension2D(1, 1)));
 
         // Unfocus whatever is currently focused, so that it doesn't taint
@@ -1123,28 +1145,31 @@ SUITE(ClientModelMemberSuite)
 
         model.stop_resizing(a, Dimension2D(0, 0));
 
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change =
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP, 
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
             const ChangeFocus *the_change =
-                dynamic_cast<const ChangeFocus*>(*iterator);
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
 
             CHECK_EQUAL(a, model.get_focused());
         }
-        iterator++;
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        delete change;
+
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 #undef FLUSH_AFER
     }
 
@@ -1157,36 +1182,36 @@ SUITE(ClientModelMemberSuite)
         // First, stick a client and ensure that we get the desktop change event
         model.toggle_stick(a);
 
-        ClientModel::change_iter iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
                 model.ALL_DESKTOPS), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Then, unstick it and ensure that we get the change event again
         model.toggle_stick(a);
 
-        iterator = model.changes_begin();
-
-        CHECK((*iterator)->is_client_desktop_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
         {
             const ChangeClientDesktop *the_change = 
-                dynamic_cast<const ChangeClientDesktop*>(*iterator);
+                dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.ALL_DESKTOPS, 
                 model.USER_DESKTOPS[0]), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_focus_unfocus)
@@ -1201,29 +1226,34 @@ SUITE(ClientModelMemberSuite)
         // Then, unfocus a and check for the event
         model.unfocus();
         
-        ClientModel::change_iter iterator = model.changes_begin();
-        CHECK((*iterator)->is_focus_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
-            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            const ChangeFocus *the_change = 
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Refocus and ensure that another event is fired
         model.focus(a);
 
-        iterator = model.changes_begin();
-        CHECK((*iterator)->is_focus_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
         {
-            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(*iterator);
+            const ChangeFocus *the_change = 
+                dynamic_cast<const ChangeFocus*>(change);
             CHECK_EQUAL(ChangeFocus(None, a), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 
     TEST_FIXTURE(ClientModelFixture, test_location_size_changers)
@@ -1235,40 +1265,41 @@ SUITE(ClientModelMemberSuite)
         // First, move the window manually and ensure a change happens
         model.change_location(a, 100, 100);
 
-        ClientModel::change_iter iterator = model.changes_begin();
-        CHECK((*iterator)->is_location_change());
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
         {
             const ChangeLocation *the_change =
-                dynamic_cast<const ChangeLocation*>(*iterator);
+                dynamic_cast<const ChangeLocation*>(change);
             CHECK_EQUAL(ChangeLocation(a, 100, 100), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Then, cause a resize and check for the event
         model.change_size(a, 100, 100);
 
-        iterator = model.changes_begin();
-        CHECK((*iterator)->is_size_change());
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_size_change());
         {
             const ChangeSize *the_change =
-                dynamic_cast<const ChangeSize*>(*iterator);
+                dynamic_cast<const ChangeSize*>(change);
             CHECK_EQUAL(ChangeSize(a, 100, 100), *the_change);
         }
-        iterator++;
+        delete change;
 
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
 
         // Finally, try to use an invalid size, and ensure that no change is
         // propagated
         model.change_size(a, -1, -1);
 
-        iterator = model.changes_begin();
-        CHECK_EQUAL(model.changes_end(), iterator);
-        model.flush_changes();
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
     }
 };
 

@@ -2,35 +2,41 @@
 #include "client-model.h"
 
 /**
- * Removes all of the recorded changes.
- *
- * Note that, beyond this point, all of the changes which were previously 
- * stored are deleted. _Do not keep references to them after calling this!_
+ * Removes all changes which are still stored.
  */
 void ClientModel::flush_changes()
 {
-    for (ClientModel::change_iter iter = changes_begin();
-            iter != changes_end();
-            iter++)
-        delete *iter;
-
-    m_changes.clear();
+    change_ptr change;
+    while ((change = get_next_change()) != 0)
+        delete change;
 }
 
 /**
- * Gets an iterator representing the start of the change list.
+ * Checks if the change queue is empty.
+ *
+ * @return True if no changes remain, False otherwise.
  */
-ClientModel::change_iter ClientModel::changes_begin()
+bool ClientModel::has_more_changes()
 {
-    return m_changes.begin();
+    return !m_changes.empty();
 }
 
 /**
- * Gets an iterator representing the end of the change list.
+ * Gets the next change, or NULL if no changes remain.
+ *
+ * Note that this change should be deleted after the caller is finished with
+ * it.
  */
-ClientModel::change_iter ClientModel::changes_end()
+ClientModel::change_ptr ClientModel::get_next_change()
 {
-    return m_changes.end();
+    if (has_more_changes())
+    {
+        change_ptr change = m_changes.front();
+        m_changes.pop();
+        return change;
+    }
+    else
+        return 0;
 }
 
 /**
@@ -505,7 +511,7 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
 void ClientModel::push_change(change_ptr change)
 {
     if (!m_drop_changes)
-        m_changes.push_back(change);
+        m_changes.push(change);
 }
 
 /**

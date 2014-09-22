@@ -7,6 +7,7 @@
 #include "unique-multimap.h"
 
 #include <algorithm>
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -78,8 +79,8 @@ public:
     }
 
     void flush_changes();
-    change_iter changes_begin();
-    change_iter changes_end();
+    bool has_more_changes();
+    change_ptr get_next_change();
 
     bool is_client(Window);
     bool is_visible(Window);
@@ -131,7 +132,7 @@ protected:
 
 private:
     /// A list of the changes made to the client data
-    std::vector<change_ptr> m_changes;
+    std::queue<change_ptr> m_changes;
     /// The maximum number of user-visible desktops
     unsigned long long m_max_desktops;
 

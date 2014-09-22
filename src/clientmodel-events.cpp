@@ -9,12 +9,9 @@ void ClientModelEvents::handle_queued_changes()
     m_should_relayer = false;
     m_should_reposition_icons = false;
 
-    for (ClientModel::change_iter change_iter = m_clients.changes_begin();
-            change_iter != m_clients.changes_end();
-            change_iter++)
+    m_change = m_clients.get_next_change();
+    while ((m_change = m_clients.get_next_change()) != 0)
     {
-        m_change = *change_iter;
-
         if (m_change->is_layer_change())
             handle_layer_change();
         else if (m_change->is_focus_change())
@@ -27,8 +24,10 @@ void ClientModelEvents::handle_queued_changes()
             handle_location_change();
         else if (m_change->is_size_change())
             handle_size_change();
+
+        delete m_change;
+        m_change = m_clients.get_next_change();
     }
-    m_clients.flush_changes();
 
     if (m_should_relayer)
         do_relayer();
