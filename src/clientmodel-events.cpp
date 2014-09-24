@@ -77,7 +77,7 @@ void ClientModelEvents::handle_focus_change()
         // ungrabbing the mouse and setting the keyboard focus
         if (m_xdata.set_input_focus(focused_client))
         {
-            m_xdata.set_border_color(unfocused_client, X_BLACK);
+            m_xdata.set_border_color(focused_client, X_BLACK);
             m_xdata.ungrab_mouse(focused_client);
         }
         else
@@ -86,8 +86,16 @@ void ClientModelEvents::handle_focus_change()
             // update the client model to keep it in sync with what our idea
             // of the focus is
             m_clients.unfocus();
+
+            // Also, make sure to apply the grab to the window
+            m_xdata.set_border_color(focused_client, X_WHITE);
+            m_xdata.grab_mouse(focused_client);
         }
     }
+
+    // Since the focus probably changed, go ahead and shuffle windows around to
+    // ensure that the focused window is on top
+    m_should_relayer = true;
 }
 
 /**
@@ -155,14 +163,13 @@ void ClientModelEvents::handle_client_desktop_change()
 void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desktop,
                                                          Window client)
 {
+    m_xdata.set_border_width(client, m_config.border_width);
+
     if (new_desktop->is_user_desktop())
     {
         bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
         if (will_be_visible)
-        {
             m_should_relayer = true;
-            m_clients.focus(client);
-        }
     }
     else if (new_desktop->is_icon_desktop())
         register_new_icon(client, true);
