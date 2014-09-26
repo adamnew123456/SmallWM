@@ -306,6 +306,11 @@ Window XData::get_input_focus()
  */
 bool XData::set_input_focus(Window window)
 {
+    // If we're unfocusing, then move the focus to the root so that keyboard
+    // shortcuts work
+    if (window == None)
+        window = m_root;
+
     XSetInputFocus(m_display, window, RevertToNone, CurrentTime);
     return get_input_focus() == window;
 }
