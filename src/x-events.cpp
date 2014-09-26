@@ -476,20 +476,20 @@ void XEvents::snap_client(Window window, SnapDir side)
 
     switch (side)
     {
-    case K_SNAP_TOP:
+    case SNAP_TOP:
         m_clients.change_location(window, 0, m_config.icon_height);
-        m_clients.change_size(window, scr_width, workspace_height);
+        m_clients.change_size(window, scr_width, workspace_height / 2);
         break;
-    case K_SNAP_BOTTOM:
+    case SNAP_BOTTOM:
         m_clients.change_location(window, 0, 
             m_config.icon_height + (workspace_height / 2));
         m_clients.change_size(window, scr_width, workspace_height / 2);
         break;
-    case K_SNAP_LEFT:
+    case SNAP_LEFT:
         m_clients.change_location(window, 0, m_config.icon_height);
         m_clients.change_size(window, scr_width / 2, workspace_height);
         break;
-    case K_SNAP_RIGHT:
+    case SNAP_RIGHT:
         m_clients.change_location(window, scr_width / 2, m_config.icon_height);
         m_clients.change_size(window, scr_width / 2, workspace_height);
         break;
