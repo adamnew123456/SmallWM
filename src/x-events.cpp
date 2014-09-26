@@ -8,10 +8,6 @@
  */
 bool XEvents::step()
 {
-    // Avoid processing any more events if we've been cancelled
-    if (m_done)
-        return false;
-
     // Grab the next event from X, and then dispatch upon its type
     m_xdata.next_event(m_event);
 
@@ -39,7 +35,7 @@ bool XEvents::step()
     if (m_event.type == DestroyNotify)
         handle_destroynotify();
 
-    return true;
+    return !m_done;
 }
 
 /**
