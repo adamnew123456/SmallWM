@@ -409,6 +409,8 @@ void ClientModelEvents::handle_current_desktop_change()
 
     std::vector<Window> old_desktop_list;
     std::vector<Window> new_desktop_list;
+    m_clients.get_clients_of(change->prev_desktop, old_desktop_list);
+    m_clients.get_clients_of(change->next_desktop, new_desktop_list);
 
     // The output size will have, at most, the size of its largest input
     size_t max_output_size = std::max(old_desktop_list.size(), 
@@ -448,7 +450,7 @@ void ClientModelEvents::handle_current_desktop_change()
     std::set_difference(
         new_desktop_list.begin(), new_desktop_list.end(),
         old_desktop_list.begin(), old_desktop_list.end(),
-        to_make_invisible.begin());
+        to_make_visible.begin());
 
     for (std::vector<Window>::iterator to_show = to_make_visible.begin();
             to_show != to_make_visible.end() && *to_show != None;
