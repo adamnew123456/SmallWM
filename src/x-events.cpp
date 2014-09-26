@@ -541,6 +541,8 @@ void XEvents::add_window(Window window)
         // current desktop.
         if (!mapped_desktop->is_all_desktop())
             m_clients.client_reset_desktop(window);
+
+        return;
     }
 
     // So, this isn't an existing client. We have to figure out now if this is
