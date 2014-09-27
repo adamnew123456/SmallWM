@@ -496,6 +496,9 @@ void ClientModelEvents::handle_size_change()
 void ClientModelEvents::register_new_icon(Window client, bool do_unmap)
 {
     Window icon_window = m_xdata.create_window(true);
+    m_xdata.select_input(icon_window,
+        ButtonPressMask | ButtonReleaseMask | ExposureMask);
+
     m_xdata.resize_window(icon_window, m_config.icon_width, 
                           m_config.icon_height);
     m_xdata.map_win(icon_window);
@@ -508,6 +511,8 @@ void ClientModelEvents::register_new_icon(Window client, bool do_unmap)
         m_xdata.unmap_win(client);
 
     m_xmodel.register_icon(the_icon);
+
+    m_should_reposition_icons = true;
 }
 
 /**
