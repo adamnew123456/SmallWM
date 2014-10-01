@@ -167,11 +167,19 @@ void ClientModel::remove_client(Window client)
     // A destroyed window cannot be focused.
     unfocus_if_focused(client);
 
-    // Remove all the data associated with the client
+    // Unregister the client from any categories it may be a member of, but
+    // keep a copy of each of the categories so we can pass it on to notify
+    // that the window was destroyed (don't copy the size/location though,
+    // since they will most likely be invalid, and of no use anyway)
+    const Desktop *desktop = find_desktop(client);
+    Layer layer = find_layer(client);
+
     m_desktops.remove_member(client);
     m_layers.remove_member(client);
     m_location.erase(client);
     m_size.erase(client);
+
+    push_change(new DestroyChange(client, desktop, layer));
 }
 
 /**

@@ -39,6 +39,9 @@ struct Change
     virtual bool is_size_change() const
     { return false; }
 
+    virtual bool is_destroy_change() const
+    { return false; }
+
     virtual bool operator==(const Change &other) const
     { return false; }
 };
@@ -273,4 +276,32 @@ static std::ostream &operator<<(std::ostream &out, const ChangeSize &change)
         << "> Size(" << change.w << "," << change.h << ")]";
     return out;
 }
+
+/// Indicates that a client has been removed from the model
+struct DestroyChange : Change
+{
+    DestroyChange(Window win, const Desktop *old_desktop, Layer old_layer) :
+        window(win), desktop(old_desktop), layer(old_layer)
+    {};
+
+    bool is_destroy_change() const
+    { return true; }
+
+    virtual bool operator==(const Change &other) const
+    {
+        if (!other.is_destroy_change())
+            return false;
+
+        const DestroyChange &cast_other = 
+            dynamic_cast<const DestroyChange&>(other);
+        return (cast_other.window == window &&
+                (cast_other.desktop == desktop ||
+                 *cast_other.desktop == *desktop) &&
+                cast_other.layer == layer);
+    }
+
+    Window window;
+    const Desktop *desktop;
+    Layer layer;
+};
 #endif

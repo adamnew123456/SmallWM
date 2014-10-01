@@ -93,6 +93,16 @@ SUITE(ClientModelMemberSuite)
         }
         delete change;
 
+        // Also ensure that a DestroyChange event was sent, to notify of the removed client
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_destroy_change());
+        {
+            const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
+            const Desktop *desktop(new UserDesktop(0));
+            CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
+        }
+
         change = model.get_next_change();
         CHECK_EQUAL(change, static_cast<const Change *>(0));
 
@@ -132,6 +142,16 @@ SUITE(ClientModelMemberSuite)
             CHECK_EQUAL(ChangeFocus(a, None), *the_change);
         }
         delete change;
+
+        // Also ensure that a DestroyChange event was sent, to notify of the removed client
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_destroy_change());
+        {
+            const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
+            const Desktop *desktop(new UserDesktop(0));
+            CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
+        }
 
         change = model.get_next_change();
         CHECK_EQUAL(change, static_cast<const Change *>(0));
