@@ -182,10 +182,21 @@ struct PointerLess
      * Compares a pair of Desktop pointers. This is used because Desktop must be
      * stored in structures as a pointer, due to the need for downcasting to
      * access appropriate members.
+     *
+     * Note that this also handles NULL pointers, by saying that a NULL pointer
+     * is less than any other pointer, with the exception of other null
+     * pointers.
      */
     bool operator()(const T *a, const T* b) const
     {
-        return *a < *b;
+        if (!a && !b)
+            return false;
+        else if (!a)
+            return true;
+        else if (!b)
+            return false;
+        else
+            return *a < *b;
     }
 };
 

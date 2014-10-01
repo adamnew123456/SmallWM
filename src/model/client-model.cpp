@@ -164,6 +164,9 @@ void ClientModel::add_client(Window client, InitialState state,
  */
 void ClientModel::remove_client(Window client)
 {
+    if (!is_client(client))
+        return;
+
     // A destroyed window cannot be focused.
     unfocus_if_focused(client);
 
@@ -255,7 +258,10 @@ void ClientModel::unfocus_if_focused(Window client)
  */
 ClientModel::desktop_ptr ClientModel::find_desktop(Window client)
 {
-    return m_desktops.get_category_of(client);
+    if (m_desktops.is_member(client))
+        return m_desktops.get_category_of(client);
+    else
+        return static_cast<ClientModel::desktop_ptr>(0);
 }
 
 /**
@@ -263,7 +269,10 @@ ClientModel::desktop_ptr ClientModel::find_desktop(Window client)
  */
 Layer ClientModel::find_layer(Window client)
 {
-    return m_layers.get_category_of(client);
+    if (m_desktops.is_member(client))
+        return m_layers.get_category_of(client);
+    else
+        return INVALID_LAYER;
 }
 
 /**

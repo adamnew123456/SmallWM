@@ -35,6 +35,9 @@ typedef char LayerDiff;
 
 /// The maximum layer of any non-dialog window.
 const Layer MAX_LAYER = 10,
+      /// The default value for the layer type, representing an invalid
+      /// layer
+      INVALID_LAYER = 0,
       /// The lowest layer for any window.
       MIN_LAYER = 1,
       /// The layer of dialogs, which are on top of everything else.
