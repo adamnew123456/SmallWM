@@ -76,6 +76,16 @@ SUITE(XModelMemberSuite)
         delete icon_data;
         CHECK_EQUAL(model.find_icon_from_client(the_client), NULL_OF(Icon));
         CHECK_EQUAL(model.find_icon_from_icon_window(the_icon), NULL_OF(Icon));
+
+        // This is an addition to this test, which covers the fix made in
+        // commit 8017aeb17fba. When an icon was removed, a NULL pointer
+        // would be returned inside of the list produced by XModel::get_icons
+        //
+        // The preference is that XModel::get_icons *not* return NULL icons
+        // as a part of its listing, and instead only return valid icons
+        std::vector<Icon*> icons;
+        model.get_icons(icons);
+        CHECK_EQUAL(icons.size(), 0);
     }
 
     TEST_FIXTURE(XModelFixture, test_move_resize_getters_with_no_client)
