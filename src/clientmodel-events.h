@@ -45,6 +45,7 @@ private:
     void handle_current_desktop_change();
     void handle_location_change();
     void handle_size_change();
+    void handle_destroy_change();
 
     void handle_new_client_desktop_change(const Desktop*, Window);
     void handle_client_change_from_user_desktop(const Desktop*, const Desktop*, 

@@ -377,60 +377,13 @@ void XEvents::handle_expose()
 
 /**
  * Handles a window which has been destroyed, by unregistering it.
+ *
+ * Note that ClientModelEvents will do the work of unregistering the client
+ * if it is an icon, moving, etc.
  */
 void XEvents::handle_destroynotify()
 {
     Window destroyed_window = m_event.xdestroywindow.window;
-
-    Icon *as_icon = m_xmodel.find_icon_from_client(destroyed_window);
-    if (as_icon)
-    {
-        // Deiconifying changes the focus, which we don't want, since the
-        // recipient of the focus won't exist by the time the focus change is
-        // processed.
-        Window old_focus = m_clients.get_focused();
-
-        // Start by ignoring all events completely, so that way we can do the
-        // necessary changes to the client model without anybody else
-        // knowing
-        m_clients.begin_dropping_changes();
-        {
-            m_clients.deiconify(destroyed_window);
-
-            // Since deiconifying messed up the focus, we have to restore it
-            m_clients.focus(old_focus);
-        }
-        m_clients.end_dropping_changes();
-
-        m_xmodel.unregister_icon(as_icon);
-        delete as_icon;
-    }
-
-    if (m_xmodel.get_move_resize_client() == destroyed_window)
-    {
-        // First, we need to terminate the move/resize operation.
-        // Since that involves changing the focus, we have to do what we
-        // did above and play around with the focus manually.
-        Window old_focus = m_clients.get_focused();
-
-        m_clients.begin_dropping_changes();
-        {
-            switch (m_xmodel.get_move_resize_state())
-            {
-            case MR_MOVE:
-                m_clients.stop_moving(destroyed_window, Dimension2D(0, 0));
-                break;
-            case MR_RESIZE:
-                m_clients.stop_resizing(destroyed_window, Dimension2D(0, 0));
-            }
-
-            m_clients.focus(old_focus);
-        }
-        m_clients.end_dropping_changes();
-
-        m_xmodel.exit_move_resize();
-    }
-
     m_clients.remove_client(destroyed_window);
 }
 
@@ -450,7 +403,6 @@ void XEvents::handle_rrnotify()
  */
 void XEvents::maximize_client(Window window)
 {
-
     Dimension scr_width, scr_height;
     m_xdata.get_screen_size(scr_width, scr_height);
 

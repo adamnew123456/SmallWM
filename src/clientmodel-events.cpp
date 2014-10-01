@@ -23,6 +23,8 @@ void ClientModelEvents::handle_queued_changes()
             handle_location_change();
         else if (m_change->is_size_change())
             handle_size_change();
+        else if (m_change->is_destroy_change())
+            handle_destroy_change();
 
         delete m_change;
     }
@@ -303,7 +305,9 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
                 "that is not currently iconified." << SysLog::endl;
         else
         {
-            m_xdata.unmap_win(icon->icon);
+            m_xdata.destroy_win(icon->icon);
+            m_xmodel.unregister_icon(icon);
+
             delete icon->gc;
             delete icon;
 
@@ -344,7 +348,7 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
                                 placeholder_attr.y);
 
             m_xdata.stop_confining_pointer();
-            m_xdata.unmap_win(placeholder);
+            m_xdata.destroy_win(placeholder);
             m_xmodel.exit_move_resize();
 
             bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
@@ -383,7 +387,7 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
                                   placeholder_attr.height);
 
             m_xdata.stop_confining_pointer();
-            m_xdata.unmap_win(placeholder);
+            m_xdata.destroy_win(placeholder);
             m_xmodel.exit_move_resize();
 
             bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
@@ -483,6 +487,53 @@ void ClientModelEvents::handle_size_change()
         dynamic_cast<ChangeSize const*>(m_change);
 
     m_xdata.resize_window(change->window, change->w, change->h);
+}
+
+/**
+ * Handles a window which is being destroyed, depending upon what its current
+ * desktop is:
+ *
+ *  (1) A client which is iconified needs to have its icon unregistered.
+ *  (2) A client which is being moved/resized needs to stop moving/resizing.
+ */
+void ClientModelEvents::handle_destroy_change()
+{
+    DestroyChange const *change = 
+        dynamic_cast<DestroyChange const*>(m_change);
+    Window destroyed_window = change->window;
+    const Desktop *old_desktop = change->desktop;
+
+    if (old_desktop->is_icon_desktop() || old_desktop->is_moving_desktop() ||
+        old_desktop->is_resizing_desktop())
+    {
+        // Note that we don't apply any changes in the client model, since the
+        // desktop of the client (and its layer, etc.) are not stored any more.
+        //
+        // All we have to do is clean up the state left over in m_xmodel.
+        if (old_desktop->is_icon_desktop())
+        {
+            Icon *old_icon = m_xmodel.find_icon_from_client(destroyed_window);
+            m_xmodel.unregister_icon(old_icon);
+
+            m_xdata.destroy_win(old_icon->icon);
+            delete old_icon->gc;
+            delete old_icon;
+
+            // Since we won't be changing the ClientModel, and thus issuing a
+            // ClientDesktopChange, we have to the work that it does
+            m_should_reposition_icons = true;
+
+        }
+        else if (old_desktop->is_moving_desktop() || 
+                 old_desktop->is_resizing_desktop())
+        {
+            Window placeholder = m_xmodel.get_move_resize_placeholder();
+
+            m_xdata.stop_confining_pointer();
+            m_xdata.destroy_win(placeholder);
+            m_xmodel.exit_move_resize();
+        }
+    }
 }
 
 /**
