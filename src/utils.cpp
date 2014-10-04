@@ -2,7 +2,7 @@
 #include "utils.h"
 
 /**
- * Removes leading and trailing characters from a string.
+ * Removes characters from a string, irrespective of position.
  *
  * @param text The text to remove from.
  * @param remove A list of all characters to remove from the text.

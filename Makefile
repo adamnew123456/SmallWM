@@ -106,3 +106,10 @@ bin/test-x-model: bin/libUnitTest++.a obj/test-x-model.o obj/model/x-model.o
 
 obj/test-x-model.o: obj test/x-model.cpp src/model/x-model.h
 	${CXX} ${CXXFLAGS} -c test/x-model.cpp -o obj/test-x-model.o
+
+bin/test-utils: bin/libUnitTest++.a obj/test-utils.o obj/utils.o
+	${CXX} ${CXXFLAGS} obj/test-utils.o bin/libUnitTest++.a obj/utils.o -o bin/test-utils
+
+obj/test-utils.o: obj test/utils.cpp
+	${CXX} ${CXXFLAGS} -c test/utils.cpp -o obj/test-utils.o
+	

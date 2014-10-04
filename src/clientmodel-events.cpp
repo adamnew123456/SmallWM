@@ -69,6 +69,21 @@ void ClientModelEvents::handle_focus_change()
     Window focused_client = change_event->next_focus;
     if (focused_client == None)
     {
+        // If we can, try to salvage whatever the previously focused window was.
+        // Useful for dialogs, so that way the user can avoid clicking on things
+        // repeatedly after closing dialogs.
+        while (!m_focus_history.empty())
+        {
+            Window old_focus_target = m_focus_history.top();
+            m_focus_history.pop();
+
+            if (m_clients.is_client(old_focus_target) && m_clients.is_visible(old_focus_target))
+            {
+                m_clients.focus(old_focus_target);
+                return;
+            }
+        }
+
         // We can't set the border color of a nonexistent window, so just set
         // the focus to None
         m_xdata.set_input_focus(None);
@@ -79,6 +94,8 @@ void ClientModelEvents::handle_focus_change()
         // ungrabbing the mouse and setting the keyboard focus
         if (m_xdata.set_input_focus(focused_client))
         {
+            m_focus_history.push(focused_client);
+
             m_xdata.set_border_color(focused_client, X_BLACK);
             m_xdata.ungrab_mouse(focused_client);
         }

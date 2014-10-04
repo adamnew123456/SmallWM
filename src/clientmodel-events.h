@@ -10,6 +10,7 @@
 #include "configparse.h"
 #include "common.h"
 #include "logging.h"
+#include "utils.h"
 #include "xdata.h"
 
 /**
@@ -87,5 +88,10 @@ private:
      * should reposition all the icon windows at the end of `handle_queued_changes`.
      */
     bool m_should_reposition_icons;
+
+    /** All the windows which have been previously focused, in the order that they
+     *  were focused.
+     */
+    UniqueStack<Window> m_focus_history;
 };
 #endif
