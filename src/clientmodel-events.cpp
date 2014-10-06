@@ -688,7 +688,7 @@ void ClientModelEvents::do_relayer()
         // its peers, so before putting up the first client on the next layer,
         // put up the focused window
         if (focused_client != None &&
-            current_layer == focused_layer + 1)
+            current_layer > focused_layer)
         {
             m_xdata.raise(focused_client);
 
