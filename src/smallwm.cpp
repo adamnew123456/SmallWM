@@ -90,6 +90,10 @@ int main()
 
     ClientModelEvents client_events(config, logger, xdata, clients, xmodel);
 
+    // Make sure to process all the changes produced by the class actions for
+    // the first set of windows
+    client_events.handle_queued_changes();
+
     while (x_events.step())
         client_events.handle_queued_changes();
 
