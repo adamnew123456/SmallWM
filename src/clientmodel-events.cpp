@@ -311,7 +311,7 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
-    if (new_desktop->is_user_desktop())
+    if (new_desktop->is_user_desktop() || new_desktop->is_all_desktop())
     {
         // Get the relevant icon information, and destroy it
         Icon *icon = m_xmodel.find_icon_from_client(client);
@@ -350,7 +350,7 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
-    if (new_desktop->is_user_desktop())
+    if (new_desktop->is_user_desktop() || new_desktop->is_all_desktop())
     {
         Window placeholder = m_xmodel.get_move_resize_placeholder();
         if (placeholder == None)
@@ -389,7 +389,7 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
-    if (new_desktop->is_user_desktop())
+    if (new_desktop->is_user_desktop() || new_desktop->is_all_desktop())
     {
         Window placeholder = m_xmodel.get_move_resize_placeholder();
         if (placeholder == None)

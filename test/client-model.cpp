@@ -856,6 +856,12 @@ SUITE(ClientModelMemberSuite)
 
         // Then, deiconify it - ensure that it lands on the current desktop,
         // and that it regains the focus once it is on the current desktop.
+        //
+        // In order to ensure that the client lands on the currently visible
+        // desktop, change the desktop to the next one.
+        model.next_desktop();
+        model.flush_changes();
+
         model.deiconify(a);
 
         change = model.get_next_change();
@@ -865,7 +871,7 @@ SUITE(ClientModelMemberSuite)
             const ChangeClientDesktop *the_change = 
                 dynamic_cast<const ChangeClientDesktop*>(change);
             CHECK_EQUAL(ChangeClientDesktop(a, model.ICON_DESKTOP, 
-                model.USER_DESKTOPS[0]), *the_change);
+                model.USER_DESKTOPS[1]), *the_change);
         }
         delete change;
 
@@ -1320,6 +1326,36 @@ SUITE(ClientModelMemberSuite)
 
         change = model.get_next_change();
         CHECK_EQUAL(change, static_cast<const Change *>(0));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_stick_retention) 
+    {
+        // Ensure that a stuck window, after being iconified and deiconified,
+        // gets put back onto ALL_DESKTOPS
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1));
+        model.toggle_stick(a);
+
+        model.iconify(a);
+        model.deiconify(a);
+        model.flush_changes();
+        // Go ahead and check the events, to ensure that it was
+        // deiconified onto ALL_DESKTOPS
+        CHECK_EQUAL(model.find_desktop(a), model.ALL_DESKTOPS);
+
+        // Ensure that, after moving and resizing, a stuck window will end
+        // up on ALL_DESKTOPS
+        model.start_moving(a);
+        model.stop_moving(a, Dimension2D(1, 1));
+        model.flush_changes();
+
+        CHECK_EQUAL(model.find_desktop(a), model.ALL_DESKTOPS);
+
+        model.start_resizing(a);
+        model.stop_resizing(a, Dimension2D(1, 1));
+        model.flush_changes();
+
+        CHECK_EQUAL(model.find_desktop(a), model.ALL_DESKTOPS);
     }
 };
 

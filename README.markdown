@@ -156,7 +156,6 @@ list of default bindings and see what each of these bindings mean.
 Bugs/Todo
 =========
 - Support for the EWMH and the `_NET*` atoms
-- The sticking class action is not working for some reason.
 
 Credits
 =======

@@ -146,6 +146,11 @@ private:
     /// A mapping between clients and their sizes
     std::map<Window, Dimension2D> m_size;
 
+    /** A mapping between clients that are iconified, or being moved/resized, 
+        and whether or not they were stuck before they were moved/resized or
+        iconfied. */
+    std::map<Window, bool> m_was_stuck;
+
     /// The currently visible desktop
     user_desktop_ptr m_current_desktop;
     /// The currently focused client

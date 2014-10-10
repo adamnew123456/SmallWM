@@ -437,10 +437,13 @@ void ClientModel::prev_desktop()
 void ClientModel::iconify(Window client)
 {
     desktop_ptr old_desktop = m_desktops.get_category_of(client);
+
     if (old_desktop->is_icon_desktop())
         return;
     else if (!is_visible(client))
         return;
+
+    m_was_stuck[client] = old_desktop->is_all_desktop();
 
     move_to_desktop(client, ICON_DESKTOP, true);
 }
@@ -454,9 +457,15 @@ void ClientModel::deiconify(Window client)
     if (!old_desktop->is_icon_desktop())
         return;
 
+    // If the client was stuck before it was iconified, then respect that
+    // when deiconifying it
+    if (m_was_stuck[client])
+        move_to_desktop(client, ALL_DESKTOPS, false);
+    else
+        move_to_desktop(client, m_current_desktop, false);
+
     // Focus after making the client visible, since a non-visible client
     // cannot be allowed to be focused
-    move_to_desktop(client, m_current_desktop, false);
     focus(client);
 }
 
@@ -468,11 +477,14 @@ void ClientModel::start_moving(Window client)
     if (!is_visible(client))
         return;
 
+    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+
     // Only one window, at max, can be either moved or resized
     if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
+    m_was_stuck[client] = old_desktop->is_all_desktop();
     move_to_desktop(client, MOVING_DESKTOP, true);
 }
 
@@ -485,7 +497,11 @@ void ClientModel::stop_moving(Window client, Dimension2D location)
     if (!old_desktop->is_moving_desktop())
         return;
 
-    move_to_desktop(client, m_current_desktop, false);
+    if (m_was_stuck[client])
+        move_to_desktop(client, ALL_DESKTOPS, false);
+    else
+        move_to_desktop(client, m_current_desktop, false);
+
     change_location(client, DIM2D_X(location), DIM2D_Y(location));
 
     focus(client);
@@ -499,11 +515,14 @@ void ClientModel::start_resizing(Window client)
     if (!is_visible(client))
         return;
 
+    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+
     // Only one window, at max, can be either moved or resized
     if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
+    m_was_stuck[client] = old_desktop->is_all_desktop();
     move_to_desktop(client, RESIZING_DESKTOP, true);
 }
 
@@ -516,7 +535,11 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
     if (!old_desktop->is_resizing_desktop())
         return;
 
-    move_to_desktop(client, m_current_desktop, false);
+    if (m_was_stuck[client])
+        move_to_desktop(client, ALL_DESKTOPS, false);
+    else
+        move_to_desktop(client, m_current_desktop, false);
+
     change_size(client, DIM2D_WIDTH(size), DIM2D_HEIGHT(size));
 
     focus(client);
