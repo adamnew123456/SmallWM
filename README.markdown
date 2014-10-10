@@ -82,7 +82,7 @@ For example:
     icon-icons=0
     log-level=NOTICE
     [actions]
-    stalonetray=stick,layer:99
+    stalonetray=stick,layer:9
     [keyboard]
     toggle-stick=asciitilde
     snap-top=w
@@ -93,11 +93,11 @@ For example:
 The options in the `[smallwm]` section are (in order):
 
  - The shell launched by `Super+LClick` (default: xterm). This can be any syntax supported by /bin/sh.
- - The number of desktops (default: 5)
- - The width in pixels of icons (default: 75)
- - The height in pixels of icons (default: 20)
- - The width of the border of windows (default: 4)
- - Whether to (1) or not to (0) show application icons inside icon windows. (default: 1)
+ - The number of desktops (default: 5).
+ - The width in pixels of icons (default: 75).
+ - The height in pixels of icons (default: 20).
+ - The width of the border of windows (default: 4).
+ - Whether to (1) or not to (0) show application icons inside icon windows (default: 1).
  - The severity of logging messages to send to syslog. By default, this is `WARNING`. See `syslog(3)` for the other log levels.
 
 The options in the `[actions]` section are covered next, and then the 
@@ -118,10 +118,10 @@ Generally speaking, any number of these class actions can be chained together
 by separating them with commas.
 
 The possibilities for a class action are:
- - `stick` makes a particular window stick to all the desktops
- - `maximize` maximizes that window
- - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 10 to 99 (the default layer is 50).
- - `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen
+ - `stick` makes a particular window stick to all the desktops.
+ - `maximize` maximizes that window.
+ - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 1 to 9; 9 is the highest layer, 1 is the lowest.
+ - `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen.
 
 Keyboard Bindings
 =================
@@ -156,6 +156,7 @@ list of default bindings and see what each of these bindings mean.
 Bugs/Todo
 =========
 - Support for the EWMH and the `_NET*` atoms
+- The sticking class action is not working for some reason.
 
 Credits
 =======
