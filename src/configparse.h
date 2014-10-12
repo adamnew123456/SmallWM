@@ -27,6 +27,7 @@ enum KeyboardAction
     K_SNAP_TOP, K_SNAP_BOTTOM, K_SNAP_LEFT, K_SNAP_RIGHT,
     LAYER_ABOVE, LAYER_BELOW, LAYER_TOP, LAYER_BOTTOM,
     LAYER_1, LAYER_2, LAYER_3, LAYER_4, LAYER_5, LAYER_6, LAYER_7, LAYER_8, LAYER_9,
+    CYCLE_FOCUS,
     EXIT_WM
 };
 
@@ -86,6 +87,7 @@ struct KeyboardConfig
             { LAYER_7, "layer-7", XK_7 },
             { LAYER_8, "layer-8", XK_8 },
             { LAYER_9, "layer-9", XK_9 },
+            { CYCLE_FOCUS, "cycle-focus", XK_Tab },
             { EXIT_WM, "exit", XK_Escape },
         };
 

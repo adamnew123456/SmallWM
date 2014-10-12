@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "model/client-model.h"
+#include "model/focus-cycle.h"
 #include "model/x-model.h"
 #include "configparse.h"
 #include "common.h"
@@ -24,10 +25,11 @@ class ClientModelEvents
 {
 public:
     ClientModelEvents(WMConfig &config, SysLog &logger, 
-        XData &xdata, ClientModel &clients, XModel &xmodel) :
+        XData &xdata, ClientModel &clients, XModel &xmodel,
+        FocusCycle &focus_cycle) :
         m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-        m_logger(logger), m_change(0), m_should_relayer(false), 
-        m_should_reposition_icons(false)
+        m_logger(logger), m_focus_cycle(focus_cycle), m_change(0), 
+        m_should_relayer(false), m_should_reposition_icons(false)
     {};
 
     void handle_queued_changes();
@@ -39,6 +41,7 @@ private:
     void start_resizing(Window);
     void do_relayer();
     void reposition_icons();
+    void update_focus_cycle();
 
     void handle_layer_change();
     void handle_focus_change();
@@ -78,6 +81,9 @@ private:
 
     /// The event handler's logger
     SysLog &m_logger;
+
+    /// The focus cycler
+    FocusCycle &m_focus_cycle;
 
     /** Whether or not to relayer the visible windows - this allows this class
      * to avoid restacking windows on every `ChangeLayer`, and instead only do 

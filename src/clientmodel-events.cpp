@@ -95,6 +95,7 @@ void ClientModelEvents::handle_focus_change()
         if (m_xdata.set_input_focus(focused_client))
         {
             m_focus_history.push(focused_client);
+            m_focus_cycle.set_focus(focused_client);
 
             m_xdata.set_border_color(focused_client, X_BLACK);
             m_xdata.ungrab_mouse(focused_client);
@@ -171,6 +172,8 @@ void ClientModelEvents::handle_client_desktop_change()
         m_logger.set_priority(LOG_WARNING) <<
             "Unanticipated switch by " << client << " from " <<
             old_desktop  << " to " << new_desktop << SysLog::endl;
+
+    update_focus_cycle();
 }
 
 /**
@@ -478,6 +481,9 @@ void ClientModelEvents::handle_current_desktop_change()
             to_show++)
         m_xdata.map_win(*to_show);
 
+    // Finally, update the focus cycle.
+    update_focus_cycle();
+
     // Since we've made some windows visible and some others invisible, we've
     // invalidated the previous stacking order, so restack everything according
     // to what is now visible
@@ -551,6 +557,13 @@ void ClientModelEvents::handle_destroy_change()
             m_xmodel.exit_move_resize();
         }
     }
+
+    // Update the focus cycle to ensure it does not include this new window
+    // (Also ensure that the currently visible window stays, since most of the
+    // internal state of the focus cycle is changed when we do this)
+    update_focus_cycle();
+    m_focus_cycle.set_focus(m_clients.get_focused());
+
 }
 
 /**
@@ -755,4 +768,32 @@ void ClientModelEvents::reposition_icons()
         m_xdata.move_window(the_icon->icon, x, y);
         x += icon_width;
     }
+}
+
+/**
+ * Updates the list of windows for the focus cycle.
+ */
+void ClientModelEvents::update_focus_cycle()
+{
+    std::vector<Window> visible_windows;
+    m_clients.get_visible_clients(visible_windows);
+
+    // Filter out any windows which are not currently mapped
+    bool previous_iter_erased_window = false;
+    for (unsigned int win_idx = 0; win_idx < visible_windows.size(); win_idx++)
+    {
+        if (previous_iter_erased_window)
+        {
+            previous_iter_erased_window = false;
+            win_idx--;
+        }
+
+        if (!m_xdata.is_mapped(visible_windows[win_idx]))
+        {
+            previous_iter_erased_window = true;
+            visible_windows.erase(visible_windows.begin() + win_idx);
+        }
+    }
+
+    m_focus_cycle.update_window_list(visible_windows);
 }

@@ -77,7 +77,8 @@ int main()
     xdata.get_windows(existing_windows);
 
     XModel xmodel;
-    XEvents x_events(config, xdata, clients, xmodel);
+    FocusCycle focus_cycle(logger);
+    XEvents x_events(config, xdata, clients, xmodel, focus_cycle);
 
     for (std::vector<Window>::iterator win_iter = existing_windows.begin();
          win_iter != existing_windows.end();
@@ -88,7 +89,8 @@ int main()
     }
 
 
-    ClientModelEvents client_events(config, logger, xdata, clients, xmodel);
+    ClientModelEvents client_events(config, logger, xdata, clients, xmodel,
+                                    focus_cycle);
 
     // Make sure to process all the changes produced by the class actions for
     // the first set of windows

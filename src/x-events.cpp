@@ -145,6 +145,12 @@ void XEvents::handle_keypress()
     LAYER_SET(9);
 
 #undef LAYER_SET
+    case CYCLE_FOCUS:
+    {
+        Window next_focused = m_focus_cycle.get_next();
+        if (next_focused != None)
+            m_clients.focus(next_focused);
+    }; break;
 
     case EXIT_WM:
         m_done = true;

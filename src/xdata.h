@@ -105,6 +105,7 @@ public:
     void get_attributes(Window, XWindowAttributes&);
     void set_attributes(Window, XSetWindowAttributes&,
         unsigned long);
+    bool is_mapped(Window);
     void set_border_color(Window, MonoColor);
     void set_border_width(Window, Dimension);
 

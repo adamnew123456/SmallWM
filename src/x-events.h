@@ -3,6 +3,7 @@
 #define __SMALLWM_X_EVENTS__
 
 #include "model/client-model.h"
+#include "model/focus-cycle.h"
 #include "model/x-model.h"
 #include "configparse.h"
 #include "common.h"
@@ -18,9 +19,9 @@ class XEvents
 {
 public:
     XEvents(WMConfig &config, XData &xdata, ClientModel &clients,
-            XModel &xmodel) :
+            XModel &xmodel, FocusCycle &focus_cycle) :
         m_config(config), m_xdata(xdata), m_clients(clients),
-        m_xmodel(xmodel), m_done(false)
+        m_xmodel(xmodel), m_focus_cycle(focus_cycle), m_done(false)
     {
         m_randroffset = xdata.randr_event_offset;
 
@@ -38,7 +39,7 @@ public:
             K_SNAP_TOP, K_SNAP_BOTTOM, K_SNAP_LEFT, K_SNAP_RIGHT,
             LAYER_ABOVE, LAYER_BELOW, LAYER_TOP, LAYER_BOTTOM,
             LAYER_1, LAYER_2, LAYER_3, LAYER_4, LAYER_5, LAYER_6, LAYER_7, LAYER_8, LAYER_9,
-            EXIT_WM,
+            CYCLE_FOCUS, EXIT_WM,
             INVALID_ACTION
         };
 
@@ -84,6 +85,9 @@ private:
     /** The data model which stores information related to clients, but not
      * about them. */
     XModel &m_xmodel;
+
+    /// The focus cycler
+    FocusCycle &m_focus_cycle;
 
     /// The offset for all RandR generated events
     int m_randroffset;

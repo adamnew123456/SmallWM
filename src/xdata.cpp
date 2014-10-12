@@ -385,6 +385,16 @@ void XData::set_attributes(Window window, XSetWindowAttributes &attr,
 }
 
 /**
+ * Checks to see if a window is visible or not.
+ */
+bool XData::is_mapped(Window window)
+{
+    XWindowAttributes attrs;
+    get_attributes(window, attrs);
+    return attrs.map_state != IsUnmapped;
+}
+
+/**
  * Sets the color of the border of a window.
  * @param window The window whose border to set.
  * @param color The border color.
