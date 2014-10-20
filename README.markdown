@@ -8,7 +8,7 @@ Improvements over TinyWM
 ========================
 - Window Iconification
 - Window Layering
-- Click-To-Focus (Focus Is Indicated By Colored Borders)
+- Click-To-Focus (Focus Is Indicated By Colored Borders) and Focus Cycling
 - Moving/Resizing Placeholders
 - Multiple Virtual Desktops (With Window Sticking)
 - Window Snapping
@@ -42,6 +42,7 @@ ones that involve clicking the mouse, and the `Super+1` ... `Super+9` bindings.
  - `layer-above`, `layer-below`
 - `Super+Home`, `Super+End`: Puts a client on the topmost or bottommost layer.
  - `layer-top`, `layer-bottom`
+- `Super+Tab`: Focuses the next visible client; note that, on occasion, SmallWM will focus a window which is not actually visible - in this case, just keep cycling until another visible window is chosen (`cycle-focus`).
 - `Super+LClick`: Dragging the left mouse button starts moving a window - to place it, let go.
 - `Super+RClick`: Dragging the right mouse button starts resizing a window - to scale it, let go.
 - `Super+1` ... `Super+5` ... `Super+9`: These change the layer to the specified value (1, 5, or 9 respectively, in this example)
@@ -53,7 +54,7 @@ ones that involve clicking the mouse, and the `Super+1` ... `Super+9` bindings.
 
 Building
 ========
-As a dependency, you'll need to have acxess to the headers for Xlib and XRandR.
+As a dependency, you'll need to have access to the headers for Xlib and XRandR.
 You should be able to easily obtain these via your package manager. You'll also
 need a C++ compiler - GNU G++ and clang++ work well.
 
@@ -64,6 +65,38 @@ Other than the dependencies, the Makefile contains everything you need to build 
 For modifying SmallWM, the other target that you should be aware of is `make check` 
 which compiles everything but does no linking. This is useful for incremental building
 to track compiler errors in source files.
+
+Running
+=======
+
+Typically, the easiest place to put the `smallwm` binary is in `/usr/local/bin`.
+
+If you want to run SmallWM from your login manager, you should put a file like the following in `/usr/share/xsessions/smallwm.desktop`:
+
+    [Desktop Entry]
+    Name=SmallWM
+    Exec=/usr/local/bin/smallwm.sh
+    Type=Application
+
+Inside the script `/usr/local/bin/smallwm.sh`, you should enter something like 
+the following (my personal launch script is more complicated than what follows,
+because mine contains options to allow me to run SmallWM under GDB server or
+via valgrind):
+
+    #!/bin/bash
+    if [ -x $HOME/.smallwmrc ]; then
+        $HOME/.smallwmrc &
+    fi
+
+    exec /usr/local/bin/smallwm
+
+At this point, you may choose to write a `.smallwmrc` file to start any programs
+you wish to run for the duration of your session. Note that SmallWM does not include
+a process manager to handle session programs (unlike say, XFCE, which will restart
+components like the panel or the desktop if they crash). I use a tool I wrote myself,
+called [jobmon](http://github.com/adamnew123456/jobmon), to manage my system tray and
+other programs, but you are free to choose whatever process manager you like, since
+SmallWM doesn't care about it.
 
 Configuration
 =============
@@ -151,6 +184,7 @@ list of default bindings and see what each of these bindings mean.
  - `force-close`
  - `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
  - `layer-above`, `layer-below`, `layer-top`, `layer-bottom`
+ - `cycle-focus`
  - `exit-wm` 
 
 Bugs/Todo
