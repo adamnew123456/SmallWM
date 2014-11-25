@@ -466,12 +466,7 @@ void XEvents::add_window(Window window)
 
         // Icons must be uniconified
         if (mapped_desktop->is_icon_desktop())
-        {
-            Icon *icon = m_xmodel.find_icon_from_client(window);
-            m_xmodel.unregister_icon(icon);
-
             m_clients.deiconify(window);
-        }
 
         // Moving/resizing clients must stop being moved/resized
         if (mapped_desktop->is_moving_desktop() || mapped_desktop->is_resizing_desktop())
