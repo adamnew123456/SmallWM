@@ -552,5 +552,23 @@ void XEvents::add_window(Window window)
 
         if (action.actions & ACT_SNAP)
             snap_client(window, action.snap);
+
+        if (action.actions & ACT_MOVE_X || action.actions & ACT_MOVE_Y)
+        {
+            Dimension scr_width, scr_height;
+            m_xdata.get_screen_size(scr_width, scr_height);
+
+            Dimension win_x_pos = win_attr.x;
+            Dimension win_y_pos = win_attr.y;
+
+            if (action.actions & ACT_MOVE_X)
+                win_x_pos = scr_width * action.relative_x;
+
+            if (action.actions & ACT_MOVE_Y)
+                win_y_pos = scr_height * action.relative_y;
+
+            if (win_attr.x != win_x_pos || win_attr.x != win_y_pos)
+                m_clients.change_location(window, win_x_pos, win_y_pos);
+        }
     }
 }

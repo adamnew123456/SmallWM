@@ -6,6 +6,10 @@
  */
 void WMConfig::load()
 {
+    // This is meant to help out the unit tests, which would otherwise have 
+    // 'reset()' calls sprinkled about
+    reset();
+
     std::string config_path = get_config_path();
     const char *c_filename = const_cast<const char*>(config_path.c_str());
 
@@ -171,6 +175,24 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 {
                     action.actions |= ACT_SETLAYER;
                     action.layer = layer;
+                }
+            }
+            else if (!strncmp(stripped, "xpos:", 5))
+            {
+                double relative_x = strtod(stripped + 5, NULL) / 100.0;
+                if (relative_x > 0.0 && relative_x < 1.0)
+                {
+                    action.actions |= ACT_MOVE_X;
+                    action.relative_x = relative_x;
+                }
+            }
+            else if (!strncmp(stripped, "ypos:", 5))
+            {
+                double relative_y = strtod(stripped + 5, NULL) / 100.0;
+                if (relative_y > 0.0 && relative_y < 1.0)
+                {
+                    action.actions |= ACT_MOVE_Y;
+                    action.relative_y = relative_y;
                 }
             }
 

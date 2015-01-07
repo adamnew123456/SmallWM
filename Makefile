@@ -54,7 +54,7 @@ obj:
 	[ -d obj/model ] || mkdir obj/model
 
 test: ${TESTS}
-	for TEST in ${TESTS}; do ./$$TEST;  done
+	for TEST in ${TESTS}; do echo "Running $$TEST::"; ./$$TEST;  done
 
 tags: ${HEADRES} ${CFILES}
 	ctags --c++-kinds=+p --fields=+iaS --extra=+q --language-force=c++ -R src

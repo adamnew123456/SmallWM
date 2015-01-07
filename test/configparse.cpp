@@ -22,15 +22,6 @@ protected:
 };
 
 CustomFileWMConfig config;
-struct WMConfigFixture 
-{
-    WMConfigFixture() 
-    { config.reset(); };
-
-    ~WMConfigFixture() 
-    {};
-};
-
 void write_config_file(std::string filename, const char *text)
 {
     std::ofstream config(filename.c_str());
@@ -40,238 +31,235 @@ void write_config_file(std::string filename, const char *text)
 
 SUITE(WMConfigSuitePlainOptions)
 {
-    TEST_FIXTURE(WMConfigFixture, test_default_shell)
+    TEST(test_default_shell)
     {
         // Ensure that an empty config file provides the default shell
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(std::string("/usr/bin/xterm"), config.shell);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_shell) 
+    TEST(test_shell) 
     {
         // Make sure that any particular setting is acceptable
         write_config_file(*config_path,
             "[smallwm]\nshell=some-terminal \n");
-
         config.load();
+
         CHECK_EQUAL(std::string("some-terminal"), config.shell);
     }
     
-    TEST_FIXTURE(WMConfigFixture, test_shell_empty)
+    TEST(test_shell_empty)
     {
         // Make sure that an empty configuration option is not accepted
         write_config_file(*config_path,
             "[smallwm]\nshell= \n");
-        
         config.load();
+
         CHECK_EQUAL(std::string("/usr/bin/xterm"), config.shell);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_default_num_desktops)
+    TEST(test_default_num_desktops)
     {
         // Ensure that an empty config file provides the default number of
         // desktops
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(5, config.num_desktops);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_num_desktops)
+    TEST(test_num_desktops)
     {
         // Make sure that a valid number of desktops sets the option
         write_config_file(*config_path,
             "[smallwm]\ndesktops= 42 \n");
-
         config.load();
+
         CHECK_EQUAL(42, config.num_desktops);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_num_desktops_zero)
+    TEST(test_num_desktops_zero)
     {
         // Zero desktops are invalid, so make sure they revert to the default
         write_config_file(*config_path,
             "[smallwm]\ndesktops=0\n");
-
         config.load();
+
         CHECK_EQUAL(5, config.num_desktops);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_num_desktops_negative)
+    TEST(test_num_desktops_negative)
     {
         // Negative desktops are also invalid
         write_config_file(*config_path,
             "[smallwm]\ndesktops=-32\n");
-
         config.load();
+
         CHECK_EQUAL(5, config.num_desktops);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_num_desktops_non_numeric)
+    TEST(test_num_desktops_non_numeric)
     {
         // Non-numbers should give back the default value
         write_config_file(*config_path,
             "[smallwm]\ndesktops=not a number\n");
-
         config.load();
+
         CHECK_EQUAL(5, config.num_desktops);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_default_icon_width)
+    TEST(test_default_icon_width)
     {
-
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(75, config.icon_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_width)
+    TEST(test_icon_width)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-width= 42 \n");
-
         config.load();
+
         CHECK_EQUAL(42, config.icon_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_width_zero)
+    TEST(test_icon_width_zero)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-width=0\n");
-
         config.load();
+
         CHECK_EQUAL(75, config.icon_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_width_negative)
+    TEST(test_icon_width_negative)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-width=-42\n");
-
         config.load();
+
         CHECK_EQUAL(75, config.icon_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_width_not_numeric)
+    TEST(test_icon_width_not_numeric)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-width=not a number\n");
-
         config.load();
+
         CHECK_EQUAL(75, config.icon_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_default_icon_height)
+    TEST(test_default_icon_height)
     {
-
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(20, config.icon_height);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_height)
+    TEST(test_icon_height)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-height= 42 \n");
-
         config.load();
+
         CHECK_EQUAL(42, config.icon_height);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_height_zero)
+    TEST(test_icon_height_zero)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-height=0\n");
-
         config.load();
+
         CHECK_EQUAL(20, config.icon_height);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_height_negative)
+    TEST(test_icon_height_negative)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-height=-42\n");
-
         config.load();
+
         CHECK_EQUAL(20, config.icon_height);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_height_not_numeric)
+    TEST(test_icon_height_not_numeric)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-height=not a number\n");
-
         config.load();
+
         CHECK_EQUAL(20, config.icon_height);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_default_border_width)
+    TEST(test_default_border_width)
     {
-
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(4, config.border_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_border_width)
+    TEST(test_border_width)
     {
         write_config_file(*config_path,
             "[smallwm]\nborder-width= 42 \n");
-
         config.load();
+
         CHECK_EQUAL(42, config.border_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_border_width_zero)
+    TEST(test_border_width_zero)
     {
         write_config_file(*config_path,
             "[smallwm]\nborder-width=0\n");
-
         config.load();
+
         CHECK_EQUAL(4, config.border_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_border_width_negative)
+    TEST(test_border_width_negative)
     {
         write_config_file(*config_path,
             "[smallwm]\nborder-width=-42\n");
-
         config.load();
+
         CHECK_EQUAL(4, config.border_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_border_width_not_numeric)
+    TEST(test_border_width_not_numeric)
     {
         write_config_file(*config_path,
             "[smallwm]\nborder-width=not a number\n");
-
         config.load();
+
         CHECK_EQUAL(4, config.border_width);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_icons_default)
+    TEST(test_icon_icons_default)
     {
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(true, config.show_icons);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_icons_yes)
+    TEST(test_icon_icons_yes)
     {
         write_config_file(*config_path, 
             "[smallwm]\nicon-icons= 1 \n");
-
         config.load();
+
         CHECK_EQUAL(true, config.show_icons);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_icons_no)
+    TEST(test_icon_icons_no)
     {
         write_config_file(*config_path, 
             "[smallwm]\nicon-icons= 0 \n");
@@ -280,33 +268,33 @@ SUITE(WMConfigSuitePlainOptions)
         CHECK_EQUAL(false, config.show_icons);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_icons_invalid)
+    TEST(test_icon_icons_invalid)
     {
         write_config_file(*config_path, 
             "[smallwm]\nicon-icons= 42 \n");
-
         config.load();
+
         CHECK_EQUAL(true, config.show_icons);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_icon_icons_not_numeric)
+    TEST(test_icon_icons_not_numeric)
     {
         write_config_file(*config_path,
             "[smallwm]\nicon-icons=not a number\n");
-
         config.load();
+
         CHECK_EQUAL(true, config.show_icons);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_syslog_level_default)
+    TEST(test_syslog_level_default)
     {
         write_config_file(*config_path, "\n");
-
         config.load();
+
         CHECK_EQUAL(LOG_UPTO(LOG_WARNING), config.log_mask);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_syslog_level_valid)
+    TEST(test_syslog_level_valid)
     {
         const char *log_names[] = {
             "EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO",
@@ -331,44 +319,46 @@ SUITE(WMConfigSuitePlainOptions)
         }
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_syslog_invalid)
+    TEST(test_syslog_invalid)
     {
         write_config_file(*config_path,
             "[smallwm]\nlog-level=not a log level\n");
-
         config.load();
+
         CHECK_EQUAL(LOG_UPTO(LOG_WARNING), config.log_mask);
     }
 };
 
 SUITE(WMConfigSuiteActions)
 {
-    TEST_FIXTURE(WMConfigFixture, test_empty_actions)
+    TEST(test_empty_actions)
     {
         // First, ensure that no class actions are set by default
         write_config_file(*config_path, "");
-
         config.load();
+
         CHECK_EQUAL(0, config.classactions.size());
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_default_actions)
+    TEST(test_default_actions)
     {
         // Check that we get an entry in the class actions mapping, but with
         // the default values
         write_config_file(*config_path, 
             "[actions]\ntest-class=\n");
-
         config.load();
+
         ClassActions &action = config.classactions[
             std::string("test-class")];
         CHECK_EQUAL(0, action.actions & ACT_STICK);
         CHECK_EQUAL(0, action.actions & ACT_SNAP);
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_invalid_actions)
+    TEST(test_invalid_actions)
     {
         // Check that we get an entry in the class actions mapping, but with
         // the default values, whenever the configuration encounters an
@@ -383,9 +373,11 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SNAP);
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_stick)
+    TEST(test_stick)
     {
         // Check that the created class action sticks the window and nothing
         // else
@@ -399,32 +391,35 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SNAP);
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_maximize)
+    TEST(test_maximize)
     {
 
         // Check that the created class action sticks the window and nothing
         // else
         write_config_file(*config_path, 
             "[actions]\ntest-class= maximize \n");
-
         config.load();
+
         ClassActions &action = config.classactions[
             std::string("test-class")];
         CHECK_EQUAL(0, action.actions & ACT_STICK);
         CHECK_EQUAL(0, action.actions & ACT_SNAP);
         CHECK(action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_set_valid_layers)
+    TEST(test_set_valid_layers)
     {
         // Set the layer using some valid layers
         Layer layers[] = {MIN_LAYER, MAX_LAYER, DEF_LAYER, 6, 4, 9};
         for (int idx = 0; idx < sizeof(layers) / sizeof(*layers); idx++)
         {
-            config.reset();
 
             std::stringstream stream;
             stream << "[actions]\ntest-class= layer:" << 
@@ -446,14 +441,13 @@ SUITE(WMConfigSuiteActions)
         }
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_set_invalid_layers)
+    TEST(test_set_invalid_layers)
     {
         // Set the layer using some invalid layers
         Layer layers[] = {DIALOG_LAYER, 12, 16, 22, 19};
 
         for (int idx = 0; idx < sizeof(layers) / sizeof(*layers); idx++)
         {
-            config.reset();
 
             std::stringstream stream;
             stream << "[actions]\ntest-class= layer:" << 
@@ -473,7 +467,6 @@ SUITE(WMConfigSuiteActions)
         }
 
         // Test with something non-numeric
-        config.reset();
 
         write_config_file(*config_path, "[actions]\ntest-class= layer:not a layer\n");
         config.load();
@@ -489,7 +482,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_set_snap_sides)
+    TEST(test_set_snap_sides)
     {
         // Snap toward all valid sides
         SnapDir snaps[] = {SNAP_TOP, SNAP_BOTTOM, SNAP_LEFT, SNAP_RIGHT};
@@ -497,7 +490,6 @@ SUITE(WMConfigSuiteActions)
 
         for (int idx = 0; idx < sizeof(snaps) / sizeof(*snaps); idx++)
         {
-            config.reset();
 
             std::stringstream stream;
             stream << "[actions]\ntest-class= snap:" << 
@@ -517,7 +509,7 @@ SUITE(WMConfigSuiteActions)
         }
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_set_invalid_snap)
+    TEST(test_set_invalid_snap)
     {
         // Snap some invalid sides
         const char *invalid_snaps[] = {"LEFT", "lEfT", "not a layer", "42"};
@@ -526,7 +518,6 @@ SUITE(WMConfigSuiteActions)
                 idx < sizeof(invalid_snaps) / sizeof(*invalid_snaps);
                 idx++)
         {
-            config.reset();
 
             std::stringstream stream;
             stream << "[actions]\ntest-class= snap:" << 
@@ -544,10 +535,107 @@ SUITE(WMConfigSuiteActions)
         }
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_combiations)
+    TEST(test_x_pos)
+    {
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=xpos:57.32\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK(action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+
+        CHECK_CLOSE(action.relative_x, 57.32 / 100.0, 0.001);
+    }
+
+    TEST(test_invalid_x_pos)
+    {
+        // The only valid range is in [0, 100], so test two values outside of
+        // that range
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=xpos:-15.05\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=xpos:-15.05\n");
+        config.load();
+
+        action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+    }
+    
+    TEST(test_y_pos)
+    {
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=ypos:57.32\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK(action.actions & ACT_MOVE_Y);
+
+        CHECK_CLOSE(action.relative_y, 57.32 / 100.0, 0.001);
+    }
+
+    TEST(test_invalid_y_pos)
+    {
+        // The only valid range is in [0, 100], so test two values outside of
+        // that range
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=ypos:-15.05\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=ypos:109.52\n");
+        config.load();
+
+        action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+    }
+
+    TEST(test_combiations)
     {
         // Test a few combinations of different comma-separated options
-        config.reset();
 
         write_config_file(*config_path,
             "[actions]\ntest-class= maximize, snap:left, layer:4, stick \n");
@@ -565,10 +653,9 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(action.layer, 4);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_combiations_with_duplicates)
+    TEST(test_combiations_with_duplicates)
     {
         // Test a few combinations of different comma-separated options
-        config.reset();
 
         write_config_file(*config_path,
             "[actions]\ntest-class= maximize, snap:left, layer:4, stick, layer:5 \n");
@@ -627,7 +714,7 @@ DefaultBinding shortcuts[] = {
 // "layer-9"
 SUITE(WMConfigSuiteKeyboardOptions)
 {
-    TEST_FIXTURE(WMConfigFixture, test_default_bindngs)
+    TEST(test_default_bindngs)
     {
         write_config_file(*config_path, "");
         config.load();
@@ -640,7 +727,7 @@ SUITE(WMConfigSuiteKeyboardOptions)
         }
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_unused_bindings)
+    TEST(test_unused_bindings)
     {
         // Makes sure that unused bindings are assigned properly
         write_config_file(*config_path,
@@ -656,7 +743,7 @@ SUITE(WMConfigSuiteKeyboardOptions)
         CHECK_EQUAL(LAYER_2, config.key_commands.keysym_to_action[XK_colon]);
     }
 
-    TEST_FIXTURE(WMConfigFixture, test_duplicate_bindings)
+    TEST(test_duplicate_bindings)
     {
         // Tests to make sure that duplicate bindings get reverted, to avoid
         // bindings which are not attached to any key
