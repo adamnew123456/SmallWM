@@ -115,7 +115,7 @@ For example:
     icon-icons=0
     log-level=NOTICE
     [actions]
-    stalonetray=stick,layer:9
+    stalonetray=stick,layer:9,xpos:90,ypos:0
     [keyboard]
     toggle-stick=asciitilde
     snap-top=w
@@ -155,6 +155,9 @@ The possibilities for a class action are:
  - `maximize` maximizes that window.
  - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 1 to 9; 9 is the highest layer, 1 is the lowest.
  - `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen.
+ - `xpos:X` and `ypos:Y` set the relative position of the window on the screen. `X` and `Y` are decimals in the range 0 to 100,
+   inclusive. For example, setting `xpos:50` puts the window's left edge in the middle of the screen (because `xpos:50` is
+   equivalent to saying that the X position should be 50 percent of the screen's width).
 
 Keyboard Bindings
 =================
