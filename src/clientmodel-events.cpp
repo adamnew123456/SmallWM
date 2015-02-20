@@ -793,6 +793,19 @@ void ClientModelEvents::update_focus_cycle()
             previous_iter_erased_window = true;
             visible_windows.erase(visible_windows.begin() + win_idx);
         }
+        else
+        {
+            XWindowAttributes props;
+            m_xdata.get_attributes(visible_windows[win_idx], props);
+
+            // Some windows are completely off-screen, and should be ignored when
+            // figuring out which windows can be cycled
+            if (props.x + props.width < 0 || props.y + props.height < 0)
+            {
+                previous_iter_erased_window = true;
+                visible_windows.erase(visible_windows.begin() + win_idx);
+            }
+        }
     }
 
     m_focus_cycle.update_window_list(visible_windows);
