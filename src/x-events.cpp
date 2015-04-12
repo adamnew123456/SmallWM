@@ -45,9 +45,15 @@ void XEvents::handle_keypress()
 {
     KeySym key = m_xdata.get_keysym(m_event.xkey.keycode);
 
-    Window client = m_event.xkey.subwindow;
-    if (client == None)
-        client = m_event.xkey.window;
+    Window client = None;
+    if (m_config.hotkey == HK_MOUSE)
+    {
+        Window client = m_event.xkey.subwindow;
+        if (client == None)
+            client = m_event.xkey.window;
+    }
+    else if (m_config.hotkey == HK_FOCUS)
+        client = m_clients.get_focused();
 
     bool is_client = m_clients.is_client(client);
 

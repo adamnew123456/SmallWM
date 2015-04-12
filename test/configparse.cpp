@@ -633,6 +633,41 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
 
+    TEST(test_hotkey_default)
+    {
+        write_config_file(*config_path, "\n");
+        config.load();
+
+        CHECK_EQUAL(config.hotkey, HK_MOUSE);
+    }
+
+    TEST(test_hotkey_focus)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nhotkey-mode=focus\n");
+        config.load();
+
+        CHECK_EQUAL(config.hotkey, HK_FOCUS);
+    }
+
+    TEST(test_hotkey_mouse)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nhotkey-mode=mouse\n");
+        config.load();
+
+        CHECK_EQUAL(config.hotkey, HK_MOUSE);
+    }
+
+    TEST(test_invalid_hotkey)
+    {
+        write_config_file(*config_path,
+            "[smallwm]\nhotkey-mode=blargh\n");
+        config.load();
+
+        CHECK_EQUAL(config.hotkey, HK_MOUSE);
+    }
+
     TEST(test_combiations)
     {
         // Test a few combinations of different comma-separated options

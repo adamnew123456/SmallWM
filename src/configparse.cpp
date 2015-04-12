@@ -28,6 +28,7 @@ void WMConfig::reset()
     border_width = 4;
     show_icons = true;
     log_mask = LOG_UPTO(LOG_WARNING);
+    hotkey = HK_MOUSE;
 
     key_commands.reset();
     classactions.clear();
@@ -78,6 +79,15 @@ int WMConfig::config_parser(void *user, const char *c_section,
             SYSLOG_MACRO_CHECK(INFO);
             SYSLOG_MACRO_CHECK(DEBUG);
 #undef SYSLOG_MACRO_CHECK
+        }
+        else if (name == std::string("hotkey-mode"))
+        {
+            if (value == std::string("focus"))
+                self->hotkey = HK_FOCUS;
+            else if (value == std::string("mouse"))
+                self->hotkey = HK_MOUSE;
+            else
+                self->hotkey = HK_MOUSE;
         }
         else if (name == std::string("shell"))
         {

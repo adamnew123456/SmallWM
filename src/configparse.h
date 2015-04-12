@@ -119,6 +119,15 @@ struct KeyboardConfig
 };
 
 /**
+ * How to apply actions made with keyboard hotkeys.
+ */
+enum HotkeyType
+{
+    HK_FOCUS, //< Hotkeys apply to the currently focused window
+    HK_MOUSE //< Hotkeys apply to the window the mouse cursor is on
+};
+
+/**
  * Reads and manages configuration options in the SmallWM configure option.
  */
 class WMConfig
@@ -130,6 +139,9 @@ public:
     
     void load();
     void reset();
+
+    /// The current hotkey mode
+    HotkeyType hotkey;
 
     /// The minimum message level to send to syslog
     int log_mask;
