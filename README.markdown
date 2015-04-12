@@ -114,6 +114,7 @@ For example:
     border-width=4
     icon-icons=0
     log-level=NOTICE
+    hotkey-mode=focus
     [actions]
     stalonetray=stick,layer:9,xpos:90,ypos:0
     [keyboard]
@@ -132,6 +133,7 @@ The options in the `[smallwm]` section are (in order):
  - The width of the border of windows (default: 4).
  - Whether to (1) or not to (0) show application icons inside icon windows (default: 1).
  - The severity of logging messages to send to syslog. By default, this is `WARNING`. See `syslog(3)` for the other log levels.
+ - What window to apply hotkeys like MINIMIZE to - this can be either `focus` (which means that the currently focused window is acted upon) or `mouse` (which means that the window under the cursor is acted upon). The default is `mouse`, since that was the only behavior available in SmallWM until recently.
 
 The options in the `[actions]` section are covered next, and then the 
 `[keyboard]` section after that.
