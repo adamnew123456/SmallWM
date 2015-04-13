@@ -79,12 +79,6 @@ void XData::init_xrandr()
     // than we require, it seems like a good starting point
     int major_version = 1, minor_version = 4;
     XRRQueryVersion(m_display, &major_version, &minor_version);
-
-    // Make sure that we receive screen change events, so that way XEvents
-    // can handle them
-    XRRSelectInput(m_display, m_root,
-            RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask 
-            | RROutputChangeNotifyMask | RROutputPropertyNotifyMask);
 }
 
 /**
@@ -562,36 +556,94 @@ void XData::get_class(Window win, std::string &xclass)
 }
 
 /**
- * Gets the current screen size.
+ * Gets the size of the primary screen.
  * @param[out] width The width of the screen.
  * @param[out] height The height of the screen.
  */
-void XData::get_screen_size(Dimension &width, Dimension &height)
+void XData::get_screen_bounds(Box &box)
 {
-    width = DIM2D_WIDTH(m_screen_size);
-    height = DIM2D_HEIGHT(m_screen_size);
+    get_screen_bounds_at_location(0, 0, box);
 }
 
 /**
- * Updates the current screen size by querying X RandR.
+ * Gets the size of the screen which a particular window occupies.
  */
-void XData::update_screen_size()
+void XData::get_screen_bounds_for_window(Window window, Box &box) 
 {
-    XRRScreenConfiguration *screen_config = XRRGetScreenInfo(m_display,
-        m_root);
-   
-    // First, we have to retrieve the list of all *possible* sizes, and then
-    // pick out the current size from that
-    int _;
-    XRRScreenSize *sizes = XRRConfigSizes(screen_config, &_);
+    XWindowAttributes attr;
+    get_attributes(window, attr);
 
-    Rotation __;
-    SizeID current_size_idx = XRRConfigCurrentConfiguration(screen_config, &__);
+    get_screen_bounds_at_location(attr.x, attr.y, box);
+}
 
-    DIM2D_WIDTH(m_screen_size) = sizes[current_size_idx].width;
-    DIM2D_HEIGHT(m_screen_size) = sizes[current_size_idx].height;
+/**
+ * Figures out what screen is covering a point, and then gets the bounds of that
+ * screen.
+ *
+ * This is the result of my crawling through Xrandr.h rather than any attempt 
+ * at processing formal documentation. There aren't any good docs, from what 
+ * I can find.
+ *
+ * The AwesomeWM codebase was helpful in finding out a few things, though.
+ */
+void XData::get_screen_bounds_at_location(int x, int y, Box &box)
+{
+    XRRScreenResources *resources = XRRGetScreenResourcesCurrent(m_display, m_root);
 
-    XRRFreeScreenConfigInfo(screen_config);
+    if (resources == NULL)
+    {
+        box.x = -1;
+        box.y = -1;
+        box.width = -1;
+        box.height = -1;
+        return;
+    }
+
+    // XRandR stores things called 'CRTCs', which is apparently a funny way of
+    // spelling 'outputs' (like LVDS1 or VGA2). We have to find out what location
+    // the top-left of the window is in, and then test all the CRTCs to figure
+    // out which contains our position.
+    //
+    // It *seems* like there should be a better way, but this is exactly what
+    // awesome does.
+    //
+    // I may decide to do caching on this later, but I'll have to see how slow
+    // it is.
+    for (int crtc_idx = 0; crtc_idx < resources->ncrtc; crtc_idx++)
+    {
+        RRCrtc crtc_id = resources->crtcs[crtc_idx];
+
+        XRRCrtcInfo *crtc = XRRGetCrtcInfo(m_display, resources, crtc_id);
+        if (!crtc)
+            continue;
+
+        int left = crtc->x;
+        int right = left + crtc->width;
+        int top = crtc->y;
+        int bottom = top + crtc->height;
+
+        XRRFreeCrtcInfo(crtc);
+
+        if (IN_BOUNDS(x, left, right) && IN_BOUNDS(y, top, bottom))
+        {
+            box.x = left;
+            box.y = top;
+            box.width = right - left;
+            box.height = bottom - top;
+
+            goto cleanup_screen;
+        }
+    }
+
+    // Somehow, the position isn't on any screen
+    box.x = -1;
+    box.y = -1;
+    box.width = -1;
+    box.height = -1;
+
+cleanup_screen:
+    XRRFreeScreenResources(resources);
+    return;
 }
 
 /**

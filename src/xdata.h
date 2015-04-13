@@ -67,7 +67,6 @@ public:
         m_screen = DefaultScreen(dpy);
 
         init_xrandr();
-        update_screen_size();
     };
 
     void init_xrandr();
@@ -123,8 +122,9 @@ public:
     KeySym get_keysym(int);
     void keysym_to_string(KeySym, std::string&);
 
-    void get_screen_size(Dimension&, Dimension&);
-    void update_screen_size();
+    void get_screen_bounds(Box&);
+    void get_screen_bounds_for_window(Window, Box&);
+    void get_screen_bounds_at_location(int, int, Box&);
 
     /// The event code X adds to each XRandR event (used by XEvents)
     int randr_event_offset;
@@ -148,10 +148,7 @@ private:
     /// The pre-defined atoms, which are accessible via a string
     std::map<std::string, Atom> m_atoms;
 
-    /// The size of the screen
-    Dimension2D m_screen_size;
-
-    /// The window the pointer is confined to, or Nont
+    /// The window the pointer is confined to, or None
     Window m_confined;
 };
 

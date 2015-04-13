@@ -23,8 +23,6 @@ public:
         m_config(config), m_xdata(xdata), m_clients(clients),
         m_xmodel(xmodel), m_focus_cycle(focus_cycle), m_done(false)
     {
-        m_randroffset = xdata.randr_event_offset;
-
         xdata.add_hotkey_mouse(MOVE_BUTTON);
         xdata.add_hotkey_mouse(RESIZE_BUTTON);
         xdata.add_hotkey_mouse(LAUNCH_BUTTON);
@@ -61,8 +59,6 @@ private:
     void handle_mapnotify();
     void handle_expose();
     void handle_destroynotify();
-
-    void handle_rrnotify();
 
     void maximize_client(Window);
     void snap_client(Window, SnapDir);

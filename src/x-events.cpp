@@ -10,9 +10,6 @@ bool XEvents::step()
 {
     // Grab the next event from X, and then dispatch upon its type
     m_xdata.next_event(m_event);
-
-    if (m_event.type == m_randroffset + RRNotify)
-        handle_rrnotify();
     
     if (m_event.type == KeyPress)
         handle_keypress();
@@ -56,15 +53,6 @@ void XEvents::handle_keypress()
         client = m_clients.get_focused();
 
     bool is_client = m_clients.is_client(client);
-
-    // Only some of the actions below need this, but it shouldn't be
-    // prohibitively expensive to go ahead and do it here
-    Dimension scr_width, scr_height;
-    m_xdata.get_screen_size(scr_width, scr_height);
-
-    // We need to subtract the height of the icon row when dealing with
-    // the size of the screen
-    Dimension workspace_height = scr_height - m_config.icon_height;
 
     KeyboardAction action = m_config.key_commands.keysym_to_action[key];
     switch (action)
@@ -400,26 +388,33 @@ void XEvents::handle_destroynotify()
 }
 
 /**
- * Handles screen resizing events by updating the screen dimensions
- * when X RandR sends us events.
- */
-void XEvents::handle_rrnotify()
-{
-    m_xdata.update_screen_size();
-}
-
-/**
  * Maximizes a client, taking up the whole screen, with the exception of one
  * row of the icon bar.
  * @param window The window to maximize.
  */
 void XEvents::maximize_client(Window window)
 {
-    Dimension scr_width, scr_height;
-    m_xdata.get_screen_size(scr_width, scr_height);
+    Box screen;
+    m_xdata.get_screen_bounds_for_window(window, screen);
 
-    m_clients.change_location(window, 0, m_config.icon_height);
-    m_clients.change_size(window, scr_width, scr_height - m_config.icon_height);
+    // An invalid screen. Just put the client on the main display.
+    if (screen.x == -1)
+        m_xdata.get_screen_bounds(screen);
+
+    // The icons can only appear along the top edge. If they won't appear on
+    // this screen, there's no need to shift the window down.
+    //
+    // (Also, see XEvents::snap_client for the rationale behind the + 1)
+    if (screen.y == 0)
+    {
+        m_clients.change_location(window, screen.x + 1, m_config.icon_height);
+        m_clients.change_size(window, screen.width, screen.height - m_config.icon_height);
+    }
+    else
+    {
+        m_clients.change_location(window, screen.x + 1, screen.y);
+        m_clients.change_size(window, screen.width, screen.height);
+    }
 }
 
 /**
@@ -429,29 +424,40 @@ void XEvents::maximize_client(Window window)
  */
 void XEvents::snap_client(Window window, SnapDir side)
 {
-    Dimension scr_width, scr_height;
-    m_xdata.get_screen_size(scr_width, scr_height);
+    Box screen;
+    m_xdata.get_screen_bounds_for_window(window, screen);
+    if (screen.x == -1)
+        m_xdata.get_screen_bounds(screen);
 
-    Dimension workspace_height = scr_height - m_config.icon_height;
+    Dimension workspace_height = 
+        screen.height - (screen.y == 0 ? m_config.icon_height : 0);
+
+    int top_y = (screen.y == 1 ? m_config.icon_height : screen.y);
+    int mid_y = top_y + (workspace_height / 2);
+
+    // Note the "+ 1" offsets used for the snaps. The reason for this is that
+    // we want the window to avoid the screen's left and top edges so that
+    // it doesn't "migrate" screens (that is, if the window is on the edge, it
+    // could be considered on either, which can cause the window to end up on
+    // the unexpected monitor).
 
     switch (side)
     {
     case SNAP_TOP:
-        m_clients.change_location(window, 0, m_config.icon_height);
-        m_clients.change_size(window, scr_width, workspace_height / 2);
+        m_clients.change_location(window, screen.x + 1, top_y);
+        m_clients.change_size(window, screen.width, workspace_height / 2);
         break;
     case SNAP_BOTTOM:
-        m_clients.change_location(window, 0, 
-            m_config.icon_height + (workspace_height / 2));
-        m_clients.change_size(window, scr_width, workspace_height / 2);
+        m_clients.change_location(window, screen.x + 1, mid_y);
+        m_clients.change_size(window, screen.width, workspace_height / 2);
         break;
     case SNAP_LEFT:
-        m_clients.change_location(window, 0, m_config.icon_height);
-        m_clients.change_size(window, scr_width / 2, workspace_height);
+        m_clients.change_location(window, screen.x + 1, top_y);
+        m_clients.change_size(window, screen.width / 2, workspace_height);
         break;
     case SNAP_RIGHT:
-        m_clients.change_location(window, scr_width / 2, m_config.icon_height);
-        m_clients.change_size(window, scr_width / 2, workspace_height);
+        m_clients.change_location(window, screen.x + screen.width / 2, top_y);
+        m_clients.change_size(window, screen.width / 2, workspace_height);
         break;
     }
 }
@@ -556,17 +562,21 @@ void XEvents::add_window(Window window)
 
         if (action.actions & ACT_MOVE_X || action.actions & ACT_MOVE_Y)
         {
-            Dimension scr_width, scr_height;
-            m_xdata.get_screen_size(scr_width, scr_height);
+            // This is exempt from the typical use for screen sizes, which is
+            // relative to the window (that is, the screen size is the size of
+            // the screen *that the window occupies*). This is because we can't
+            // know what screen the user intended the window to be on.
+            Box screen;
+            m_xdata.get_screen_bounds(screen);
 
             Dimension win_x_pos = win_attr.x;
             Dimension win_y_pos = win_attr.y;
 
             if (action.actions & ACT_MOVE_X)
-                win_x_pos = scr_width * action.relative_x;
+                win_x_pos = screen.width * action.relative_x;
 
             if (action.actions & ACT_MOVE_Y)
-                win_y_pos = scr_height * action.relative_y;
+                win_y_pos = screen.height * action.relative_y;
 
             if (win_attr.x != win_x_pos || win_attr.x != win_y_pos)
                 m_clients.change_location(window, win_x_pos, win_y_pos);
