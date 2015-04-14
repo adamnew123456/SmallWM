@@ -412,7 +412,7 @@ void XEvents::maximize_client(Window window)
     }
     else
     {
-        m_clients.change_location(window, screen.x + 1, screen.y);
+        m_clients.change_location(window, screen.x + 1, screen.y + 1);
         m_clients.change_size(window, screen.width, screen.height);
     }
 }
@@ -429,11 +429,19 @@ void XEvents::snap_client(Window window, SnapDir side)
     if (screen.x == -1)
         m_xdata.get_screen_bounds(screen);
 
-    Dimension workspace_height = 
-        screen.height - (screen.y == 0 ? m_config.icon_height : 0);
-
-    int top_y = (screen.y == 1 ? m_config.icon_height : screen.y);
-    int mid_y = top_y + (workspace_height / 2);
+    int top_y, mid_y, bottom_y;
+    if (screen.y == 0) 
+    {
+        top_y = screen.y + m_config.icon_height;
+        mid_y = screen.y + (screen.height / 2);
+        bottom_y = screen.y + screen.height;
+    }
+    else
+    {
+        top_y = screen.y + 1;
+        mid_y = screen.y + (screen.height / 2);
+        bottom_y = screen.y + screen.height;
+    }
 
     // Note the "+ 1" offsets used for the snaps. The reason for this is that
     // we want the window to avoid the screen's left and top edges so that
@@ -445,19 +453,19 @@ void XEvents::snap_client(Window window, SnapDir side)
     {
     case SNAP_TOP:
         m_clients.change_location(window, screen.x + 1, top_y);
-        m_clients.change_size(window, screen.width, workspace_height / 2);
+        m_clients.change_size(window, screen.width, mid_y - top_y);
         break;
     case SNAP_BOTTOM:
         m_clients.change_location(window, screen.x + 1, mid_y);
-        m_clients.change_size(window, screen.width, workspace_height / 2);
+        m_clients.change_size(window, screen.width, bottom_y - mid_y);
         break;
     case SNAP_LEFT:
         m_clients.change_location(window, screen.x + 1, top_y);
-        m_clients.change_size(window, screen.width / 2, workspace_height);
+        m_clients.change_size(window, screen.width / 2, bottom_y - top_y);
         break;
     case SNAP_RIGHT:
         m_clients.change_location(window, screen.x + screen.width / 2, top_y);
-        m_clients.change_size(window, screen.width / 2, workspace_height);
+        m_clients.change_size(window, screen.width / 2, bottom_y - top_y);
         break;
     }
 }
