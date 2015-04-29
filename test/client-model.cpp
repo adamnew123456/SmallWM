@@ -1357,6 +1357,59 @@ SUITE(ClientModelMemberSuite)
 
         CHECK_EQUAL(model.find_desktop(a), model.ALL_DESKTOPS);
     }
+
+    TEST_FIXTURE(ClientModelFixture, test_mode_change)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // Start out by changing to floating. This should cause no events, since
+        // all windows are floating by default
+        model.change_mode(a, CPS_FLOATING);
+
+        const Change * change = model.get_next_change();
+        CHECK(change == static_cast<const Change *>(0));
+
+        // Go through all the other kinds of modes, and change to them. 
+        // Ensure that they produce the right kind of events
+        ClientPosScale modes[] = {CPS_SPLIT_LEFT, CPS_SPLIT_RIGHT, CPS_SPLIT_TOP, CPS_SPLIT_BOTTOM, CPS_MAX};
+        for (int idx = 0; idx < sizeof(modes) / sizeof(ClientPosScale); idx++)
+        {
+            ClientPosScale mode = modes[idx];
+            model.change_mode(a, mode);
+
+            const Change * change = model.get_next_change();
+            CHECK(change != 0);
+            CHECK(change->is_mode_change());
+            {
+                const ChangeCPSMode *the_change =
+                    dynamic_cast<const ChangeCPSMode*>(change);
+                CHECK_EQUAL(the_change->window, a);
+                CHECK_EQUAL(the_change->mode, mode);
+            }
+            delete change;
+
+            change = model.get_next_change();
+            CHECK(change == static_cast<const Change *>(0));
+        }
+
+        // Finally, check the floating mode, since we're changing over from CPS_MAX
+        model.change_mode(a, CPS_FLOATING);
+
+        change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_mode_change());
+        {
+            const ChangeCPSMode *the_change =
+                dynamic_cast<const ChangeCPSMode*>(change);
+            CHECK_EQUAL(the_change->window, a);
+            CHECK_EQUAL(the_change->mode, CPS_FLOATING);
+        }
+        delete change;
+
+        change = model.get_next_change();
+        CHECK(change == static_cast<const Change *>(0));
+    }
 };
 
 int main()

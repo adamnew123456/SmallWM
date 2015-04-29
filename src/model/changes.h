@@ -33,6 +33,9 @@ struct Change
     virtual bool is_current_desktop_change() const
     { return false; }
 
+    virtual bool is_mode_change() const
+    { return false; }
+
     virtual bool is_location_change() const
     { return false; }
 
@@ -210,6 +213,31 @@ static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &c
         *change.next_desktop << ")]";
     return out;
 }
+
+/// Indicates a change in the client's position/scale mode
+struct ChangeCPSMode : Change
+{
+    ChangeCPSMode(Window win, ClientPosScale _mode) :
+        window(win), mode(_mode)
+    {};
+
+    bool is_mode_change() const
+    { return true; }
+
+    virtual bool operator==(const Change &other) const
+    {
+        if (!other.is_mode_change())
+            return false;
+
+        const ChangeCPSMode &cast_other = 
+            dynamic_cast<const ChangeCPSMode&>(other);
+
+        return cast_other.window == window && cast_other.mode == mode;
+    }
+
+    Window window;
+    ClientPosScale mode;
+};
 
 /// Indicates a change in the location of a window
 struct ChangeLocation : Change

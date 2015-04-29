@@ -19,6 +19,8 @@ void ClientModelEvents::handle_queued_changes()
             handle_client_desktop_change();
         else if (m_change->is_current_desktop_change())
             handle_current_desktop_change();
+        else if (m_change->is_mode_change())
+            handle_mode_change();
         else if (m_change->is_location_change())
             handle_location_change();
         else if (m_change->is_size_change())
@@ -488,6 +490,71 @@ void ClientModelEvents::handle_current_desktop_change()
     // invalidated the previous stacking order, so restack everything according
     // to what is now visible
     m_should_relayer = true;
+}
+
+/**
+ * Handles a change in the mode of a client.
+ */
+void ClientModelEvents::handle_mode_change()
+{
+    ChangeCPSMode const *change =
+        dynamic_cast<ChangeCPSMode const*>(m_change);
+
+    // Floating doesn't impose any position or size requirements on the window
+    if (change->mode == CPS_FLOATING)
+        return;
+
+    Window client = change->window;
+
+    Box screen;
+    m_xdata.get_screen_bounds_for_window(client, screen);
+
+    int left_x = screen.x;
+    int right_x = left_x + screen.width;
+    int middle_x = left_x + screen.width / 2;
+
+    int top_y = screen.y;
+    int bottom_y = top_y + screen.height;
+    int middle_y = top_y + screen.height / 2;
+
+    // If the client is on the root screen, then the icon row has to be taken
+    // into account
+    if (screen.x == 0 && screen.y == 0) 
+    {
+        top_y = screen.y + m_config.icon_height;
+
+        int working_height = screen.height - m_config.icon_height;
+        middle_y = top_y + working_height / 2;
+    }
+    else
+    {
+        top_y = screen.y;
+        middle_y = top_y + screen.height / 2;
+    }
+
+    switch (change->mode)
+    {
+        case CPS_SPLIT_LEFT:
+            m_clients.change_location(client, left_x, top_y);
+            m_clients.change_size(client, middle_x - left_x, bottom_y - top_y);
+            break;
+        case CPS_SPLIT_RIGHT:
+            m_clients.change_location(client, middle_x, top_y);
+            m_clients.change_size(client, right_x - middle_x, bottom_y - top_y);
+            break;
+        case CPS_SPLIT_TOP:
+            m_clients.change_location(client, left_x, top_y);
+            m_clients.change_size(client, right_x - left_x, middle_y - top_y);
+            break;
+        case CPS_SPLIT_BOTTOM:
+            m_clients.change_location(client, left_x, middle_y);
+            m_clients.change_size(client, right_x - left_x, bottom_y - middle_y);
+            break;
+        case CPS_MAX:
+            m_clients.change_location(client, left_x, top_y);
+            m_clients.change_size(client, right_x - left_x, bottom_y - top_y);
+            break;
+    }
 }
 
 /**

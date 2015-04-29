@@ -81,7 +81,7 @@ void XEvents::handle_keypress()
         break;
     case MAXIMIZE:
         if (is_client)
-            maximize_client(client);
+            m_clients.change_mode(client, CPS_MAX);
         break;
     case REQUEST_CLOSE:
         if (is_client)
@@ -93,19 +93,19 @@ void XEvents::handle_keypress()
         break;
     case K_SNAP_TOP:
         if (is_client)
-            snap_client(client, SNAP_TOP);
+            m_clients.change_mode(client, CPS_SPLIT_TOP);
         break;
     case K_SNAP_BOTTOM:
         if (is_client)
-            snap_client(client, SNAP_BOTTOM);
+            m_clients.change_mode(client, CPS_SPLIT_BOTTOM);
         break;
     case K_SNAP_LEFT:
         if (is_client)
-            snap_client(client, SNAP_LEFT);
+            m_clients.change_mode(client, CPS_SPLIT_LEFT);
         break;
     case K_SNAP_RIGHT:
         if (is_client)
-            snap_client(client, SNAP_RIGHT);
+            m_clients.change_mode(client, CPS_SPLIT_RIGHT);
         break;
     case LAYER_ABOVE:
         if (is_client)
@@ -388,89 +388,6 @@ void XEvents::handle_destroynotify()
 }
 
 /**
- * Maximizes a client, taking up the whole screen, with the exception of one
- * row of the icon bar.
- * @param window The window to maximize.
- */
-void XEvents::maximize_client(Window window)
-{
-    Box screen;
-    m_xdata.get_screen_bounds_for_window(window, screen);
-
-    // An invalid screen. Just put the client on the main display.
-    if (screen.x == -1)
-        m_xdata.get_screen_bounds(screen);
-
-    // The icons can only appear along the top edge. If they won't appear on
-    // this screen, there's no need to shift the window down.
-    //
-    // (Also, see XEvents::snap_client for the rationale behind the + 1)
-    if (screen.y == 0)
-    {
-        m_clients.change_location(window, screen.x + 1, m_config.icon_height);
-        m_clients.change_size(window, screen.width, screen.height - m_config.icon_height);
-    }
-    else
-    {
-        m_clients.change_location(window, screen.x + 1, screen.y + 1);
-        m_clients.change_size(window, screen.width, screen.height);
-    }
-}
-
-/**
- * Snaps the client to a particular half of the screen, respecting the icon row.
- * @param window The window to snap.
- * @param side The side of the screen to snap to.
- */
-void XEvents::snap_client(Window window, SnapDir side)
-{
-    Box screen;
-    m_xdata.get_screen_bounds_for_window(window, screen);
-    if (screen.x == -1)
-        m_xdata.get_screen_bounds(screen);
-
-    int top_y, mid_y, bottom_y;
-    if (screen.y == 0) 
-    {
-        top_y = screen.y + m_config.icon_height;
-        mid_y = screen.y + (screen.height / 2);
-        bottom_y = screen.y + screen.height;
-    }
-    else
-    {
-        top_y = screen.y + 1;
-        mid_y = screen.y + (screen.height / 2);
-        bottom_y = screen.y + screen.height;
-    }
-
-    // Note the "+ 1" offsets used for the snaps. The reason for this is that
-    // we want the window to avoid the screen's left and top edges so that
-    // it doesn't "migrate" screens (that is, if the window is on the edge, it
-    // could be considered on either, which can cause the window to end up on
-    // the unexpected monitor).
-
-    switch (side)
-    {
-    case SNAP_TOP:
-        m_clients.change_location(window, screen.x + 1, top_y);
-        m_clients.change_size(window, screen.width, mid_y - top_y);
-        break;
-    case SNAP_BOTTOM:
-        m_clients.change_location(window, screen.x + 1, mid_y);
-        m_clients.change_size(window, screen.width, bottom_y - mid_y);
-        break;
-    case SNAP_LEFT:
-        m_clients.change_location(window, screen.x + 1, top_y);
-        m_clients.change_size(window, screen.width / 2, bottom_y - top_y);
-        break;
-    case SNAP_RIGHT:
-        m_clients.change_location(window, screen.x + screen.width / 2, top_y);
-        m_clients.change_size(window, screen.width / 2, bottom_y - top_y);
-        break;
-    }
-}
-
-/**
  * Adds a window - this is exposed specifically so that smallwm.cpp can
  * access this method when it imports existing windows.
  *
@@ -560,13 +477,30 @@ void XEvents::add_window(Window window)
             m_clients.toggle_stick(window);
 
         if (action.actions & ACT_MAXIMIZE)
-            maximize_client(window);
+            m_clients.change_mode(window, CPS_MAX);
 
         if (action.actions & ACT_SETLAYER)
             m_clients.set_layer(window, action.layer);
 
         if (action.actions & ACT_SNAP)
-            snap_client(window, action.snap);
+        {
+            ClientPosScale mode;
+            switch (action.snap) 
+            {
+                case SNAP_LEFT:
+                    mode = CPS_SPLIT_LEFT;
+                    break;
+                case SNAP_RIGHT:
+                    mode = CPS_SPLIT_RIGHT;
+                    break;
+                case SNAP_TOP:
+                    mode = CPS_SPLIT_TOP;
+                    break;
+                case SNAP_BOTTOM:
+                    mode = CPS_SPLIT_BOTTOM;
+            }
+            m_clients.change_mode(window, mode);
+        }
 
         if (action.actions & ACT_MOVE_X || action.actions & ACT_MOVE_Y)
         {
@@ -576,6 +510,8 @@ void XEvents::add_window(Window window)
             // know what screen the user intended the window to be on.
             Box screen;
             m_xdata.get_screen_bounds(screen);
+
+            m_clients.change_mode(window, CPS_FLOATING);
 
             Dimension win_x_pos = win_attr.x;
             Dimension win_y_pos = win_attr.y;

@@ -60,9 +60,6 @@ private:
     void handle_expose();
     void handle_destroynotify();
 
-    void maximize_client(Window);
-    void snap_client(Window, SnapDir);
-
     /// The currently active event
     XEvent m_event;
 

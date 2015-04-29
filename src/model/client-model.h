@@ -3,6 +3,7 @@
 #define __SMALLWM_CLIENT_MODEL__
 
 #include "changes.h"
+#include "common.h"
 #include "desktop-type.h"
 #include "unique-multimap.h"
 
@@ -93,6 +94,7 @@ public:
     void add_client(Window, InitialState, Dimension2D, Dimension2D);
     void remove_client(Window);
 
+    void change_mode(Window, ClientPosScale);
     void change_location(Window, Dimension, Dimension);
     void change_size(Window, Dimension, Dimension);
 
@@ -145,6 +147,8 @@ private:
     std::map<Window, Dimension2D> m_location;
     /// A mapping between clients and their sizes
     std::map<Window, Dimension2D> m_size;
+    /// A mapping between clients and their position/scale modes
+    std::map<Window, ClientPosScale> m_cps_mode;
 
     /** A mapping between clients that are iconified, or being moved/resized, 
         and whether or not they were stuck before they were moved/resized or

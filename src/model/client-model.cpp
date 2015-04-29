@@ -150,6 +150,7 @@ void ClientModel::add_client(Window client, InitialState state,
     // an event now that they're set
     m_location[client] = location;
     m_size[client] = size;
+    m_cps_mode[client] = CPS_FLOATING;
 
     focus(client);
 }
@@ -183,6 +184,22 @@ void ClientModel::remove_client(Window client)
     m_size.erase(client);
 
     push_change(new DestroyChange(client, desktop, layer));
+}
+
+/**
+ * Changes the position/scale mode of a client.
+ *
+ * Note that this change doesn't actually update the location or the size, since
+ * the ClientModel is isolated from the information necessary to make that 
+ * change.
+ */
+void ClientModel::change_mode(Window client, ClientPosScale cps)
+{
+    if (m_cps_mode[client] != cps)
+    {
+        m_cps_mode[client] = cps;
+        push_change(new ChangeCPSMode(client, cps));
+    }
 }
 
 /**
@@ -484,6 +501,7 @@ void ClientModel::start_moving(Window client)
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
+    change_mode(client, CPS_FLOATING);
     m_was_stuck[client] = old_desktop->is_all_desktop();
     move_to_desktop(client, MOVING_DESKTOP, true);
 }
@@ -522,6 +540,7 @@ void ClientModel::start_resizing(Window client)
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
+    change_mode(client, CPS_FLOATING);
     m_was_stuck[client] = old_desktop->is_all_desktop();
     move_to_desktop(client, RESIZING_DESKTOP, true);
 }

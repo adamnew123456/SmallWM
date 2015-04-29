@@ -34,7 +34,10 @@ struct Box {
     Dimension width, height;
 };
 
-#define IN_BOUNDS(value, min, max) ((value) >= (min) && (value) <= (max))
+// Note '(value) < (max)' - this is mostly used for finding screen boundaries,
+// and a window on the left edge of a screen should not be considered to be on
+// a different monitor
+#define IN_BOUNDS(value, min, max) ((value) >= (min) && (value) < (max))
 
 /// The z-layer of a window.
 typedef unsigned char Layer;
@@ -72,4 +75,20 @@ operator<<(std::basic_ostream<CharT, Traits> &out, const T &value)
     return out;
 }
 
+// Note that this would otherwise be a circular dependency between 
+// model/changes.h and model/client-model.h
+
+/**
+ * How a client is positioned and scaled - all but CPS_FLOATING are managed 
+ * by SmallWM.
+ */
+enum ClientPosScale
+{
+    CPS_FLOATING, //< The user has manually moved/resized the window
+    CPS_SPLIT_LEFT, //< A split on the left half of the screen
+    CPS_SPLIT_RIGHT,
+    CPS_SPLIT_TOP,
+    CPS_SPLIT_BOTTOM,
+    CPS_MAX, //< The window takes up the entire viewable area
+};
 #endif

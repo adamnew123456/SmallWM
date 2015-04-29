@@ -47,6 +47,7 @@ private:
     void handle_focus_change();
     void handle_client_desktop_change();
     void handle_current_desktop_change();
+    void handle_mode_change();
     void handle_location_change();
     void handle_size_change();
     void handle_destroy_change();
