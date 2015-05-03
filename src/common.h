@@ -30,6 +30,19 @@ typedef std::pair<Dimension,Dimension> Dimension2D;
 
 // A box is exactly what is sounds like - a rectangular region
 struct Box {
+    Box(): x(0), y(0), width(-1), height(-1)
+    {}
+
+    Box(int _x, int _y, Dimension _width, Dimension _height) :
+        x(_x), y(_y), width(_width), height(_height)
+    {}
+
+    bool operator ==(const Box &other) const
+    {
+        return other.x == x && other.y == y && 
+                other.width == width && other.height == height;
+    }
+
     int x, y;
     Dimension width, height;
 };

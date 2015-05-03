@@ -107,6 +107,12 @@ bin/test-x-model: bin/libUnitTest++.a obj/test-x-model.o obj/model/x-model.o
 obj/test-x-model.o: obj test/x-model.cpp src/model/x-model.h
 	${CXX} ${CXXFLAGS} -c test/x-model.cpp -o obj/test-x-model.o
 
+bin/test-screen: bin/libUnitTest++.a obj/test-screen.o obj/model/screen.o
+	${CXX} ${CXXFLAGS} obj/test-screen.o bin/libUnitTest++.a obj/model/screen.o ${LINKER_FLAGS} -o bin/test-screen
+
+obj/test-screen.o: obj test/screen.cpp src/model/screen.cpp
+	${CXX} ${CXXFLAGS} -c test/screen.cpp -o obj/test-screen.o
+
 bin/test-utils: bin/libUnitTest++.a obj/test-utils.o obj/utils.o
 	${CXX} ${CXXFLAGS} obj/test-utils.o bin/libUnitTest++.a obj/utils.o -o bin/test-utils
 
