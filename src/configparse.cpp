@@ -161,22 +161,22 @@ int WMConfig::config_parser(void *user, const char *c_section,
             else if (!strcmp(stripped, "snap:left"))
             {
                 action.actions |= ACT_SNAP;
-                action.snap = SNAP_LEFT;
+                action.snap = DIR_LEFT;
             }
             else if (!strcmp(stripped, "snap:right"))
             {
                 action.actions |= ACT_SNAP;
-                action.snap = SNAP_RIGHT;
+                action.snap = DIR_RIGHT;
             }
             else if (!strcmp(stripped, "snap:top"))
             {
                 action.actions |= ACT_SNAP;
-                action.snap = SNAP_TOP;
+                action.snap = DIR_TOP;
             }
             else if (!strcmp(stripped, "snap:bottom"))
             {
                 action.actions |= ACT_SNAP;
-                action.snap = SNAP_BOTTOM;
+                action.snap = DIR_BOTTOM;
             }
             else if (!strncmp(stripped, "layer:", 6))
             {

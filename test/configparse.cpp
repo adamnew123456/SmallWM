@@ -485,7 +485,7 @@ SUITE(WMConfigSuiteActions)
     TEST(test_set_snap_sides)
     {
         // Snap toward all valid sides
-        SnapDir snaps[] = {SNAP_TOP, SNAP_BOTTOM, SNAP_LEFT, SNAP_RIGHT};
+        Direction snaps[] = {DIR_TOP, DIR_BOTTOM, DIR_LEFT, DIR_RIGHT};
         const char *snap_names[] = {"top", "bottom", "left", "right"};
 
         for (int idx = 0; idx < sizeof(snaps) / sizeof(*snaps); idx++)
@@ -684,7 +684,7 @@ SUITE(WMConfigSuiteActions)
         CHECK(action.actions & ACT_MAXIMIZE);
         CHECK(action.actions & ACT_SETLAYER);
 
-        CHECK_EQUAL(action.snap, SNAP_LEFT);
+        CHECK_EQUAL(action.snap, DIR_LEFT);
         CHECK_EQUAL(action.layer, 4);
     }
 
@@ -704,7 +704,7 @@ SUITE(WMConfigSuiteActions)
         CHECK(action.actions & ACT_MAXIMIZE);
         CHECK(action.actions & ACT_SETLAYER);
 
-        CHECK_EQUAL(action.snap, SNAP_LEFT);
+        CHECK_EQUAL(action.snap, DIR_LEFT);
         CHECK_EQUAL(action.layer, 5);
     }
 };

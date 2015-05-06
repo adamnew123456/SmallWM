@@ -17,17 +17,6 @@ const unsigned int ACT_STICK = 1 << 0,
     /// Moves a client in the Y direction
     ACT_MOVE_Y = 1 << 5;
 
-/** 
- * The side of the screen to snap a window to. 
- */
-enum SnapDir
-{
-    SNAP_TOP = 1, 
-    SNAP_BOTTOM,
-    SNAP_LEFT,
-    SNAP_RIGHT,
-};
-
 /**
  * A grouping of class actions which are applied to all clients of a particular class.
  *
@@ -36,7 +25,7 @@ enum SnapDir
 struct ClassActions
 {
     /// Initialize a blank ClassAction, with a few defaults.
-    ClassActions() : actions(0), snap(SNAP_TOP), layer(0),
+    ClassActions() : actions(0), snap(DIR_TOP), layer(0),
         relative_x(0), relative_y(0)
     {}
     
@@ -44,7 +33,7 @@ struct ClassActions
     unsigned int actions;
 
     /// The direction to snap a window.
-    SnapDir snap;
+    Direction snap;
 
     /// The layer to place the client on.
     Layer layer;

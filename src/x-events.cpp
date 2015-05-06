@@ -487,16 +487,16 @@ void XEvents::add_window(Window window)
             ClientPosScale mode;
             switch (action.snap) 
             {
-                case SNAP_LEFT:
+                case DIR_LEFT:
                     mode = CPS_SPLIT_LEFT;
                     break;
-                case SNAP_RIGHT:
+                case DIR_RIGHT:
                     mode = CPS_SPLIT_RIGHT;
                     break;
-                case SNAP_TOP:
+                case DIR_TOP:
                     mode = CPS_SPLIT_TOP;
                     break;
-                case SNAP_BOTTOM:
+                case DIR_BOTTOM:
                     mode = CPS_SPLIT_BOTTOM;
             }
             m_clients.change_mode(window, mode);

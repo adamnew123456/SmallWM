@@ -47,6 +47,25 @@ struct Box {
     Dimension width, height;
 };
 
+static std::ostream &operator<<(std::ostream &out, const Box &box)
+{
+    out << "Box(" << box.x << "," << box.y << " " <<
+                     box.width << "x" << box.height << ")";
+    return out;
+}
+
+/**
+ * Directions are used both for snapping in the configuration loader, as well
+ * as for moving windows to different relative screens.
+ */
+enum Direction
+{
+    DIR_TOP = 1,
+    DIR_BOTTOM,
+    DIR_LEFT,
+    DIR_RIGHT
+};
+
 // Note '(value) < (max)' - this is mostly used for finding screen boundaries,
 // and a window on the left edge of a screen should not be considered to be on
 // a different monitor
