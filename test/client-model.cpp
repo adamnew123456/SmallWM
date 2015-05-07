@@ -35,16 +35,21 @@ struct ClientModelFixture
     ClientModelFixture() :
         model(manager, max_desktops)
     {
+        reset_screen_graph();
+    };
+
+    ~ClientModelFixture()
+    {};
+
+    void reset_screen_graph()
+    {
         std::vector<Box> screens;
         for (int x = 0; x < 300; x += 100)
             for (int y = 0; y < 300; y += 100)
                 screens.push_back(Box(x, y, 100, 100));
 
         manager.rebuild_graph(screens);
-    };
-
-    ~ClientModelFixture()
-    {};
+    }
 
     CrtManager manager;
     ClientModel model;
@@ -1575,6 +1580,62 @@ SUITE(ClientModelMemberSuite)
 
         change = model.get_next_change();
         CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+        model.remove_client(a);
+        model.flush_changes();
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_screen_update)
+    {
+        Box tests_start_box[] = {
+            Box(100, 100, 1, 1),
+            Box(200, 200, 1, 1),
+        };
+
+        for (int test = 0; test < sizeof(tests_start_box) / sizeof(tests_start_box[0]); test++)
+        {
+            Box &start = tests_start_box[test];
+            model.add_client(a, IS_VISIBLE, Dimension2D(start.x, start.y), Dimension2D(start.width, start.height));
+            model.flush_changes();
+
+            // Each client should start out on different screens, but they should all end up
+            // in the same large box when we update the screen configuration
+            std::vector<Box> screens;
+            screens.push_back(Box(0, 0, 1000, 1000));
+
+            model.update_screens(screens);
+
+            const Change *change = model.get_next_change();
+            CHECK(change != 0);
+            CHECK(change->is_screen_change());
+            {
+                const ChangeScreen *the_change =
+                    dynamic_cast<const ChangeScreen*>(change);
+
+                CHECK_EQUAL(ChangeScreen(a, screens[0]), *the_change);
+            }
+            delete change;
+
+            change = model.get_next_change();
+            CHECK(change == static_cast<const Change *>(0));
+
+            model.remove_client(a);
+            reset_screen_graph();
+            model.flush_changes();
+        }
+
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // Each client should start out on different screens, but they should all end up
+        // in the same large box when we update the screen configuration
+        std::vector<Box> screens;
+        screens.push_back(Box(0, 0, 1000, 1000));
+
+        model.update_screens(screens);
+
+        const Change *change = model.get_next_change();
+        CHECK(change == static_cast<const Change *>(0));
 
         model.remove_client(a);
         model.flush_changes();

@@ -638,6 +638,46 @@ void ClientModel::to_screen_crt(Window client, Crt* screen)
 }
 
 /**
+ * Updates the screen configuration, as well as the screen property of every
+ * client window.
+ */
+void ClientModel::update_screens(std::vector<Box> &bounds)
+{
+    m_crt_manager.rebuild_graph(bounds);
+
+    // Now, translate the location of every client back into its updated screen
+    for (std::map<Window, Dimension2D>::iterator client_location = m_location.begin();
+         client_location != m_location.end();
+         client_location++)
+    {
+        Window client = client_location->first;
+        Dimension2D &location = client_location->second;
+
+        // Keep the old screen - if the new screen is the same, we don't want
+        // to send out a change notification
+        Box &old_box = m_screen[client];
+        Box new_box(-1, -1, 0, 0);
+
+        Crt *new_screen = m_crt_manager.screen_of_coord(
+            DIM2D_X(location), DIM2D_Y(location));
+
+        if (new_screen)
+            new_box = m_crt_manager.box_of_screen(new_screen);
+
+        if (new_box != old_box)
+        {
+            m_screen[client] = new_box;
+
+            // Why do the ref like this? Well, if it is done as a reference
+            // to new_box directly, then new_box will go out of scope and
+            // our data will be thoroughly shat over. Thankfully the unit
+            // tests caught this one.
+            push_change(new ChangeScreen(client, m_screen[client]));
+        }
+    }
+}
+
+/**
  * Pushes a change into the change buffer.
  */
 void ClientModel::push_change(change_ptr change)

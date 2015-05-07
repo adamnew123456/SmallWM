@@ -130,6 +130,8 @@ public:
     void to_relative_screen(Window, Direction);
     void to_screen_box(Window, Box);
 
+    void update_screens(std::vector<Box>&);
+
     void begin_dropping_changes();
     void end_dropping_changes();
 
