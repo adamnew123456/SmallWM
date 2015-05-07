@@ -23,34 +23,40 @@
 struct Crt {
     Crt *left, *right, *top, *bottom;
 
-    Crt() : left(NULL), right(NULL), top(NULL), bottom(NULL)
+    Crt() : left(NULL), right(NULL), top(NULL), bottom(NULL), m_deleting(false)
     {}
 
     ~Crt() 
     {
+        m_deleting = true;
+
         // Note that we have to break all links when deleting the screen, since
         // we don't want to get trapped in a cycle
-        if (left)
+        if (left && !left->m_deleting)
         {
             left->right = NULL;
             delete left;
         }
-        if (right)
+        if (right && !right->m_deleting)
         {
             right->left = NULL;
             delete right;
         }
-        if (top)
+        if (top && !top->m_deleting)
         {
             top->bottom = NULL;
             delete top;
         }
-        if (bottom)
+        if (bottom && !bottom->m_deleting)
         {
             bottom->top = NULL;
             delete bottom;
         }
     }
+
+private:
+    /// This is used to avoid cycles when deleting a Crt
+    bool m_deleting;
 };
 
 /**

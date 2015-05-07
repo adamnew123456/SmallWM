@@ -85,22 +85,34 @@ void CrtManager::build_node(Crt *screen, std::map<Dimension2D, Box> &boxes)
 
     if (boxes.count(below_box))
     {
-        Crt *below = new Crt();
+        Box &complete_below_box = boxes[below_box];
+
+        Crt *below = screen_of_box(complete_below_box);
+        if (!below)
+        {
+            below = new Crt();
+            m_boxes[below] = complete_below_box;
+        }
+
         screen->bottom = below;
         below->top = screen;
-
-        m_boxes[below] = boxes[below_box];
 
         build_node(below, boxes);
     }
 
     if (boxes.count(right_box))
     {
-        Crt *right = new Crt();
+        Box &complete_right_box = boxes[right_box];
+
+        Crt *right = screen_of_box(Box(complete_right_box));
+        if (!right)
+        {
+            right = new Crt();
+            m_boxes[right] = complete_right_box;
+        }
+
         screen->right = right;
         right->left = screen;
-
-        m_boxes[right] = boxes[right_box];
 
         build_node(right, boxes);
     }
