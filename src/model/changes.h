@@ -33,6 +33,9 @@ struct Change
     virtual bool is_current_desktop_change() const
     { return false; }
 
+    virtual bool is_screen_change() const
+    { return false; }
+
     virtual bool is_mode_change() const
     { return false; }
 
@@ -211,6 +214,38 @@ static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &c
 {
     out << "[ChangeCurrentDesktop Desktop(" << *change.prev_desktop << "-->" << 
         *change.next_desktop << ")]";
+    return out;
+}
+
+/// Indicates a change in the client's monitor
+struct ChangeScreen : Change
+{
+    ChangeScreen(Window win, Box &_bounds) :
+        window(win), bounds(_bounds)
+    {};
+
+    bool is_screen_change() const
+    { return true; }
+
+
+    virtual bool operator==(const Change &other) const
+    {
+        if (!other.is_screen_change())
+            return false;
+
+        const ChangeScreen &cast_other = 
+            dynamic_cast<const ChangeScreen&>(other);
+
+        return cast_other.window == window && cast_other.bounds == bounds;
+    }
+
+    Window window;
+    Box &bounds;
+};
+
+static std::ostream &operator<<(std::ostream &out, const ChangeScreen &change)
+{
+    out << "[ChangeScreen] Window" << change.window << ") " << change.bounds << "\n";
     return out;
 }
 

@@ -5,6 +5,7 @@
 #include "changes.h"
 #include "common.h"
 #include "desktop-type.h"
+#include "screen.h"
 #include "unique-multimap.h"
 
 #include <algorithm>
@@ -47,7 +48,8 @@ public:
     /**
      * Initializes all of the categories in the maps
      */
-    ClientModel(unsigned long long max_desktops) :
+    ClientModel(CrtManager &crt_manager, unsigned long long max_desktops) :
+        m_crt_manager(crt_manager),
         m_max_desktops(max_desktops),
         m_focused(None), m_drop_changes(false),
         // Initialize all the desktops
@@ -125,6 +127,9 @@ public:
     void start_resizing(Window);
     void stop_resizing(Window, Dimension2D);
 
+    void to_relative_screen(Window, Direction);
+    void to_screen_box(Window, Box);
+
     void begin_dropping_changes();
     void end_dropping_changes();
 
@@ -132,7 +137,12 @@ protected:
     void push_change(change_ptr);
     void move_to_desktop(Window, desktop_ptr, bool);
 
+    void to_screen_crt(Window, Crt*);
+
 private:
+    // The screen manager, used to map positions to screens
+    CrtManager &m_crt_manager;
+
     /// A list of the changes made to the client data
     std::queue<change_ptr> m_changes;
     /// The maximum number of user-visible desktops
@@ -149,6 +159,8 @@ private:
     std::map<Window, Dimension2D> m_size;
     /// A mapping between clients and their position/scale modes
     std::map<Window, ClientPosScale> m_cps_mode;
+    /// A mapping between clients and their screens
+    std::map<Window, Box> m_screen;
 
     /** A mapping between clients that are iconified, or being moved/resized, 
         and whether or not they were stuck before they were moved/resized or

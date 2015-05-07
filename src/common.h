@@ -43,6 +43,11 @@ struct Box {
                 other.width == width && other.height == height;
     }
 
+    bool operator !=(const Box &other) const
+    {
+        return !(other == *this);
+    }
+
     int x, y;
     Dimension width, height;
 };

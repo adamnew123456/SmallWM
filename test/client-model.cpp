@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <utility>
+#include <vector>
 
 #include <UnitTest++.h>
+#include "model/screen.h"
 #include "model/client-model.h"
 
 const Window a = 1,
@@ -10,16 +12,50 @@ const Window a = 1,
 
 const unsigned long long max_desktops = 5;
 
+/*
+ * Note that the implied screen configuration used is:
+ *
+ * +-----+-----+-----+
+ * |     |     |     |
+ * |     |     |     |
+ * +-----+-----+-----+
+ * |     |  x  |     |
+ * |     |     |     |
+ * +-----+-----+-----+
+ * |     |     |     |
+ * |     |     |     |
+ * +-----+-----+-----+
+ *
+ * Note here that X marks the (default) spot for windows, and that each
+ * screen is 100x100
+ */
+
 struct ClientModelFixture
 {
     ClientModelFixture() :
-        model(max_desktops)
-    {};
+        model(manager, max_desktops)
+    {
+        std::vector<Box> screens;
+        for (int x = 0; x < 300; x += 100)
+            for (int y = 0; y < 300; y += 100)
+                screens.push_back(Box(x, y, 100, 100));
+
+        manager.rebuild_graph(screens);
+    };
 
     ~ClientModelFixture()
     {};
 
+    CrtManager manager;
     ClientModel model;
+};
+
+/// This makes it easier to construct screen shift test cases
+struct ChangeScreenTest
+{
+    Direction direction;
+    Dimension box_x, box_y;
+    unsigned int box_width, box_height;
 };
 
 SUITE(ClientModelMemberSuite)
@@ -1410,7 +1446,140 @@ SUITE(ClientModelMemberSuite)
         change = model.get_next_change();
         CHECK(change == static_cast<const Change *>(0));
     }
-};
+
+    TEST_FIXTURE(ClientModelFixture, test_screen_shift)
+    {
+        // Each of these test cases moves the window to a given relative 
+        // screen, and checks to see that the bounding box of the screen it 
+        // ends up on is the same as the box given by the last four elements
+        ChangeScreenTest tests[] = {
+            {DIR_TOP, 100, 0, 100, 100},
+            {DIR_BOTTOM, 100, 200, 100, 100},
+            {DIR_LEFT, 0, 100, 100, 100},
+            {DIR_RIGHT, 200, 100, 100, 100},
+        };
+
+        for (int test = 0; test < sizeof(tests) / sizeof(tests[0]); test++)
+        {
+            model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+            model.flush_changes();
+
+
+            ChangeScreenTest &the_test = tests[test];
+            model.to_relative_screen(a, the_test.direction);
+
+            const Change *change = model.get_next_change();
+            CHECK(change != 0);
+            CHECK(change->is_screen_change());
+            {
+                const ChangeScreen *the_change =
+                    dynamic_cast<const ChangeScreen*>(change);
+
+                Box dest_box(the_test.box_x, the_test.box_y,
+                             the_test.box_width, the_test.box_height);
+                CHECK_EQUAL(ChangeScreen(a, dest_box), *the_change);
+            }
+            delete change;
+
+            change = model.get_next_change();
+            CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+            model.remove_client(a);
+            model.flush_changes();
+        }
+
+        // Ensure that no change occurs if we move it to an invalid screen
+        model.add_client(a, IS_VISIBLE, Dimension2D(0, 0), Dimension2D(1, 1));
+        model.flush_changes();
+
+        model.to_relative_screen(a, DIR_LEFT);
+
+        const Change *change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+        model.remove_client(a);
+        model.flush_changes();
+
+        // Ensure that it isn't moved anywhere if we start from an invalid
+        // place
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // This *would* be valid, if the location weren't off-screen
+        model.to_relative_screen(a, DIR_RIGHT);
+
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_screen_box)
+    {
+        // Each of these test cases moves the client into the monitor given by
+        // the box defined in the struct, and ensures that the client ends up
+        // in the screen (which is defined by the same box)
+        Box tests[] = {
+            Box(0, 0, 100, 100),
+            Box(100, 0, 100, 100),
+            Box(200, 0, 100, 100),
+            Box(0, 100, 100, 100),
+            // Avoid the middle screen, since no change will be emitted
+            Box(200, 100, 100, 100),
+            Box(0, 200, 100, 100),
+            Box(100, 200, 100, 100),
+            Box(200, 200, 100, 100),
+        };
+
+        for (int test = 0; test < sizeof(tests) / sizeof(tests[0]); test++)
+        {
+            model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+            model.flush_changes();
+
+            Box &the_test = tests[test];
+            model.to_screen_box(a, the_test);
+
+            const Change *change = model.get_next_change();
+            CHECK(change != 0);
+            CHECK(change->is_screen_change());
+            {
+                const ChangeScreen *the_change =
+                    dynamic_cast<const ChangeScreen*>(change);
+
+                CHECK_EQUAL(ChangeScreen(a, the_test), *the_change);
+            }
+            delete change;
+
+            change = model.get_next_change();
+            CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+            model.remove_client(a);
+            model.flush_changes();
+        }
+
+        // Ensure that moving to a non-existent screen does nothing
+        model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+        model.flush_changes();
+
+        model.to_screen_box(a, Box(-1, -1, 100, 100));
+
+        const Change *change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+        model.remove_client(a);
+        model.flush_changes();
+
+        // Ensure that moving to the same screen does nothing
+        model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+        model.flush_changes();
+
+        model.to_screen_box(a, Box(100, 100, 100, 100));
+
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+        model.remove_client(a);
+        model.flush_changes();
+    }
+}
 
 int main()
 {

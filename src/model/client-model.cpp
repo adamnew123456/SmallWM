@@ -152,6 +152,16 @@ void ClientModel::add_client(Window client, InitialState state,
     m_size[client] = size;
     m_cps_mode[client] = CPS_FLOATING;
 
+    Crt *current_screen = m_crt_manager.screen_of_coord(DIM2D_X(location), DIM2D_Y(location));
+    if (!current_screen)
+        // An invalid screen - no monitor ever contains a negative screen
+        m_screen[client] = Box(-1, -1, 0, 0);
+    else
+    {
+        Box &screen_box = m_crt_manager.box_of_screen(current_screen);
+        m_screen[client] = screen_box;
+    }
+
     focus(client);
 }
 
@@ -182,6 +192,8 @@ void ClientModel::remove_client(Window client)
     m_layers.remove_member(client);
     m_location.erase(client);
     m_size.erase(client);
+    m_cps_mode.erase(client);
+    m_screen.erase(client);
 
     push_change(new DestroyChange(client, desktop, layer));
 }
@@ -562,6 +574,67 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
     change_size(client, DIM2D_WIDTH(size), DIM2D_HEIGHT(size));
 
     focus(client);
+}
+
+/**
+ * Change the relative screen of a window to a neighboring screen.
+ * Does nothing if no such neighboring screen exists.
+ */
+void ClientModel::to_relative_screen(Window client, Direction dir)
+{
+    Crt *current_screen = m_crt_manager.screen_of_box(m_screen[client]);
+    if (!current_screen)
+        return;
+
+    Crt *target = NULL;
+
+    switch (dir)
+    {
+        case DIR_TOP:
+            target = current_screen->top;
+            break;
+        case DIR_BOTTOM:
+            target = current_screen->bottom;
+            break;
+        case DIR_LEFT:
+            target = current_screen->left;
+            break;
+        case DIR_RIGHT:
+            target = current_screen->right;
+            break;
+    }
+
+    if (!target)
+        return;
+
+    to_screen_crt(client, target);
+}
+
+/**
+ * Change the screen of a window to the screen given by a particular box.
+ */
+void ClientModel::to_screen_box(Window client, Box box)
+{
+    Crt *box_screen = m_crt_manager.screen_of_box(box);
+    if (!box_screen)
+        return;
+
+    to_screen_crt(client, box_screen);
+}
+
+/**
+ * Changes the screen of a window to the given screen directly.
+ */
+void ClientModel::to_screen_crt(Window client, Crt* screen)
+{
+    Box &current_box = m_screen[client];
+    Box &target_box = m_crt_manager.box_of_screen(screen);
+
+    if (current_box != target_box)
+    {
+        m_screen[client] = target_box;
+        push_change(new ChangeScreen(client, target_box));
+    }
 }
 
 /**
