@@ -42,11 +42,13 @@ private:
     void do_relayer();
     void reposition_icons();
     void update_focus_cycle();
+    void update_location_size_for_cps(Window);
 
     void handle_layer_change();
     void handle_focus_change();
     void handle_client_desktop_change();
     void handle_current_desktop_change();
+    void handle_screen_change();
     void handle_mode_change();
     void handle_location_change();
     void handle_size_change();

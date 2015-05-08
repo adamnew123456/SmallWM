@@ -19,6 +19,8 @@ void ClientModelEvents::handle_queued_changes()
             handle_client_desktop_change();
         else if (m_change->is_current_desktop_change())
             handle_current_desktop_change();
+        else if (m_hcnage->is_screen_change())
+            handle_screen_change();
         else if (m_change->is_mode_change())
             handle_mode_change();
         else if (m_change->is_location_change())
@@ -493,6 +495,48 @@ void ClientModelEvents::handle_current_desktop_change()
 }
 
 /**
+ * Handles the screen of a client changing.
+ */
+void ClientModelEVents::handle_screen_change()
+{
+    ChangeScreen const *change =
+        dynamic_cast<ChangeScreen const*>(m_change);
+
+    Window client = change->window;
+    Box &screen = change->box;
+
+    // If the window went to an invalid screen, then there's nothing we can do
+    if (screen == Box(-1, -1, 0, 0))
+        return;
+
+    XWindowAttributes attrib;
+    m_xdata.get_window_attributes(client, attrib);
+
+    ClientPosScale cps_mode = m_clients.get_mode(change->window);
+
+    Dimension new_width = attrib.width, 
+              new_height = attrib.height;
+
+    switch (cps_mode)
+    {
+        case CPS_FLOATING:
+            // For floating windows, just make sure that they don't extend
+            // beyond the window they're supposed to inhabit
+            if (attrib.x + attrib.width > box.x + box.width)
+                new_width = (box.x + box.width) - attrib.x;
+            if (attrib.y + attrib.height > box.y + box.height)
+                new_height = (box.y + box.height) - attrib.y;
+
+            m_clients.change_size(client, new_width, new_height);
+            break;
+        default:
+            // If we're doing the managing for this window, then correct for
+            // the screen change
+            update_location_size_for_cps(client, cps_mode);
+    }
+}
+
+/**
  * Handles a change in the mode of a client.
  */
 void ClientModelEvents::handle_mode_change()
@@ -504,57 +548,7 @@ void ClientModelEvents::handle_mode_change()
     if (change->mode == CPS_FLOATING)
         return;
 
-    Window client = change->window;
-
-    Box screen;
-    m_xdata.get_screen_bounds_for_window(client, screen);
-
-    int left_x = screen.x;
-    int right_x = left_x + screen.width;
-    int middle_x = left_x + screen.width / 2;
-
-    int top_y = screen.y;
-    int bottom_y = top_y + screen.height;
-    int middle_y = top_y + screen.height / 2;
-
-    // If the client is on the root screen, then the icon row has to be taken
-    // into account
-    if (screen.x == 0 && screen.y == 0) 
-    {
-        top_y = screen.y + m_config.icon_height;
-
-        int working_height = screen.height - m_config.icon_height;
-        middle_y = top_y + working_height / 2;
-    }
-    else
-    {
-        top_y = screen.y;
-        middle_y = top_y + screen.height / 2;
-    }
-
-    switch (change->mode)
-    {
-        case CPS_SPLIT_LEFT:
-            m_clients.change_location(client, left_x, top_y);
-            m_clients.change_size(client, middle_x - left_x, bottom_y - top_y);
-            break;
-        case CPS_SPLIT_RIGHT:
-            m_clients.change_location(client, middle_x, top_y);
-            m_clients.change_size(client, right_x - middle_x, bottom_y - top_y);
-            break;
-        case CPS_SPLIT_TOP:
-            m_clients.change_location(client, left_x, top_y);
-            m_clients.change_size(client, right_x - left_x, middle_y - top_y);
-            break;
-        case CPS_SPLIT_BOTTOM:
-            m_clients.change_location(client, left_x, middle_y);
-            m_clients.change_size(client, right_x - left_x, bottom_y - middle_y);
-            break;
-        case CPS_MAX:
-            m_clients.change_location(client, left_x, top_y);
-            m_clients.change_size(client, right_x - left_x, bottom_y - top_y);
-            break;
-    }
+    update_location_size_for_cps(change->window, change->mode);
 }
 
 /**
@@ -876,4 +870,59 @@ void ClientModelEvents::update_focus_cycle()
     }
 
     m_focus_cycle.update_window_list(visible_windows);
+}
+
+/**
+ * Updates the location and size of a window based upon its current CPS mode.
+ */
+void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosScale mode)
+{
+    Box &screen = m_clients.get_screen(client);
+
+    int left_x = screen.x;
+    int right_x = left_x + screen.width;
+    int middle_x = left_x + screen.width / 2;
+
+    int top_y = screen.y;
+    int bottom_y = top_y + screen.height;
+    int middle_y = top_y + screen.height / 2;
+
+    // If the client is on the root screen, then the icon row has to be taken
+    // into account
+    if (screen.x == 0 && screen.y == 0) 
+    {
+        top_y = screen.y + m_config.icon_height;
+
+        int working_height = screen.height - m_config.icon_height;
+        middle_y = top_y + working_height / 2;
+    }
+    else
+    {
+        top_y = screen.y;
+        middle_y = top_y + screen.height / 2;
+    }
+
+    switch (mode)
+    {
+        case CPS_SPLIT_LEFT:
+            m_clients.change_location(client, left_x, top_y);
+            m_clients.change_size(client, middle_x - left_x, bottom_y - top_y);
+            break;
+        case CPS_SPLIT_RIGHT:
+            m_clients.change_location(client, middle_x, top_y);
+            m_clients.change_size(client, right_x - middle_x, bottom_y - top_y);
+            break;
+        case CPS_SPLIT_TOP:
+            m_clients.change_location(client, left_x, top_y);
+            m_clients.change_size(client, right_x - left_x, middle_y - top_y);
+            break;
+        case CPS_SPLIT_BOTTOM:
+            m_clients.change_location(client, left_x, middle_y);
+            m_clients.change_size(client, right_x - left_x, bottom_y - middle_y);
+            break;
+        case CPS_MAX:
+            m_clients.change_location(client, left_x, top_y);
+            m_clients.change_size(client, right_x - left_x, bottom_y - top_y);
+            break;
+    }
 }
