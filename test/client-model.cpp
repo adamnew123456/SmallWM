@@ -1404,6 +1404,8 @@ SUITE(ClientModelMemberSuite)
         model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
         model.flush_changes();
 
+        CHECK_EQUAL(model.get_mode(a), CPS_FLOATING);
+
         // Start out by changing to floating. This should cause no events, since
         // all windows are floating by default
         model.change_mode(a, CPS_FLOATING);
@@ -1432,6 +1434,8 @@ SUITE(ClientModelMemberSuite)
 
             change = model.get_next_change();
             CHECK(change == static_cast<const Change *>(0));
+
+            CHECK_EQUAL(model.get_mode(a), mode);
         }
 
         // Finally, check the floating mode, since we're changing over from CPS_MAX
@@ -1450,6 +1454,8 @@ SUITE(ClientModelMemberSuite)
 
         change = model.get_next_change();
         CHECK(change == static_cast<const Change *>(0));
+
+        CHECK_EQUAL(model.get_mode(a), CPS_FLOATING);
     }
 
     TEST_FIXTURE(ClientModelFixture, test_screen_shift)

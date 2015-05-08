@@ -199,6 +199,14 @@ void ClientModel::remove_client(Window client)
 }
 
 /**
+ * Gets  the position/scale mode of a client.
+ */
+ClientPosScale ClientModel::get_mode(Window client)
+{
+    return m_cps_mode[client];
+}
+
+/**
  * Changes the position/scale mode of a client.
  *
  * Note that this change doesn't actually update the location or the size, since

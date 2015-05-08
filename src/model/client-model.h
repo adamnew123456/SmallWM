@@ -96,7 +96,9 @@ public:
     void add_client(Window, InitialState, Dimension2D, Dimension2D);
     void remove_client(Window);
 
+    ClientPosScale get_mode(Window);
     void change_mode(Window, ClientPosScale);
+
     void change_location(Window, Dimension, Dimension);
     void change_size(Window, Dimension, Dimension);
 
