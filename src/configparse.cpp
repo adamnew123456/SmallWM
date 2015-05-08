@@ -219,23 +219,31 @@ set_actions:
     {
         KeyboardConfig &kb_config = self->key_commands;
         KeyboardAction action = kb_config.action_names[name];
-        KeySym binding = XStringToKeysym(value.c_str());
 
+        bool uses_secondary_action = (value[0] == '!');
+
+        std::string key_value = value;
+        if (uses_secondary_action)
+            key_value.erase(0, 1);
+
+        KeySym key = XStringToKeysym(key_value.c_str());
         // Fail if the key is not recognized by Xlib
-        if (binding == NoSymbol)
+        if (key == NoSymbol)
             return 0;
 
+        KeyBinding binding(key, uses_secondary_action);
+
         // If this new binding is in use by another entry, then fail
-        if (kb_config.keysym_to_action[binding] != INVALID_ACTION)
+        if (kb_config.binding_to_action[binding] != INVALID_ACTION)
             return 0;
 
         // If an old binding exists for this action, then remove it
-        KeySym old_binding = kb_config.action_to_keysym[action];
-        if (old_binding != NoSymbol)
-            kb_config.keysym_to_action.erase(old_binding);
+        KeyBinding old_binding = kb_config.action_to_binding[action];
+        if (old_binding.first != NoSymbol)
+            kb_config.binding_to_action.erase(old_binding);
 
-        kb_config.action_to_keysym[action] = binding;
-        kb_config.keysym_to_action[binding] = action;
+        kb_config.action_to_binding[action] = binding;
+        kb_config.binding_to_action[binding] = action;
     }
 
     return 0;

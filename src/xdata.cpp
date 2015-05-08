@@ -163,12 +163,16 @@ void XData::get_latest_event(XEvent &data, int type)
  * modifier) registers an event no matter where it is pressed.
  * @param key The key to bind.
  */
-void XData::add_hotkey(KeySym key)
+void XData::add_hotkey(KeySym key, bool use_secondary_action)
 {
     // X grabs on keycodes, not on KeySyms, so we have to do the conversion
     int keycode = XKeysymToKeycode(m_display, key);
 
-    XGrabKey(m_display, keycode, ACTION_MASK, m_root, true, 
+    int mask = ACTION_MASK;
+    if (use_secondary_action)
+        mask |= SECONDARY_MASK;
+
+    XGrabKey(m_display, keycode, mask, m_root, true, 
         GrabModeAsync, GrabModeAsync);
 }
 

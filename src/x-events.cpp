@@ -41,6 +41,7 @@ bool XEvents::step()
 void XEvents::handle_keypress()
 {
     KeySym key = m_xdata.get_keysym(m_event.xkey.keycode);
+    bool is_using_secondary_action = (m_event.xkey.state & SECONDARY_MASK);
 
     Window client = None;
     if (m_config.hotkey == HK_MOUSE)
@@ -54,7 +55,8 @@ void XEvents::handle_keypress()
 
     bool is_client = m_clients.is_client(client);
 
-    KeyboardAction action = m_config.key_commands.keysym_to_action[key];
+    KeyBinding binding(key, is_using_secondary_action);
+    KeyboardAction action = m_config.key_commands.binding_to_action[binding];
     switch (action)
     {
     case CLIENT_NEXT_DESKTOP:

@@ -42,7 +42,10 @@ public:
         };
 
         for (KeyboardAction *action = &actions[0]; *action != INVALID_ACTION; action++)
-            xdata.add_hotkey(config.key_commands.action_to_keysym[*action]);
+        {
+            KeyBinding &binding = config.key_commands.action_to_keysym[*action];
+            xdata.add_hotkey(binding.first, binding.second);
+        }
     };
 
     bool step();

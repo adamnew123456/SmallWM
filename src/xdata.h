@@ -80,7 +80,7 @@ public:
     void next_event(XEvent&);
     void get_latest_event(XEvent&, int);
 
-    void add_hotkey(KeySym);
+    void add_hotkey(KeySym, bool);
     void add_hotkey_mouse(unsigned int);
 
     void confine_pointer(Window);

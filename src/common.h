@@ -100,7 +100,9 @@ const int LAUNCH_BUTTON = 1,
       /// The button to click to resize a client
       RESIZE_BUTTON = 3,
       /// The key to hold to activate window manager functions
-      ACTION_MASK = Mod4Mask;
+      ACTION_MASK = Mod4Mask,
+      /// Used along with ACTION_MASK to access certain shortcuts
+      SECONDARY_MASK = ControlMask;
 
 // This is useful for tests, since they insist on printing things that they
 // have no knowledge of.

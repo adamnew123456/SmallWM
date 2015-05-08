@@ -713,36 +713,37 @@ struct DefaultBinding
 {
     KeyboardAction action;
     KeySym keysym;
+    bool uses_secondary;
 };
 
 DefaultBinding shortcuts[] = {
-    { CLIENT_NEXT_DESKTOP, XK_bracketright },
-    { CLIENT_PREV_DESKTOP, XK_bracketleft },
-    { NEXT_DESKTOP, XK_period },
-    { PREV_DESKTOP, XK_comma },
-    { TOGGLE_STICK, XK_backslash },
-    { ICONIFY, XK_h },
-    { MAXIMIZE, XK_m },
-    { REQUEST_CLOSE, XK_c },
-    { FORCE_CLOSE, XK_x },
-    { K_SNAP_TOP, XK_Up },
-    { K_SNAP_BOTTOM, XK_Down },
-    { K_SNAP_LEFT, XK_Left },
-    { K_SNAP_RIGHT, XK_Right },
-    { LAYER_ABOVE, XK_Page_Up },
-    { LAYER_BELOW, XK_Page_Down },
-    { LAYER_TOP, XK_Home },
-    { LAYER_BOTTOM, XK_End },
-    { LAYER_1, XK_1 },
-    { LAYER_2, XK_2 },
-    { LAYER_3, XK_3 },
-    { LAYER_4, XK_4 },
-    { LAYER_5, XK_5 },
-    { LAYER_6, XK_6 },
-    { LAYER_7, XK_7 },
-    { LAYER_8, XK_8 },
-    { LAYER_9, XK_9 },
-    { EXIT_WM, XK_Escape },
+    { CLIENT_NEXT_DESKTOP, XK_bracketright, false},
+    { CLIENT_PREV_DESKTOP, XK_bracketleft, false },
+    { NEXT_DESKTOP, XK_period, false },
+    { PREV_DESKTOP, XK_comma, false },
+    { TOGGLE_STICK, XK_backslash, false },
+    { ICONIFY, XK_h, false },
+    { MAXIMIZE, XK_m, false },
+    { REQUEST_CLOSE, XK_c, false },
+    { FORCE_CLOSE, XK_x, false },
+    { K_SNAP_TOP, XK_Up, false },
+    { K_SNAP_BOTTOM, XK_Down, false },
+    { K_SNAP_LEFT, XK_Left, false },
+    { K_SNAP_RIGHT, XK_Right, false },
+    { LAYER_ABOVE, XK_Page_Up, false},
+    { LAYER_BELOW, XK_Page_Down, false },
+    { LAYER_TOP, XK_Home, false },
+    { LAYER_BOTTOM, XK_End, false },
+    { LAYER_1, XK_1, false },
+    { LAYER_2, XK_2, false },
+    { LAYER_3, XK_3, false },
+    { LAYER_4, XK_4, false },
+    { LAYER_5, XK_5, false },
+    { LAYER_6, XK_6, false },
+    { LAYER_7, XK_7, false },
+    { LAYER_8, XK_8, false },
+    { LAYER_9, XK_9, false },
+    { EXIT_WM, XK_Escape, false },
 };
 
 // Note that all the key bindings tested here used "layer-1" through
@@ -756,9 +757,9 @@ SUITE(WMConfigSuiteKeyboardOptions)
         for (int i = 0; i < sizeof(shortcuts) / sizeof(*shortcuts); i++)
         {
             KeyboardAction action = shortcuts[i].action;
-            KeySym keysym = shortcuts[i].keysym;
-            CHECK_EQUAL(config.key_commands.action_to_keysym[action], keysym);
-            CHECK_EQUAL(config.key_commands.keysym_to_action[keysym], action);
+            KeyBinding binding(shortcuts[i].keysym, shortcuts[i].uses_secondary);
+            CHECK_EQUAL(config.key_commands.action_to_binding[action], binding);
+            CHECK_EQUAL(config.key_commands.binding_to_action[binding], action);
         }
     }
 
@@ -769,13 +770,15 @@ SUITE(WMConfigSuiteKeyboardOptions)
             "[keyboard]\nlayer-1=asciitilde\nlayer-2=colon\n");
         config.load();
 
-        CHECK_EQUAL(XK_asciitilde, 
-            config.key_commands.action_to_keysym[LAYER_1]);
+        KeyBinding layer_1_binding(XK_asciitilde, false);
+        CHECK_EQUAL(layer_1_binding, 
+            config.key_commands.action_to_binding[LAYER_1]);
         CHECK_EQUAL(LAYER_1, 
-            config.key_commands.keysym_to_action[XK_asciitilde]);
+            config.key_commands.binding_to_action[layer_1_binding]);
 
-        CHECK_EQUAL(XK_colon, config.key_commands.action_to_keysym[LAYER_2]);
-        CHECK_EQUAL(LAYER_2, config.key_commands.keysym_to_action[XK_colon]);
+        KeyBinding layer_2_binding(XK_colon, false);
+        CHECK_EQUAL(layer_2_binding, config.key_commands.action_to_binding[LAYER_2]);
+        CHECK_EQUAL(LAYER_2, config.key_commands.binding_to_action[layer_2_binding]);
     }
 
     TEST(test_duplicate_bindings)
@@ -787,13 +790,34 @@ SUITE(WMConfigSuiteKeyboardOptions)
         config.load();
 
         // Remember that the binding remains for the original Super+x binding
-        CHECK_EQUAL(XK_x, config.key_commands.action_to_keysym[FORCE_CLOSE]);
-        CHECK_EQUAL(FORCE_CLOSE, config.key_commands.keysym_to_action[XK_x]);
+        KeyBinding force_close(XK_x, false);
+        CHECK_EQUAL(force_close, config.key_commands.action_to_binding[FORCE_CLOSE]);
+        CHECK_EQUAL(FORCE_CLOSE, config.key_commands.binding_to_action[force_close]);
 
         // Similarly, make sure that the old binding remains for the original
         // LAYER_1 action
-        CHECK_EQUAL(XK_1, config.key_commands.action_to_keysym[LAYER_1]);
-        CHECK_EQUAL(LAYER_1, config.key_commands.keysym_to_action[XK_1]);
+        KeyBinding layer_1(XK_1, false);
+        CHECK_EQUAL(layer_1, config.key_commands.action_to_binding[LAYER_1]);
+        CHECK_EQUAL(LAYER_1, config.key_commands.binding_to_action[layer_1]);
+    }
+
+    TEST(test_secondary_mask_bindings)
+    {
+        /**
+         * The '!' is used to denote a binding which requires the secondary key.
+         *
+         * Also, 'h' is used to ensure that secondary bindings do not overlap with 
+         * non-secondary bindings.
+         */
+        write_config_file(*config_path,
+            "[keyboard]\nlayer-1=!h\n");
+        config.load();
+
+        KeyBinding layer_1_binding(XK_h, true);
+        CHECK_EQUAL(layer_1_binding, 
+            config.key_commands.action_to_binding[LAYER_1]);
+        CHECK_EQUAL(LAYER_1,
+            config.key_commands.binding_to_action[layer_1_binding]);
     }
 };
 

@@ -6,6 +6,7 @@
 #include <cstring>
 #include <map>
 #include <string>
+#include <utility>
 
 #include "ini.h"
 #include "actions.h"
@@ -36,13 +37,21 @@ enum KeyboardAction
  *  - A keyboard shortcut
  *  - The name in the configuration file
  *  - The default keyboard shortcut
+ *  - Whether or not that shortcut uses the secondary action modifier
  */
 struct DefaultShortcut
 {
     KeyboardAction action;
     const char *config_name;
     KeySym keysym;
+    bool uses_secondary;
 };
+
+/**
+ * Key bindings consist of both a main key, a modifier, and (possibly) 
+ * a secondary modifier (the boolean).
+ */
+typedef std::pair<KeySym, bool> KeyBinding;
 
 /**
  * All the keyboard controls, which can loaded from the config file.
@@ -57,38 +66,38 @@ struct KeyboardConfig
 
     void reset()
     {
-        action_to_keysym.clear();
-        keysym_to_action.clear();
+        action_to_binding.clear();
+        binding_to_action.clear();
 
         DefaultShortcut shortcuts[] = {
-            { CLIENT_NEXT_DESKTOP, "client-next-desktop", XK_bracketright },
-            { CLIENT_PREV_DESKTOP, "client-prev-desktop", XK_bracketleft },
-            { NEXT_DESKTOP, "next-desktop", XK_period },
-            { PREV_DESKTOP, "prev-desktop", XK_comma },
-            { TOGGLE_STICK, "toggle-stick", XK_backslash },
-            { ICONIFY, "iconify", XK_h },
-            { MAXIMIZE, "maximize", XK_m },
-            { REQUEST_CLOSE, "request-close", XK_c },
-            { FORCE_CLOSE, "force-close", XK_x },
-            { K_SNAP_TOP, "snap-top", XK_Up },
-            { K_SNAP_BOTTOM, "snap-bottom", XK_Down },
-            { K_SNAP_LEFT, "snap-left", XK_Left },
-            { K_SNAP_RIGHT, "snap-right", XK_Right },
-            { LAYER_ABOVE, "layer-above", XK_Page_Up },
-            { LAYER_BELOW, "layer-below", XK_Page_Down },
-            { LAYER_TOP, "layer-top", XK_Home },
-            { LAYER_BOTTOM, "layer-bottom", XK_End },
-            { LAYER_1, "layer-1", XK_1 },
-            { LAYER_2, "layer-2", XK_2 },
-            { LAYER_3, "layer-3", XK_3 },
-            { LAYER_4, "layer-4", XK_4 },
-            { LAYER_5, "layer-5", XK_5 },
-            { LAYER_6, "layer-6", XK_6 },
-            { LAYER_7, "layer-7", XK_7 },
-            { LAYER_8, "layer-8", XK_8 },
-            { LAYER_9, "layer-9", XK_9 },
-            { CYCLE_FOCUS, "cycle-focus", XK_Tab },
-            { EXIT_WM, "exit", XK_Escape },
+            { CLIENT_NEXT_DESKTOP, "client-next-desktop", XK_bracketright, false },
+            { CLIENT_PREV_DESKTOP, "client-prev-desktop", XK_bracketleft, false },
+            { NEXT_DESKTOP, "next-desktop", XK_period, false },
+            { PREV_DESKTOP, "prev-desktop", XK_comma, false },
+            { TOGGLE_STICK, "toggle-stick", XK_backslash, false },
+            { ICONIFY, "iconify", XK_h, false },
+            { MAXIMIZE, "maximize", XK_m, false },
+            { REQUEST_CLOSE, "request-close", XK_c, false },
+            { FORCE_CLOSE, "force-close", XK_x, false },
+            { K_SNAP_TOP, "snap-top", XK_Up, false },
+            { K_SNAP_BOTTOM, "snap-bottom", XK_Down, false },
+            { K_SNAP_LEFT, "snap-left", XK_Left, false },
+            { K_SNAP_RIGHT, "snap-right", XK_Right, false },
+            { LAYER_ABOVE, "layer-above", XK_Page_Up, false },
+            { LAYER_BELOW, "layer-below", XK_Page_Down, false },
+            { LAYER_TOP, "layer-top", XK_Home, false },
+            { LAYER_BOTTOM, "layer-bottom", XK_End, false },
+            { LAYER_1, "layer-1", XK_1, false },
+            { LAYER_2, "layer-2", XK_2, false },
+            { LAYER_3, "layer-3", XK_3, false },
+            { LAYER_4, "layer-4", XK_4, false },
+            { LAYER_5, "layer-5", XK_5, false },
+            { LAYER_6, "layer-6", XK_6, false },
+            { LAYER_7, "layer-7", XK_7, false },
+            { LAYER_8, "layer-8", XK_8, false },
+            { LAYER_9, "layer-9", XK_9, false },
+            { CYCLE_FOCUS, "cycle-focus", XK_Tab, false },
+            { EXIT_WM, "exit", XK_Escape, false },
         };
 
         int num_shortcuts = sizeof(shortcuts) / sizeof(shortcuts[0]);
@@ -101,21 +110,21 @@ struct KeyboardConfig
                 action_names[config_name] = current_shortcut.action;
             }
 
-            action_to_keysym[current_shortcut.action] = 
-                current_shortcut.keysym;
-            keysym_to_action[current_shortcut.keysym] =
-                current_shortcut.action;
+            KeyBinding binding(current_shortcut.keysym, current_shortcut.uses_secondary);
+
+            action_to_binding[current_shortcut.action] = binding;
+            binding_to_action[binding] = current_shortcut.action;
         }
     }
 
     /// The keyboard shortcuts which are bound to specific keys
-    std::map<KeyboardAction, KeySym> action_to_keysym;
+    std::map<KeyboardAction, KeyBinding> action_to_binding;
 
     /// The configuration values which are bound to specific shortcuts
     std::map<std::string, KeyboardAction> action_names;
 
-    /// A reverse mapping between KeySyms and KeyboardActions
-    std::map<KeySym, KeyboardAction> keysym_to_action;
+    /// A reverse mapping between KeyBindings and KeyboardActions
+    std::map<KeyBinding, KeyboardAction> binding_to_action;
 };
 
 /**
