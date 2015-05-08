@@ -227,8 +227,16 @@ void ClientModel::change_mode(Window client, ClientPosScale cps)
  */
 void ClientModel::change_location(Window client, Dimension x, Dimension y)
 {
+    // See whether the client should end up on a new desktop with its new
+    // location
+    Box &old_desktop = m_screen[client];
+    Box &new_desktop = m_crt_manager.screen_of_cord(x, y);
+
     m_location[client] = Dimension2D(x, y);
     push_change(new ChangeLocation(client, x, y));
+
+    if (old_desktop != new_desktop)
+        to_screen_box(client, new_desktop);
 }
 
 /**
