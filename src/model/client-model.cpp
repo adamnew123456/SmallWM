@@ -585,6 +585,14 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
 }
 
 /**
+ * Gets the bounding box of the screen that the client currently inhabits.
+ */
+Box &ClientModel::get_screen(Window client)
+{
+    return m_screen[client];
+}
+
+/**
  * Change the relative screen of a window to a neighboring screen.
  * Does nothing if no such neighboring screen exists.
  */

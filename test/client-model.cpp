@@ -1545,6 +1545,8 @@ SUITE(ClientModelMemberSuite)
             model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
             model.flush_changes();
 
+            CHECK_EQUAL(model.get_screen(a), Box(100, 100, 100, 100));
+
             Box &the_test = tests[test];
             model.to_screen_box(a, the_test);
 
@@ -1562,6 +1564,8 @@ SUITE(ClientModelMemberSuite)
             change = model.get_next_change();
             CHECK_EQUAL(change, static_cast<const Change *>(0));
 
+            CHECK_EQUAL(model.get_screen(a), the_test);
+
             model.remove_client(a);
             model.flush_changes();
         }
@@ -1575,6 +1579,8 @@ SUITE(ClientModelMemberSuite)
         const Change *change = model.get_next_change();
         CHECK_EQUAL(change, static_cast<const Change *>(0));
 
+        CHECK_EQUAL(model.get_screen(a), Box(100, 100, 100, 100));
+
         model.remove_client(a);
         model.flush_changes();
 
@@ -1586,6 +1592,8 @@ SUITE(ClientModelMemberSuite)
 
         change = model.get_next_change();
         CHECK_EQUAL(change, static_cast<const Change *>(0));
+
+        CHECK_EQUAL(model.get_screen(a), Box(100, 100, 100, 100));
 
         model.remove_client(a);
         model.flush_changes();
@@ -1625,6 +1633,8 @@ SUITE(ClientModelMemberSuite)
             change = model.get_next_change();
             CHECK(change == static_cast<const Change *>(0));
 
+            CHECK_EQUAL(model.get_screen(a), Box(0, 0, 1000, 1000));
+
             model.remove_client(a);
             reset_screen_graph();
             model.flush_changes();
@@ -1632,6 +1642,8 @@ SUITE(ClientModelMemberSuite)
 
         model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
         model.flush_changes();
+
+        CHECK_EQUAL(model.get_screen(a), Box(-1, -1, 0, 0));
 
         // Each client should start out on different screens, but they should all end up
         // in the same large box when we update the screen configuration

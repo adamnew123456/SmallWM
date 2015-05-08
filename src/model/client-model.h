@@ -129,6 +129,7 @@ public:
     void start_resizing(Window);
     void stop_resizing(Window, Dimension2D);
 
+    Box &get_screen(Window);
     void to_relative_screen(Window, Direction);
     void to_screen_box(Window, Box);
 
