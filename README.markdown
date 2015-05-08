@@ -122,7 +122,7 @@ For example:
     snap-top=w
     snap-bottom=s
     snap-left=a
-    snap-right=d
+    snap-right=!d
 
 The options in the `[smallwm]` section are (in order):
 
@@ -191,6 +191,12 @@ list of default bindings and see what each of these bindings mean.
  - `layer-above`, `layer-below`, `layer-top`, `layer-bottom`
  - `cycle-focus`
  - `exit-wm` 
+
+Note the key binding given for `snap-right` in the example - the `!` that prefixes
+the 'a' is used to indicate that this key bindings uses a secondary modifier key
+(Ctrl, by default) - that is, in order to activate `snap-left`, you need to press
+`Super+Ctrl+a` rather than just `Super+a`. No key bindings currently use this
+feature by default, although that could change in the future.
 
 Bugs/Todo
 =========
