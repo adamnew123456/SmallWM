@@ -590,7 +590,7 @@ void XData::get_screen_boxes(std::vector<Box> &box)
         RRCrtc crtc_id = resources->crtcs[crtc_idx];
 
         XRRCrtcInfo *crtc = XRRGetCrtcInfo(m_display, resources, crtc_id);
-        if (!crtc)
+        if (!crtc || crtc->width == 0 || crtc->height == 0)
             continue;
 
         box.push_back(Box(crtc->x, crtc->y, crtc->width, crtc->height));

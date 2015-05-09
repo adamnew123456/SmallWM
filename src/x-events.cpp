@@ -539,8 +539,7 @@ void XEvents::add_window(Window window)
             // relative to the window (that is, the screen size is the size of
             // the screen *that the window occupies*). This is because we can't
             // know what screen the user intended the window to be on.
-            Box screen;
-            m_clients.get_screen(window);
+            Box screen = m_clients.get_screen(window);
 
             m_clients.change_mode(window, CPS_FLOATING);
 
