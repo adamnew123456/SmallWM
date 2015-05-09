@@ -230,7 +230,8 @@ void ClientModel::change_location(Window client, Dimension x, Dimension y)
     // See whether the client should end up on a new desktop with its new
     // location
     Box &old_desktop = m_screen[client];
-    Box &new_desktop = m_crt_manager.screen_of_cord(x, y);
+    Crt *new_screen = m_crt_manager.screen_of_coord(x, y);
+    Box &new_desktop = m_crt_manager.box_of_screen(new_screen);
 
     m_location[client] = Dimension2D(x, y);
     push_change(new ChangeLocation(client, x, y));
@@ -590,6 +591,14 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
     change_size(client, DIM2D_WIDTH(size), DIM2D_HEIGHT(size));
 
     focus(client);
+}
+
+/**
+ * Gets the root screen.
+ */
+Box &ClientModel::get_root_screen()
+{
+    return m_crt_manager.box_of_screen(m_crt_manager.root());
 }
 
 /**
