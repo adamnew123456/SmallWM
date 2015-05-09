@@ -71,6 +71,9 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(false, model.is_client(a));
         CHECK_EQUAL(false, model.is_client(b));
 
+        // Ensure that the root screen is the top-left screen
+        CHECK_EQUAL(model.get_root_screen(), Box(0, 0, 100, 100));
+
         // Add a new client, and ensure that it is present
         model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
 
@@ -1325,6 +1328,11 @@ SUITE(ClientModelMemberSuite)
 
     TEST_FIXTURE(ClientModelFixture, test_location_size_changers)
     {
+        // Avoid screen changes when positions change
+        std::vector<Box> screens;
+        screens.push_back(Box(0, 0, 1000, 1000));
+        model.update_screens(screens);
+
         model.add_client(a, IS_VISIBLE, 
             Dimension2D(1, 1), Dimension2D(1, 1));
         model.flush_changes();
