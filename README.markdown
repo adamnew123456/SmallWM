@@ -38,6 +38,8 @@ ones that involve clicking the mouse, and the `Super+1` ... `Super+9` bindings.
 - `Super+x`: Force-closes the current client (`force-close`).
 - `Super+Up`, `Super+Down`, `Super+Left`, `Super+Right`: Snaps a window to either the top-half, bottom-half, left-half or right-half of the screen.
  - `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
+- `Super+Ctrl+Up`, `Super+Ctrl+Down`, ...: Moves a window to the screen in the relative direction of the arrow key. Note that the window will keep its maximized/split status.
+ - `screen-top`, `screen-bottom`, `screen-left`, `screen-right`
 - `Super+PageUp`, `Super+PageDown`: Increments or decrements the layer of this client.
  - `layer-above`, `layer-below`
 - `Super+Home`, `Super+End`: Puts a client on the topmost or bottommost layer.
@@ -195,8 +197,8 @@ list of default bindings and see what each of these bindings mean.
 Note the key binding given for `snap-right` in the example - the `!` that prefixes
 the 'a' is used to indicate that this key bindings uses a secondary modifier key
 (Ctrl, by default) - that is, in order to activate `snap-left`, you need to press
-`Super+Ctrl+a` rather than just `Super+a`. No key bindings currently use this
-feature by default, although that could change in the future.
+`Super+Ctrl+a` rather than just `Super+a`. Only the key bindings used to move windows
+between screens use this by default.
 
 Bugs/Todo
 =========
