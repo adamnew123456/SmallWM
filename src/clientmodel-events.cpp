@@ -514,7 +514,9 @@ void ClientModelEvents::handle_screen_change()
 
     ClientPosScale cps_mode = m_clients.get_mode(change->window);
 
-    Dimension new_width = attrib.width, 
+    Dimension new_x = attrib.x, 
+              new_y = attrib.y,
+              new_width = attrib.width, 
               new_height = attrib.height;
 
     switch (cps_mode)
@@ -528,6 +530,15 @@ void ClientModelEvents::handle_screen_change()
                 new_height = (box.y + box.height) - attrib.y;
 
             m_clients.change_size(client, new_width, new_height);
+
+            // Ensure that the window actually is located in the screen it
+            // claims to be in
+            if (attrib.x < box.x || attrib.x >= box.x + box.width)
+                new_x = box.x;
+            if (attrib.y < box.y || attrib.y >= box.y + box.height)
+                new_y = box.y;
+
+            m_clients.change_location(client, new_x, new_y);
             break;
         default:
             // If we're doing the managing for this window, then correct for
