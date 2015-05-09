@@ -111,19 +111,19 @@ void XEvents::handle_keypress()
         break;
     case SCREEN_TOP:
         if (is_client)
-            m_clients.to_relative_screen(client, TOP);
+            m_clients.to_relative_screen(client, DIR_TOP);
         break;
     case SCREEN_BOTTOM:
         if (is_client)
-            m_clients.to_relative_screen(client, BOTTOM);
+            m_clients.to_relative_screen(client, DIR_BOTTOM);
         break;
     case SCREEN_LEFT:
         if (is_client)
-            m_clients.to_relative_screen(client, LEFT);
+            m_clients.to_relative_screen(client, DIR_LEFT);
         break;
     case SCREEN_RIGHT:
         if (is_client)
-            m_clients.to_relative_screen(client, RIGHT);
+            m_clients.to_relative_screen(client, DIR_RIGHT);
         break;
     case LAYER_ABOVE:
         if (is_client)

@@ -19,7 +19,7 @@ void ClientModelEvents::handle_queued_changes()
             handle_client_desktop_change();
         else if (m_change->is_current_desktop_change())
             handle_current_desktop_change();
-        else if (m_hcnage->is_screen_change())
+        else if (m_change->is_screen_change())
             handle_screen_change();
         else if (m_change->is_mode_change())
             handle_mode_change();
@@ -497,20 +497,20 @@ void ClientModelEvents::handle_current_desktop_change()
 /**
  * Handles the screen of a client changing.
  */
-void ClientModelEVents::handle_screen_change()
+void ClientModelEvents::handle_screen_change()
 {
     ChangeScreen const *change =
         dynamic_cast<ChangeScreen const*>(m_change);
 
     Window client = change->window;
-    Box &screen = change->box;
+    Box &box = change->bounds;
 
     // If the window went to an invalid screen, then there's nothing we can do
-    if (screen == Box(-1, -1, 0, 0))
+    if (box == Box(-1, -1, 0, 0))
         return;
 
     XWindowAttributes attrib;
-    m_xdata.get_window_attributes(client, attrib);
+    m_xdata.get_attributes(client, attrib);
 
     ClientPosScale cps_mode = m_clients.get_mode(change->window);
 

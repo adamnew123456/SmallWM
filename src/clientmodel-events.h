@@ -42,7 +42,7 @@ private:
     void do_relayer();
     void reposition_icons();
     void update_focus_cycle();
-    void update_location_size_for_cps(Window);
+    void update_location_size_for_cps(Window, ClientPosScale);
 
     void handle_layer_change();
     void handle_focus_change();

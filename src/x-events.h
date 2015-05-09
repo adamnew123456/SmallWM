@@ -43,7 +43,7 @@ public:
 
         for (KeyboardAction *action = &actions[0]; *action != INVALID_ACTION; action++)
         {
-            KeyBinding &binding = config.key_commands.action_to_keysym[*action];
+            KeyBinding &binding = config.key_commands.action_to_binding[*action];
             xdata.add_hotkey(binding.first, binding.second);
         }
     };
