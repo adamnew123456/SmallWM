@@ -119,12 +119,10 @@ public:
     void get_icon_name(Window, std::string&);
     void get_class(Window, std::string&);
 
+    void get_screen_boxes(std::vector<Box>&);
+
     KeySym get_keysym(int);
     void keysym_to_string(KeySym, std::string&);
-
-    void get_screen_bounds(Box&);
-    void get_screen_bounds_for_window(Window, Box&);
-    void get_screen_bounds_at_location(int, int, Box&);
 
     /// The event code X adds to each XRandR event (used by XEvents)
     int randr_event_offset;

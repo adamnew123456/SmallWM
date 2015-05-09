@@ -811,8 +811,7 @@ void ClientModelEvents::reposition_icons()
 
     const Dimension icon_width = m_config.icon_width,
                     icon_height = m_config.icon_height;
-    Box screen;
-    m_xdata.get_screen_bounds(screen);
+    Box &screen = m_clients.get_root_screen();
 
     std::vector<Icon*> icon_list;
     m_xmodel.get_icons(icon_list);

@@ -9,6 +9,7 @@
 #include "common.h"
 #include "logging.h"
 #include "model/client-model.h"
+#include "model/screen.h"
 #include "model/x-model.h"
 #include "xdata.h"
 #include "x-events.h"
@@ -72,7 +73,12 @@ int main()
     xdata.select_input(default_root, 
         PointerMotionMask | StructureNotifyMask | SubstructureNotifyMask);
 
-    ClientModel clients(config.num_desktops);
+    CrtManager crt_manager;
+    std::vector<Box> screens;
+    xdata.get_screen_boxes(screens);
+    crt_manager.rebuild_graph(screens);
+
+    ClientModel clients(crt_manager, config.num_desktops);
     std::vector<Window> existing_windows;
     xdata.get_windows(existing_windows);
 

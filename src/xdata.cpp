@@ -79,6 +79,9 @@ void XData::init_xrandr()
     // than we require, it seems like a good starting point
     int major_version = 1, minor_version = 4;
     XRRQueryVersion(m_display, &major_version, &minor_version);
+
+    // Ensure that we can handle changes to the screen configuration
+    XRRSelectInput(m_display, m_root, RRCrtcChangeNotifyMask);
 }
 
 /**
@@ -560,29 +563,7 @@ void XData::get_class(Window win, std::string &xclass)
 }
 
 /**
- * Gets the size of the primary screen.
- * @param[out] width The width of the screen.
- * @param[out] height The height of the screen.
- */
-void XData::get_screen_bounds(Box &box)
-{
-    get_screen_bounds_at_location(0, 0, box);
-}
-
-/**
- * Gets the size of the screen which a particular window occupies.
- */
-void XData::get_screen_bounds_for_window(Window window, Box &box) 
-{
-    XWindowAttributes attr;
-    get_attributes(window, attr);
-
-    get_screen_bounds_at_location(attr.x, attr.y, box);
-}
-
-/**
- * Figures out what screen is covering a point, and then gets the bounds of that
- * screen.
+ * Gets a list of screen boxes, to update the ClientModel.
  *
  * This is the result of my crawling through Xrandr.h rather than any attempt 
  * at processing formal documentation. There aren't any good docs, from what 
@@ -590,18 +571,9 @@ void XData::get_screen_bounds_for_window(Window window, Box &box)
  *
  * The AwesomeWM codebase was helpful in finding out a few things, though.
  */
-void XData::get_screen_bounds_at_location(int x, int y, Box &box)
+void XData::get_screen_boxes(std::vector<Box> &box)
 {
     XRRScreenResources *resources = XRRGetScreenResourcesCurrent(m_display, m_root);
-
-    if (resources == NULL)
-    {
-        box.x = -1;
-        box.y = -1;
-        box.width = -1;
-        box.height = -1;
-        return;
-    }
 
     // XRandR stores things called 'CRTCs', which is apparently a funny way of
     // spelling 'outputs' (like LVDS1 or VGA2). We have to find out what location
@@ -621,33 +593,11 @@ void XData::get_screen_bounds_at_location(int x, int y, Box &box)
         if (!crtc)
             continue;
 
-        int left = crtc->x;
-        int right = left + crtc->width;
-        int top = crtc->y;
-        int bottom = top + crtc->height;
-
+        box.push_back(Box(crtc->x, crtc->y, crtc->width, crtc->height));
         XRRFreeCrtcInfo(crtc);
-
-        if (IN_BOUNDS(x, left, right) && IN_BOUNDS(y, top, bottom))
-        {
-            box.x = left;
-            box.y = top;
-            box.width = right - left;
-            box.height = bottom - top;
-
-            goto cleanup_screen;
-        }
     }
 
-    // Somehow, the position isn't on any screen
-    box.x = -1;
-    box.y = -1;
-    box.width = -1;
-    box.height = -1;
-
-cleanup_screen:
     XRRFreeScreenResources(resources);
-    return;
 }
 
 /**

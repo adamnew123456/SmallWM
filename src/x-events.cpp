@@ -10,6 +10,9 @@ bool XEvents::step()
 {
     // Grab the next event from X, and then dispatch upon its type
     m_xdata.next_event(m_event);
+
+    if (m_event.type == m_xdata.randr_event_offset + RRNotify)
+        handle_rrnotify();
     
     if (m_event.type == KeyPress)
         handle_keypress();
@@ -33,6 +36,16 @@ bool XEvents::step()
         handle_destroynotify();
 
     return !m_done;
+}
+
+/**
+ * Rebuilds the display graph whenever XRandR notifies us.
+ */
+void XEvents::handle_rrnotify()
+{
+    std::vector<Box> screens;
+    m_xdata.get_screen_boxes(screens);
+    m_clients.update_screens(screens);
 }
 
 /**
@@ -527,7 +540,7 @@ void XEvents::add_window(Window window)
             // the screen *that the window occupies*). This is because we can't
             // know what screen the user intended the window to be on.
             Box screen;
-            m_xdata.get_screen_bounds(screen);
+            m_clients.get_screen(window);
 
             m_clients.change_mode(window, CPS_FLOATING);
 

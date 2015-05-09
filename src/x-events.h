@@ -55,6 +55,7 @@ public:
     void add_window(Window);
 
 private:
+    void handle_rrnotify();
     void handle_keypress();
     void handle_buttonpress();
     void handle_buttonrelease();
