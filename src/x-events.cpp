@@ -109,6 +109,22 @@ void XEvents::handle_keypress()
         if (is_client)
             m_clients.change_mode(client, CPS_SPLIT_RIGHT);
         break;
+    case SCREEN_TOP:
+        if (is_client)
+            m_clients.to_relative_screen(client, TOP);
+        break;
+    case SCREEN_BOTTOM:
+        if (is_client)
+            m_clients.to_relative_screen(client, BOTTOM);
+        break;
+    case SCREEN_LEFT:
+        if (is_client)
+            m_clients.to_relative_screen(client, LEFT);
+        break;
+    case SCREEN_RIGHT:
+        if (is_client)
+            m_clients.to_relative_screen(client, RIGHT);
+        break;
     case LAYER_ABOVE:
         if (is_client)
              m_clients.up_layer(client);
