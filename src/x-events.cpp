@@ -59,7 +59,7 @@ void XEvents::handle_keypress()
     Window client = None;
     if (m_config.hotkey == HK_MOUSE)
     {
-        Window client = m_event.xkey.subwindow;
+        client = m_event.xkey.subwindow;
         if (client == None)
             client = m_event.xkey.window;
     }
