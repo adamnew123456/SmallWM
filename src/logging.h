@@ -4,17 +4,55 @@
 
 #include <ostream>
 #include <sstream>
-#include <stack>
 #include <string>
 
 #include <syslog.h>
 #include <unistd.h>
 
 /**
+ * A basic logging API, which can be used to define the various kinds of
+ * loggers.
+ */
+class Log 
+{
+public:
+    virtual void stop() = 0;
+
+    virtual Log &log(int) = 0;
+    virtual void write(std::string&) = 0;
+    virtual void flush() = 0;
+
+    template<typename T>
+    Log &operator<<(T value)
+    {
+        m_formatter.str("");
+        m_formatter << value;
+
+        std::string format_out = m_formatter.str();
+        this->write(format_out);
+        return *this;
+    }
+
+    Log &operator<<(Log& (*manipulator)(Log&));
+
+    static Log &endl(Log &stream);
+
+    // Any concrete subclass of Log must also define write<T>(), but we can't
+    // use virtual templates in C++ :(
+
+protected:
+    // A utility object, used to input things via <<
+    std::ostringstream m_formatter;
+};
+
+/// The type of Log::endl
+typedef Log& (*LogManipulator)(Log&);
+
+/**
  * A C++ friendly wrapper around the standard Unix syslog API, but adapted to the
  * ostreams syntax.
  */
-class SysLog
+class SysLog : public Log
 {
 public:
     SysLog() :
@@ -36,31 +74,15 @@ public:
     void remove_option(int);
 
     void set_identity(std::string);
-    SysLog &set_priority(int);
     void set_facility(int);
     void set_log_mask(int);
 
     void start();
     void stop();
 
-    /// The type of SysLog::endl
-    typedef SysLog& (*SysLogManipulator)(SysLog&);
-
-    /**
-     * The general output routine for sending data to syslog.
-     * @note That the message will not be sent to syslog until SysLog::endl is
-     *  provided to this method (`me << ... << SysLog::endl;`).
-     * @param value The value to append to the current message.
-     */
-    template<typename T>
-    SysLog &operator<<(T value)
-    {
-        m_formatter << value;
-        return *this;
-    };
-
-    SysLog &operator<<(SysLogManipulator manipulator);
-    static SysLog &endl(SysLog &stream);
+    Log &log(int);
+    void write(std::string&);
+    void flush();
 
 private:
     // Whether or not the user actually started to log something

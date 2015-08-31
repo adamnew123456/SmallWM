@@ -61,8 +61,8 @@ int main()
     Display *display = XOpenDisplay(NULL);
     if (!display)
     {
-        logger.set_priority(LOG_ERR) << 
-            "Could not open X display - terminating" << SysLog::endl;
+        logger.log(LOG_ERR) << 
+            "Could not open X display - terminating" << Log::endl;
         logger.stop();
 
         std::exit(2);

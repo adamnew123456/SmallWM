@@ -173,9 +173,9 @@ void ClientModelEvents::handle_client_desktop_change()
         handle_client_change_from_resizing_desktop(old_desktop, new_desktop,
                                                    client);
     else
-        m_logger.set_priority(LOG_WARNING) <<
+        m_logger.log(LOG_WARNING) <<
             "Unanticipated switch by " << client << " from " <<
-            old_desktop  << " to " << new_desktop << SysLog::endl;
+            old_desktop  << " to " << new_desktop << Log::endl;
 
     update_focus_cycle();
 }
@@ -201,10 +201,10 @@ void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desk
         register_new_icon(client, true);
     else
     {
-        m_logger.set_priority(LOG_WARNING) <<
+        m_logger.log(LOG_WARNING) <<
             "New client " << client << " asked to start on desktop " <<
             new_desktop << "- making an icon instead"
-            << SysLog::endl;
+            << Log::endl;
 
         // Since the API doesn't allow us to get the current desktop, and
         // we can't reset it since `ClientModel::client_reset_desktop` requires
@@ -246,10 +246,10 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
             // thus will not alter the focus
         }
         else
-            m_logger.set_priority(LOG_WARNING) <<
+            m_logger.log(LOG_WARNING) <<
                 "If client is switched from a " << old_desktop << " to "
                 << new_desktop << " then it cannot be visible in both places."
-                << SysLog::endl;
+                << Log::endl;
             /*
              * This is because there is only ever one visible desktop - to
              * have a window be visible on more than one desktop would
@@ -324,9 +324,9 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
         Icon *icon = m_xmodel.find_icon_from_client(client);
 
         if (!icon)
-            m_logger.set_priority(LOG_ERR) <<
+            m_logger.log(LOG_ERR) <<
                 "Tried to de-iconify a client (" << client << ") "
-                "that is not currently iconified." << SysLog::endl;
+                "that is not currently iconified." << Log::endl;
         else
         {
             m_xdata.destroy_win(icon->icon);
@@ -361,9 +361,9 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
     {
         Window placeholder = m_xmodel.get_move_resize_placeholder();
         if (placeholder == None)
-            m_logger.set_priority(LOG_ERR) <<
+            m_logger.log(LOG_ERR) <<
                 "Tried to stop moving a client (" << client << ") "
-                "that is not currently moving." << SysLog::endl;
+                "that is not currently moving." << Log::endl;
         else
         {
             XWindowAttributes placeholder_attr;
@@ -400,9 +400,9 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
     {
         Window placeholder = m_xmodel.get_move_resize_placeholder();
         if (placeholder == None)
-            m_logger.set_priority(LOG_ERR) <<
+            m_logger.log(LOG_ERR) <<
                 "Tried to stop resizing a client (" << client << ") "
-                "that is not currently resizing." << SysLog::endl;
+                "that is not currently resizing." << Log::endl;
         else
         {
             XWindowAttributes placeholder_attr;

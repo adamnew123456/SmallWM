@@ -29,16 +29,6 @@ void SysLog::set_identity(std::string syslog_ident)
 };
 
 /**
- * The minimum priority to log messages at.
- * @param syslog_priority The minimum priority level.
- */
-SysLog &SysLog::set_priority(int syslog_priority)
-{
-    m_priority = syslog_priority;
-    return *this;
-};
-
-/**
  * Sets the facility to use when logging messages.
  * @param syslog_facility The output facility to use.
  */
@@ -91,10 +81,41 @@ void SysLog::stop()
 
 
 /**
- * Does special processing for SysLog::endl.
- * @param manipulator This should only ever by SysLog::endl.
+ * This is the main entry point to SysLog, which sets the priority and returns
+ * itself for use with the << operator and Log::endl.
+ * @param syslog_priority The minimum priority level.
  */
-SysLog &SysLog::operator<<(SysLogManipulator manipulator)
+Log &SysLog::log(int syslog_priority)
+{
+    m_priority = syslog_priority;
+    return *this;
+};
+
+
+/**
+ * Buffers writes from the Log, so we can flush them later.
+ */
+void SysLog::write(std::string &str)
+{
+    m_formatter << str;
+}
+
+/**
+ * Flushes the content of a SysLog by writing it to syslog().
+ */
+void SysLog::flush()
+{
+    if (m_started)
+        syslog(m_priority, "%s", m_formatter.str().c_str());
+        
+    m_formatter.str("");
+}
+
+/**
+ * Does special processing for Log::endl.
+ * @param manipulator This should only ever by Log::endl.
+ */
+Log &Log::operator<<(LogManipulator manipulator)
 {
     return manipulator(*this);
 }
@@ -104,11 +125,8 @@ SysLog &SysLog::operator<<(SysLogManipulator manipulator)
  * message.
  * @param stream The stream to operate upon.
  */
-SysLog& SysLog::endl(SysLog &stream)
+Log &Log::endl(Log &stream)
 {
-    if (stream.m_started)
-        syslog(stream.m_priority, "%s", stream.m_formatter.str().c_str());
-        
-    stream.m_formatter.str("");
+    stream.flush();
     return stream;
 };

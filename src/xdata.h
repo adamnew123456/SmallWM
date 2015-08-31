@@ -60,7 +60,7 @@ enum MonoColor
 class XData
 {
 public:
-    XData(SysLog &logger, Display *dpy, Window root, int screen) :
+    XData(Log &logger, Display *dpy, Window root, int screen) :
         m_display(dpy), m_logger(logger), m_confined(None)
     {
         m_root = DefaultRootWindow(dpy);
@@ -132,7 +132,7 @@ private:
     unsigned long decode_monocolor(MonoColor);
 
     /// The logging interface
-    SysLog &m_logger;
+    Log &m_logger;
 
     /// The connection to the X server
     Display *m_display;

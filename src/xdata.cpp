@@ -68,8 +68,8 @@ void XData::init_xrandr()
 
     if (randr_state == false)
     {
-        m_logger.set_priority(LOG_ERR) <<
-            "Unable to initialize XRandR extension - terminating" << SysLog::endl;
+        m_logger.log(LOG_ERR) <<
+            "Unable to initialize XRandR extension - terminating" << Log::endl;
         m_logger.stop();
 
         std::exit(1);

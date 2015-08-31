@@ -24,7 +24,7 @@
 class ClientModelEvents
 {
 public:
-    ClientModelEvents(WMConfig &config, SysLog &logger, 
+    ClientModelEvents(WMConfig &config, Log &logger, 
         XData &xdata, ClientModel &clients, XModel &xmodel,
         FocusCycle &focus_cycle) :
         m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
@@ -83,7 +83,7 @@ private:
     XModel &m_xmodel;
 
     /// The event handler's logger
-    SysLog &m_logger;
+    Log &m_logger;
 
     /// The focus cycler
     FocusCycle &m_focus_cycle;
