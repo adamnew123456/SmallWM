@@ -108,6 +108,12 @@ bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o obj/model/cli
 obj/test-client-model.o: obj test/client-model.cpp src/model/changes.h src/model/client-model.h src/model/desktop-type.h src/model/screen.h src/model/unique-multimap.h
 	${CXX} ${CXXFLAGS} -c test/client-model.cpp -o obj/test-client-model.o
 
+bin/test-focus-cycle: bin/libUnitTest++.a obj/test-focus-cycle.o obj/model/focus-cycle.o obj/logging/logging.o obj/logging/stream.o
+	${CXX} ${CXXFLAGS} obj/test-focus-cycle.o obj/model/focus-cycle.o obj/logging/logging.o obj/logging/stream.o bin/libUnitTest++.a ${LINKER_FLAGS} -o bin/test-focus-cycle
+
+obj/test-focus-cycle.o: obj
+	${CXX} ${CXXFLAGS} -c test/focus-cycle.cpp -o obj/test-focus-cycle.o
+
 bin/test-x-model: bin/libUnitTest++.a obj/test-x-model.o obj/model/x-model.o
 	${CXX} ${CXXFLAGS} obj/test-x-model.o bin/libUnitTest++.a obj/model/x-model.o ${LINKER_FLAGS} -o bin/test-x-model
 
@@ -126,3 +132,8 @@ bin/test-utils: bin/libUnitTest++.a obj/test-utils.o obj/utils.o
 obj/test-utils.o: obj test/utils.cpp
 	${CXX} ${CXXFLAGS} -c test/utils.cpp -o obj/test-utils.o
 	
+bin/test-unique-multimap: bin/libUnitTest++.a obj/test-unique-multimap.o
+	${CXX} ${CXXFLAGS} obj/test-unique-multimap.o bin/libUnitTest++.a -o bin/test-unique-multimap
+
+obj/test-unique-multimap.o: obj test/unique-multimap.cpp
+	${CXX} ${CXXFLAGS} -c test/unique-multimap.cpp -o obj/test-unique-multimap.o
