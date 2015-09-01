@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "common.h"
-#include "logging.h"
+#include "logging/logging.h"
 
 /**
  * Handles focus cycling, which is the ability to use a single keyboard

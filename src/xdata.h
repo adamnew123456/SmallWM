@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "common.h"
-#include "logging.h"
+#include "logging/logging.h"
 
 /**
  * An X graphics context which is used to draw on windows.

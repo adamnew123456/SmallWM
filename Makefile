@@ -24,14 +24,17 @@ TESTS=$(patsubst test/%.cpp,bin/test-%,$(wildcard test/*.cpp))
 BASE_CFILES:=$(wildcard src/*.cpp)
 BASE_OBJS:=$(patsubst src/%.cpp,obj/%.o,${BASE_CFILES})
 
+LOGGING_CFILES:=$(wildcard src/logging/*.cpp)
+LOGGING_OBJS:=$(patsubst src/logging/%.cpp,obj/logging/%.o,${LOGGING_CFILES})
+
 MODEL_CFILES:=$(wildcard src/model/*.cpp)
 MODEL_OBJS:=$(patsubst src/model/%.cpp,obj/model/%.o,${MODEL_CFILES})
 
 INI_CFILES:=inih/ini.c
 INI_OBJS:=obj/ini.o
 
-CFILES:=${BASE_CFILES} ${MODEL_CFILES} ${INI_CFILES}
-OBJS:=${BASE_OBJS} ${MODEL_OBJS} ${INI_OBJS}
+CFILES:=${BASE_CFILES} ${LOGGING_CFILES} ${MODEL_CFILES} ${INI_CFILES}
+OBJS:=${BASE_OBJS} ${LOGGING_OBJS} ${MODEL_OBJS} ${INI_OBJS}
 
 # ${HEADERS} exists mostly to make building Doxygen output more consistent
 # since a change in the headers may require the API documentation to be
@@ -52,6 +55,7 @@ bin:
 obj:
 	[ -d obj ] || mkdir obj
 	[ -d obj/model ] || mkdir obj/model
+	[ -d obj/logging ] || mkdir obj/logging
 
 test: ${TESTS}
 	for TEST in ${TESTS}; do echo "Running $$TEST::"; ./$$TEST;  done
@@ -71,6 +75,9 @@ obj/ini.o: obj inih/ini.c
 obj/%.o: obj
 
 obj/%.o: src/%.cpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+obj/logging/%.o: src/logging/%.cpp
 	${CXX} ${CXXFLAGS} -c $< -o $@
 
 obj/model/%.o: src/model/%.cpp
