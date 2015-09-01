@@ -237,15 +237,20 @@ SUITE(UniqueMultimapTests)
      *
      * - get_category_of
      * - get_members_of
+     */
     TEST_FIXTURE(UniqueMultimapFixture, test_add_category_works)
     {
         CHECK_EQUAL(multimap.add_category(3), true);
 
-        CHECK_EQUAL(multimap.add_member(15, 3), true);
+        CHECK_EQUAL(multimap.add_member(3, 15), true);
         CHECK_EQUAL(multimap.move_member(9, 3), true);
 
-        CHECK_EQUAL(multimap.
-    }**/
+        CHECK_EQUAL(multimap.get_category_of(15), 3);
+        CHECK_EQUAL(multimap.get_category_of(9), 3);
+
+        CHECK_EQUAL(found_in_category(multimap, 15, 3), true);
+        CHECK_EQUAL(found_in_category(multimap, 9, 3), true);
+    }
 }
 
 int main()
