@@ -56,6 +56,17 @@ public:
     size_t size() const
     { return m_value_to_index.size(); }
 
+    bool remove(value_t const &value)
+    {
+        if (m_value_to_index.count(value) == 0)
+            return false;
+
+        int idx = m_value_to_index[value];
+        m_index_to_value.erase(idx);
+        m_value_to_index.erase(value);
+        return true;
+    }
+
     value_t top() const
     {
         // Since keys in std::map are sorted, the last key (i.e. the first in

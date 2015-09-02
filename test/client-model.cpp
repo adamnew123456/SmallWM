@@ -1666,6 +1666,73 @@ SUITE(ClientModelMemberSuite)
         model.remove_client(a);
         model.flush_changes();
     }
+
+    /**
+     * This ensures that the focus history works properly.
+     */
+    TEST_FIXTURE(ClientModelFixture, test_focus_history)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        // Since creating a new window alters the focus, the two windows should 
+        // be in the focus history. b comes first since it was most recently
+        // focused.
+        CHECK_EQUAL(model.get_next_in_focus_history(), b);
+        CHECK_EQUAL(model.get_next_in_focus_history(), a);
+
+        // Exhausting the windows should give us None
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        // Ensure that b doesn't show up if we don't focus it
+        model.focus(a);
+        CHECK_EQUAL(model.get_next_in_focus_history(), a);
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        // Finally, ensure that windows focused more than once are ordered
+        // according to the most recent focused window
+        model.focus(a);
+        model.focus(b);
+        model.focus(a);
+
+        CHECK_EQUAL(model.get_next_in_focus_history(), a);
+        CHECK_EQUAL(model.get_next_in_focus_history(), b);
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        // Ensure that a window, if removed from the focus history, doesn't get 
+        // returned in the focus history. 
+        model.focus(a);
+        model.focus(b);
+        CHECK_EQUAL(model.remove_from_focus_history(b), true);
+
+        CHECK_EQUAL(model.get_next_in_focus_history(), a);
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        // Duplicate removals don't do anything
+        model.focus(b);
+        CHECK_EQUAL(model.remove_from_focus_history(b), true);
+        CHECK_EQUAL(model.remove_from_focus_history(b), false);
+
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        // Removing a non-existent window doesn't do anything
+        CHECK_EQUAL(model.remove_from_focus_history(42), false);
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        // Finally, ensure that focus histories for different desktops are 
+        // independent
+        model.focus(b);
+        model.focus(a);
+
+        model.next_desktop();
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
+        model.prev_desktop();
+        CHECK_EQUAL(model.get_next_in_focus_history(), a);
+        CHECK_EQUAL(model.get_next_in_focus_history(), b);
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+    }
 }
 
 int main()

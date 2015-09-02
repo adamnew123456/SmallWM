@@ -253,6 +253,34 @@ void ClientModel::change_size(Window client, Dimension width, Dimension height)
 }
 
 /**
+ * Gets the next window in the current desktop's focus history, that is a visible.
+ */
+Window ClientModel::get_next_in_focus_history()
+{
+    UniqueStack<Window> &focus_history = m_current_desktop->focus_history;
+    while (!focus_history.empty())
+    {
+        Window candidate = focus_history.top();
+        focus_history.pop();
+
+        if (m_desktops.is_member(candidate) &&is_visible(candidate))
+            return candidate;
+    }
+
+    return None;
+}
+
+/**
+ * Removes an element from the current desktop's focus history.
+ *
+ * This should be used when, for example, focusing a window fails.
+ */
+bool ClientModel::remove_from_focus_history(Window client)
+{
+    return m_current_desktop->focus_history.remove(client);
+}
+
+/**
  * Gets the currently focused window.
  */
 Window ClientModel::get_focused()
@@ -271,6 +299,8 @@ void ClientModel::focus(Window client)
 
     Window old_focus = m_focused;
     m_focused = client;
+
+    m_current_desktop->focus_history.push(client);
     push_change(new ChangeFocus(old_focus, client));
 }
 
@@ -436,15 +466,14 @@ void ClientModel::next_desktop()
     unsigned long long desktop_index = 
         (m_current_desktop->desktop + 1) % m_max_desktops;
 
-    user_desktop_ptr old_desktop = m_current_desktop;
-    m_current_desktop = USER_DESKTOPS[desktop_index];
-
     // We can't change while a window is being moved or resized
     if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
-    // Only unfocus the current window if it won't be visible
+    user_desktop_ptr old_desktop = m_current_desktop;
+    m_current_desktop = USER_DESKTOPS[desktop_index];
+
     if (m_focused != None && !is_visible(m_focused))
         unfocus();
 
@@ -462,15 +491,14 @@ void ClientModel::prev_desktop()
         (m_current_desktop->desktop - 1 + m_max_desktops) 
         % m_max_desktops;
 
-    user_desktop_ptr old_desktop = m_current_desktop;
-    m_current_desktop = USER_DESKTOPS[desktop_index];
-
     // We can't change while a window is being moved or resized
     if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
-    // Only unfocus the current window if it won't be visible
+    user_desktop_ptr old_desktop = m_current_desktop;
+    m_current_desktop = USER_DESKTOPS[desktop_index];
+
     if (m_focused != None && !is_visible(m_focused))
         unfocus();
 
@@ -510,8 +538,6 @@ void ClientModel::deiconify(Window client)
     else
         move_to_desktop(client, m_current_desktop, false);
 
-    // Focus after making the client visible, since a non-visible client
-    // cannot be allowed to be focused
     focus(client);
 }
 
@@ -728,6 +754,7 @@ void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
     desktop_ptr old_desktop = m_desktops.get_category_of(client);
     if (*old_desktop == *new_desktop)
         return;
+
     m_desktops.move_member(client, new_desktop);
 
     if (unfocus && !is_visible(client))

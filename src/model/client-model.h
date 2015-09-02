@@ -40,7 +40,7 @@ public:
     desktop_ptr ICON_DESKTOP;
     desktop_ptr MOVING_DESKTOP;
     desktop_ptr RESIZING_DESKTOP;
-    std::vector<user_desktop_ptr> USER_DESKTOPS;
+    std::vector<UserDesktop*> USER_DESKTOPS;
 
     typedef std::vector<change_ptr>::iterator change_iter;
     typedef UniqueMultimap<desktop_ptr,Window>::member_iter client_iter;
@@ -102,6 +102,9 @@ public:
     void change_location(Window, Dimension, Dimension);
     void change_size(Window, Dimension, Dimension);
 
+    Window get_next_in_focus_history();
+    bool remove_from_focus_history(Window);
+
     Window get_focused();
     void focus(Window);
     void unfocus();
@@ -145,6 +148,8 @@ protected:
 
     void to_screen_crt(Window, Crt*);
 
+    Window find_focus_after_move();
+
 private:
     // The screen manager, used to map positions to screens
     CrtManager &m_crt_manager;
@@ -174,7 +179,7 @@ private:
     std::map<Window, bool> m_was_stuck;
 
     /// The currently visible desktop
-    user_desktop_ptr m_current_desktop;
+    UserDesktop * m_current_desktop;
     /// The currently focused client
     Window m_focused;
 

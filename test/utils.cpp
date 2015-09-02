@@ -56,14 +56,14 @@ TEST(test_UniqueStack)
     // are used
     UniqueStack<char> stack;
     CHECK(stack.empty());
-    CHECK(stack.size() == 0);
+    CHECK_EQUAL(stack.size(), 0);
 
     stack.push('a');
     stack.push('b');
     stack.push('c');
 
     CHECK(!stack.empty());
-    CHECK(stack.size() == 3);
+    CHECK_EQUAL(stack.size(), 3);
 
     CHECK_EQUAL(stack.top(), 'c');
     stack.pop();
@@ -73,7 +73,7 @@ TEST(test_UniqueStack)
     stack.pop();
 
     CHECK(stack.empty());
-    CHECK(stack.size() == 0);
+    CHECK_EQUAL(stack.size(), 0);
 
     // Now, try with a duplicate value, and ensure that the duplicate is
     // 'promoted' and not stored
@@ -82,7 +82,7 @@ TEST(test_UniqueStack)
     stack.push('a');
 
     CHECK(!stack.empty());
-    CHECK(stack.size() == 2);
+    CHECK_EQUAL(stack.size(), 2);
 
     CHECK_EQUAL(stack.top(), 'a');
     stack.pop();
@@ -90,7 +90,41 @@ TEST(test_UniqueStack)
     stack.pop();
 
     CHECK(stack.empty());
-    CHECK(stack.size() == 0);
+    CHECK_EQUAL(stack.size(), 0);
+
+    // Ensure that a values can be removed
+    stack.push('a');
+    stack.push('b');
+    stack.push('c');
+
+    CHECK(!stack.empty());
+    CHECK_EQUAL(stack.size(), 3);
+
+    CHECK_EQUAL(stack.remove('c'), true);
+
+    CHECK(!stack.empty());
+    CHECK_EQUAL(stack.size(), 2);
+
+    CHECK_EQUAL(stack.top(), 'b');
+    stack.pop();
+    CHECK_EQUAL(stack.top(), 'a');
+    stack.pop();
+
+    CHECK(stack.empty());
+    CHECK_EQUAL(stack.size(), 0);
+
+    // Ensure that duplicate removals don't do anything, and removals of 
+    // non-existent items don't either
+    stack.push('a');
+    CHECK_EQUAL(stack.top(), 'a');
+
+    CHECK_EQUAL(stack.remove('a'), true);
+    CHECK_EQUAL(stack.remove('a'), false);
+    
+    CHECK_EQUAL(stack.remove('X'), false);
+
+    CHECK(stack.empty());
+    CHECK_EQUAL(stack.size(), 0);
 }
 
 int main()

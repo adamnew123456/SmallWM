@@ -4,6 +4,8 @@
 
 #include <ostream>
 
+#include "utils.h"
+
 /*
  * These constants are used to make sure that different instances of
  * desktop classes with the same parameters are equal, and are stored in
@@ -62,6 +64,10 @@ struct Desktop
 
 /**
  * A 'real' desktop which the user directly interacts with.
+ *
+ * Note that this has a special artifact that other desktops do not - it keeps
+ * track of its focus history, so that when the user returns to it, their
+ * focus is preserved to the last window they were on.
  */
 struct UserDesktop : public Desktop
 {
@@ -73,6 +79,7 @@ struct UserDesktop : public Desktop
     { return true; }
 
     unsigned long long desktop;
+    UniqueStack<Window> focus_history;
 };
 
 static std::ostream &operator<<(std::ostream &out, const UserDesktop &desktop)
