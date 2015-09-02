@@ -29,6 +29,9 @@ bool XEvents::step()
     if (m_event.type == MapNotify)
         handle_mapnotify();
 
+    if (m_event.type == UnmapNotify)
+        handle_unmapnotify();
+
     if (m_event.type == Expose)
         handle_expose();
 
@@ -308,6 +311,21 @@ void XEvents::handle_mapnotify()
     Window being_mapped = m_event.xmap.window;
 
     add_window(being_mapped);
+}
+
+/**
+ * Handles windows which are hiding themselves, by unfocusing them. This was a
+ * frustrating source of bugs with some programs (like Evince) which like to
+ * keep around windows that have been closed, unmapping them rather than
+ * destroying them.
+ */
+void XEvents::handle_unmapnotify()
+{
+    Window being_unmapped = m_event.xmap.window;
+    if (m_clients.is_client(being_unmapped))
+    {
+        m_clients.unfocus_if_focused(being_unmapped);
+    }
 }
 
 /**
