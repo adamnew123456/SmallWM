@@ -29,6 +29,8 @@ void ClientModelEvents::handle_queued_changes()
             handle_size_change();
         else if (m_change->is_destroy_change())
             handle_destroy_change();
+        else if (m_change->is_unmap_change())
+            handle_unmap_change();
 
         delete m_change;
     }
@@ -938,4 +940,23 @@ void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosSca
             m_clients.change_size(client, right_x - left_x, bottom_y - top_y);
             break;
     }
+}
+
+/*
+ * Unmapped windows have to be unfocused and removed from various lists
+ * in order to prevent them from being confused with regular, usable
+ * windows.
+ */
+void ClientModelEvents::handle_unmap_change()
+{
+    UnmapChange const *change_event = dynamic_cast<UnmapChange const*>(m_change);
+
+    // Ensure that the window doesn't steal the focus away from SmallWM
+    m_clients.unfocus_if_focused(change_event->window);
+
+    m_clients.remove_from_focus_history(change_event->window);
+
+    // Updating the focus cycle should remove the unmapped window, since the
+    // code in update_focus_cycle checks for the map state
+    update_focus_cycle();
 }

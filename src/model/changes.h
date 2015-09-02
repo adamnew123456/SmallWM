@@ -48,6 +48,9 @@ struct Change
     virtual bool is_destroy_change() const
     { return false; }
 
+    virtual bool is_unmap_change() const
+    { return false; }
+
     virtual bool operator==(const Change &other) const
     { return false; }
 };
@@ -367,4 +370,31 @@ struct DestroyChange : Change
     const Desktop *desktop;
     Layer layer;
 };
+
+/**
+ * Indicates that a client is still in the model, but requires special 
+ * because it is no longer valid (this is a kludge to handle unmapped
+ * windows, without destroying their state inside SmallWM)
+ */
+struct UnmapChange : Change
+{
+    UnmapChange(Window win) : window(win)
+    {};
+
+    bool is_unmap_change() const
+    { return true; }
+
+    virtual bool operator==(const Change &other) const
+    {
+        if (!other.is_unmap_change())
+            return false;
+
+        const UnmapChange &cast_other =
+            dynamic_cast<const UnmapChange&>(other);
+        return cast_other.window == window;
+    }
+
+    Window window;
+};
+
 #endif

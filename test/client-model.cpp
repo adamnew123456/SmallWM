@@ -1733,6 +1733,30 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.get_next_in_focus_history(), b);
         CHECK_EQUAL(model.get_next_in_focus_history(), None);
     }
+
+    /**
+     * This ensures that windows which are unmapped emit an UnmapChange.
+     */
+    TEST_FIXTURE(ClientModelFixture, test_unmap)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
+        model.flush_changes();
+
+        model.unmap_client(a);
+
+        const Change * change = model.get_next_change();
+        CHECK(change != 0);
+        CHECK(change->is_unmap_change());
+        {
+            const UnmapChange *the_change =
+                dynamic_cast<const UnmapChange*>(change);
+            CHECK_EQUAL(UnmapChange(a), *the_change);
+        }
+        delete change;
+
+        change = model.get_next_change();
+        CHECK_EQUAL(change, static_cast<const Change *>(0));
+    }
 }
 
 int main()

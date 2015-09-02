@@ -199,6 +199,18 @@ void ClientModel::remove_client(Window client)
 }
 
 /**
+ * This is just a way of directly sending an event to the ClientModel - we
+ * don't do anything with it.
+ */
+void ClientModel::unmap_client(Window client)
+{
+    if (!is_client(client))
+        return;
+
+    push_change(new UnmapChange(client));
+}
+
+/**
  * Gets  the position/scale mode of a client.
  */
 ClientPosScale ClientModel::get_mode(Window client)

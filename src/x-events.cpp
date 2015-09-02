@@ -314,18 +314,15 @@ void XEvents::handle_mapnotify()
 }
 
 /**
- * Handles windows which are hiding themselves, by unfocusing them. This was a
- * frustrating source of bugs with some programs (like Evince) which like to
- * keep around windows that have been closed, unmapping them rather than
- * destroying them.
+ * This fixes issues where a client that was unmapped but not destroyed
+ * would keep the focus (and cause SmallWM's keybindings to break), corrupt
+ * the focus cycle, and do other nasty things. In the end, this ensures
+ * that the window is unfocused, removed from the focus list, etc.
  */
 void XEvents::handle_unmapnotify()
 {
     Window being_unmapped = m_event.xmap.window;
-    if (m_clients.is_client(being_unmapped))
-    {
-        m_clients.unfocus_if_focused(being_unmapped);
-    }
+    m_clients.unmap_client(being_unmapped);
 }
 
 /**
