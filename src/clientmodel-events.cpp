@@ -478,13 +478,23 @@ void ClientModelEvents::handle_current_desktop_change()
             to_show++)
         m_xdata.map_win(*to_show);
 
-    // Finally, update the focus cycle.
     update_focus_cycle();
 
     // Since we've made some windows visible and some others invisible, we've
     // invalidated the previous stacking order, so restack everything according
     // to what is now visible
     m_should_relayer = true;
+
+    // Also, refocus the last window focused on this desktop, if there isn't
+    // a window focused now
+    if (m_clients.get_focused() == None)
+    {
+        Window new_focus = m_clients.get_next_in_focus_history();
+        if (new_focus != None)
+        {
+            m_clients.focus(new_focus);
+        }
+    }
 }
 
 /**
