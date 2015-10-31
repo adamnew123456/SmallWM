@@ -65,3 +65,21 @@ Window FocusCycle::get_next()
 
     return m_focus_list[m_current_focus];
 }
+
+/**
+ * Finds the previous window which can get the focus.
+ * 
+ * @return The previous window or none.
+ */
+Window FocusCycle::get_prev()
+{
+    if (m_focus_list.size() == 0)
+        return None;
+
+    if (m_current_focus == 0)
+        m_current_focus = m_focus_list.size() - 1;
+    else
+        m_current_focus--;
+
+    return m_focus_list[m_current_focus];
+}

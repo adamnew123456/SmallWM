@@ -23,6 +23,7 @@ public:
     void update_window_list(const std::vector<Window>&);
     void set_focus(Window);
     Window get_next();
+    Window get_prev();
 
 private:
     /// The index of the currently focused window.

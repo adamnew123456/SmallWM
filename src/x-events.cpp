@@ -179,6 +179,13 @@ void XEvents::handle_keypress()
         if (next_focused != None)
             m_clients.focus(next_focused);
     }; break;
+    
+    case CYCLE_FOCUS_BACK:
+    {
+        Window prev_focused = m_focus_cycle.get_prev();
+        if (prev_focused != None)
+            m_clients.focus(prev_focused);
+    }; break;
 
     case EXIT_WM:
         m_done = true;

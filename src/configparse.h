@@ -29,7 +29,7 @@ enum KeyboardAction
     SCREEN_TOP, SCREEN_BOTTOM, SCREEN_LEFT, SCREEN_RIGHT,
     LAYER_ABOVE, LAYER_BELOW, LAYER_TOP, LAYER_BOTTOM,
     LAYER_1, LAYER_2, LAYER_3, LAYER_4, LAYER_5, LAYER_6, LAYER_7, LAYER_8, LAYER_9,
-    CYCLE_FOCUS,
+    CYCLE_FOCUS, CYCLE_FOCUS_BACK,
     EXIT_WM
 };
 
@@ -102,6 +102,7 @@ struct KeyboardConfig
             { LAYER_8, "layer-8", XK_8, false },
             { LAYER_9, "layer-9", XK_9, false },
             { CYCLE_FOCUS, "cycle-focus", XK_Tab, false },
+            { CYCLE_FOCUS_BACK, "cycle-focus-back", XK_Tab, true },
             { EXIT_WM, "exit", XK_Escape, false },
         };
 
