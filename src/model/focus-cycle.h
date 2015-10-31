@@ -16,7 +16,7 @@
 class FocusCycle
 {
 public:
-    FocusCycle(Log &logger) :
+    FocusCycle(Log *logger) :
         m_logger(logger)
     {};
 
@@ -35,7 +35,7 @@ private:
     std::vector<Window> m_focus_list;
 
     /// The current logger
-    Log &m_logger;
+    Log *m_logger;
 };
 
 #endif

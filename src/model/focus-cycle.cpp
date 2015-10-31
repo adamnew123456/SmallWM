@@ -39,7 +39,7 @@ void FocusCycle::set_focus(Window window)
         // This window isn't actually inside the known list of windows. Since
         // the window list needs to be updated every time it changes, this
         // shouldn't happen.
-        m_logger.log(LOG_ERR) <<
+        m_logger->log(LOG_ERR) <<
             "Tried to change focus to a window that FocusCycle does not know "
             "about." << Log::endl;
         return;

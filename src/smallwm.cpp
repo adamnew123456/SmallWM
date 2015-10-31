@@ -84,7 +84,7 @@ int main()
     xdata.get_windows(existing_windows);
 
     XModel xmodel;
-    FocusCycle focus_cycle(logger);
+    FocusCycle focus_cycle(&logger);
     XEvents x_events(config, xdata, clients, xmodel, focus_cycle);
 
     for (std::vector<Window>::iterator win_iter = existing_windows.begin();

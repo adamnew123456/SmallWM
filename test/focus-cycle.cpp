@@ -15,7 +15,7 @@ struct FocusCycleFixture
     std::vector<Window> windows;
 
     FocusCycleFixture() :
-        cycle(log)
+        cycle(&log)
     {
         for (int win = 0; win < last_window + 1; win++) 
         {
