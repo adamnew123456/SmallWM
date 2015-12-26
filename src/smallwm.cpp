@@ -9,6 +9,7 @@
 #include "common.h"
 #include "logging/logging.h"
 #include "logging/syslog.h"
+#include "model/changes.h"
 #include "model/client-model.h"
 #include "model/screen.h"
 #include "model/x-model.h"
@@ -79,7 +80,9 @@ int main()
     xdata.get_screen_boxes(screens);
     crt_manager.rebuild_graph(screens);
 
-    ClientModel clients(crt_manager, config.num_desktops);
+    ChangeStream changes;
+    ClientModel clients(changes, crt_manager, config.num_desktops);
+
     std::vector<Window> existing_windows;
     xdata.get_windows(existing_windows);
 
@@ -96,7 +99,8 @@ int main()
     }
 
 
-    ClientModelEvents client_events(config, logger, xdata, clients, xmodel,
+    ClientModelEvents client_events(config, logger, changes, 
+                                    xdata, clients, xmodel, 
                                     focus_cycle);
 
     // Make sure to process all the changes produced by the class actions for

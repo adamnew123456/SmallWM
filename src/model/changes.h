@@ -4,6 +4,8 @@
 
 #include <memory>
 #include <ostream>
+#include <queue>
+#include <vector>
 
 #include "common.h"
 #include "desktop-type.h"
@@ -395,6 +397,26 @@ struct UnmapChange : Change
     }
 
     Window window;
+};
+
+/**
+ * Contains a series of changes. Changes can be pushed to the ChangeStream, and
+ * then retrieved later.
+ */
+class ChangeStream
+{
+public:
+    typedef Change const * change_ptr;
+    typedef std::vector<change_ptr>::iterator change_iter;
+
+    bool has_more();
+    change_ptr get_next();
+
+    void push(change_ptr);
+    void flush();
+
+private:
+    std::queue<change_ptr> m_changes;
 };
 
 #endif

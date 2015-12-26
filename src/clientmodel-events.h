@@ -24,12 +24,12 @@
 class ClientModelEvents
 {
 public:
-    ClientModelEvents(WMConfig &config, Log &logger, 
+    ClientModelEvents(WMConfig &config, Log &logger, ChangeStream &changes,
         XData &xdata, ClientModel &clients, XModel &xmodel,
         FocusCycle &focus_cycle) :
         m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-        m_logger(logger), m_focus_cycle(focus_cycle), m_change(0), 
-        m_should_relayer(false), m_should_reposition_icons(false)
+        m_changes(changes), m_logger(logger), m_focus_cycle(focus_cycle), 
+        m_change(0), m_should_relayer(false), m_should_reposition_icons(false)
     {};
 
     void handle_queued_changes();
@@ -66,6 +66,9 @@ private:
                                                 Window);
     void handle_client_change_from_resizing_desktop(const Desktop*, const Desktop*, 
                                                 Window);
+
+    /// The stream of changes to read from
+    ChangeStream &m_changes;
 
     /// The change that is currently being processed
     Change const *m_change;

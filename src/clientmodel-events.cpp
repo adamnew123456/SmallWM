@@ -9,7 +9,7 @@ void ClientModelEvents::handle_queued_changes()
     m_should_relayer = false;
     m_should_reposition_icons = false;
 
-    while ((m_change = m_clients.get_next_change()) != 0)
+    while ((m_change = m_changes.get_next()) != 0)
     {
         if (m_change->is_layer_change())
             handle_layer_change();
