@@ -162,6 +162,9 @@ The possibilities for a class action are:
  - `xpos:X` and `ypos:Y` set the relative position of the window on the screen. `X` and `Y` are decimals in the range 0 to 100,
    inclusive. For example, setting `xpos:50` puts the window's left edge in the middle of the screen (because `xpos:50` is
    equivalent to saying that the X position should be 50 percent of the screen's width).
+ - `nofocus` prevents SmallWM from automatically focusing windows of the given class. This is useful for windows like system trays,
+   clocks, or other utility windows that you don't want to manipulate by accident. SmallWM will not focus this window after moving
+   it or resizing it; SmallWM will also not focus this window when another is closed, or when switching virtual desktops.
 
 Keyboard Bindings
 =================

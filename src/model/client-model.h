@@ -88,7 +88,7 @@ public:
     void get_visible_clients(std::vector<Window>&);
     void get_visible_in_layer_order(std::vector<Window>&);
     
-    void add_client(Window, InitialState, Dimension2D, Dimension2D);
+    void add_client(Window, InitialState, Dimension2D, Dimension2D, bool);
     void remove_client(Window);
     void unmap_client(Window);
 
@@ -102,7 +102,11 @@ public:
     bool remove_from_focus_history(Window);
 
     Window get_focused();
+    bool is_autofocusable(Window);
+    void set_autofocus(Window, bool);
+
     void focus(Window);
+    void force_focus(Window);
     void unfocus();
     void unfocus_if_focused(Window);
 
@@ -165,6 +169,9 @@ private:
     std::map<Window, ClientPosScale> m_cps_mode;
     /// A mapping between clients and their screens
     std::map<Window, Box> m_screen;
+
+    /// Which clients may be auto-focused, and which may not
+    std::map<Window, bool> m_autofocus;
 
     /** A mapping between clients that are iconified, or being moved/resized, 
         and whether or not they were stuck before they were moved/resized or

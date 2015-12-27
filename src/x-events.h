@@ -2,6 +2,8 @@
 #ifndef __SMALLWM_X_EVENTS__
 #define __SMALLWM_X_EVENTS__
 
+#include <algorithm>
+
 #include "model/client-model.h"
 #include "model/focus-cycle.h"
 #include "model/x-model.h"

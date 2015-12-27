@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -5,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <syslog.h>
+#include <vector>
 
 #include <UnitTest++.h>
 #include "actions.h"
@@ -338,6 +340,7 @@ SUITE(WMConfigSuiteActions)
         config.load();
 
         CHECK_EQUAL(0, config.classactions.size());
+        CHECK_EQUAL(0, config.no_autofocus.size());
     }
 
     TEST(test_default_actions)
@@ -356,6 +359,8 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+
+        CHECK_EQUAL(0, config.no_autofocus.size());
     }
 
     TEST(test_invalid_actions)
@@ -631,6 +636,16 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+    }
+    
+    TEST(test_no_autofocus)
+    {
+        write_config_file(*config_path, 
+            "[actions]\ntest-class=nofocus\n");
+        config.load();
+
+        CHECK_EQUAL(1, config.no_autofocus.size());
+        CHECK_EQUAL(std::string("test-class"), config.no_autofocus[0]);
     }
 
     TEST(test_hotkey_default)

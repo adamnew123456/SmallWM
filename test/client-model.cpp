@@ -77,7 +77,7 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.get_root_screen(), Box(0, 0, 100, 100));
 
         // Add a new client, and ensure that it is present
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
 
         // Make sure that a is now listed as a client
         CHECK_EQUAL(true, model.is_client(a));
@@ -120,8 +120,7 @@ SUITE(ClientModelMemberSuite)
         delete change;
 
         // Finally, this is the end of the event stream
-        change = changes.get_next();
-        CHECK_EQUAL(change, static_cast<const Change *>(0));
+        CHECK(!changes.has_more());
 
         // Then, remove the added client. Ensure that a 'ChangeFocus' event was
         // fired which includes the now-destroyed client.
@@ -154,10 +153,63 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(false, model.is_client(a));
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_default_members_nofocus)
+    {
+        CHECK_EQUAL(false, model.is_client(a));
+        CHECK_EQUAL(false, model.is_client(b));
+
+        CHECK_EQUAL(model.get_root_screen(), Box(0, 0, 100, 100));
+
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), false);
+
+        CHECK_EQUAL(true, model.is_client(a));
+
+        CHECK(model.get_focused() != a);
+
+        const Change * change = changes.get_next();
+
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change = 
+                dynamic_cast<const ChangeClientDesktop*>(change);
+            const Desktop *desktop(new UserDesktop(0));
+            CHECK_EQUAL(ChangeClientDesktop(a, 0, desktop), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_layer_change());
+        {
+            const ChangeLayer *the_change = dynamic_cast<const ChangeLayer*>(change);
+            CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        model.remove_client(a);
+
+        // Also ensure that a DestroyChange event was sent, to notify of the removed client
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_destroy_change());
+        {
+            const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
+            const Desktop *desktop(new UserDesktop(0));
+            CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
+        }
+
+        CHECK(!changes.has_more());
+
+        CHECK_EQUAL(false, model.is_client(a));
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_visibility)
     {
         // Add a new client and ensure that it is present
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
 
         // Make sure that the client is visible by default
         CHECK(model.is_visible(a));
@@ -274,7 +326,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_finder_functions)
     {
         // Make sure that the `find_*` functions return the correct results
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
 
         const Desktop *desktop_of = model.find_desktop(a);
         CHECK(*desktop_of == UserDesktop(0));
@@ -285,8 +337,8 @@ SUITE(ClientModelMemberSuite)
     {
         // First, ensure that `get_clients_of` gets only clients on the given
         // desktop
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
-        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
 
         std::vector<Window> result;
         model.get_clients_of(model.USER_DESKTOPS[0], result);
@@ -373,7 +425,7 @@ SUITE(ClientModelMemberSuite)
         // Move a client up, and then down - ensure that, both times, the
         // proper event is sent.
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // Up
@@ -388,8 +440,7 @@ SUITE(ClientModelMemberSuite)
         }
         delete change;
 
-        change = changes.get_next();
-        CHECK_EQUAL(change, static_cast<const Change *>(0));
+        CHECK(!changes.has_more());
 
         // Down
         model.down_layer(a);
@@ -403,8 +454,7 @@ SUITE(ClientModelMemberSuite)
         }
         delete change;
 
-        change = changes.get_next();
-        CHECK_EQUAL(change, static_cast<const Change *>(0));
+        CHECK(!changes.has_more());
 
         // Set the layer
         model.set_layer(a, MIN_LAYER);
@@ -419,8 +469,7 @@ SUITE(ClientModelMemberSuite)
         }
         delete change;
 
-        change = changes.get_next();
-        CHECK_EQUAL(change, static_cast<const Change *>(0));
+        CHECK(!changes.has_more());
 
         // Set the layer to the same layer, and ensure that no change is
         // fired
@@ -431,7 +480,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_layer_extremes)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
 
         // First, put the client on the top
         model.set_layer(a, MIN_LAYER);
@@ -452,7 +501,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_client_desktop_change)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // First, move the client ahead and make sure it changes accordingly
@@ -481,8 +530,7 @@ SUITE(ClientModelMemberSuite)
         }
         delete change;
 
-        change = changes.get_next();
-        CHECK_EQUAL(change, static_cast<const Change *>(0));
+        CHECK(!changes.has_more());
 
         // Move the client behind and make sure it returns to its current position
         model.client_prev_desktop(a);
@@ -573,7 +621,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_bad_client_desktop_change)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // First off, iconified clients cannot have their desktops changed
@@ -581,57 +629,57 @@ SUITE(ClientModelMemberSuite)
         FLUSH_AFTER(model.iconify(a));
         model.client_next_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.deiconify(a));
 
         FLUSH_AFTER(model.iconify(a));
         model.client_prev_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.deiconify(a));
 
         FLUSH_AFTER(model.iconify(a));
         model.client_reset_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.deiconify(a));
 
         // Secondly, moving clients cannot be changed
         FLUSH_AFTER(model.start_moving(a));
         model.client_next_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_moving(a));
         model.client_prev_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_moving(a));
         model.client_reset_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // Neither can resizing clients
         FLUSH_AFTER(model.start_resizing(a));
         model.client_next_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(a));
         model.client_prev_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(a));
         model.client_reset_desktop(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
 #undef FLUSH_AFTER
@@ -640,7 +688,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_desktop_change)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // Move to the next desktop
@@ -725,7 +773,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_bad_desktop_change)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
 #define FLUSH_AFTER(expr) expr ; changes.flush()
@@ -733,26 +781,26 @@ SUITE(ClientModelMemberSuite)
         FLUSH_AFTER(model.start_moving(a));
         model.next_desktop();
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_moving(a));
         model.prev_desktop();
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // The desktop can't be changed while a window is resizing
         FLUSH_AFTER(model.start_resizing(a));
         model.next_desktop();
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(a));
         model.prev_desktop();
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 #undef FLUSH_AFTER
     }
@@ -760,7 +808,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_stick_does_not_lose_focus)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // Ensure that a window which is stuck does not lose its focus when
@@ -804,7 +852,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_iconify)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // First, iconify the client. Ensure that it loses the focus, and that
@@ -877,26 +925,26 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_bad_iconify)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
 #define FLUSH_AFTER(expr) expr ; changes.flush()
         // A window which is not iconified, cannot be deiconified
         model.deiconify(a);
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
 
         // A window cannot be iconified while it is being moved
         FLUSH_AFTER(model.start_moving(a));
         model.iconify(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // A window cannot be iconified while it is being resized
         FLUSH_AFTER(model.start_resizing(a));
         model.iconify(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 #undef FLUSH_AFER
     }
@@ -904,7 +952,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_moving)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // Start moving the client - ensure that it is unfocused, and that it
@@ -975,47 +1023,101 @@ SUITE(ClientModelMemberSuite)
         CHECK(!changes.has_more());
     }
 
+    /*
+     * Similar to test_moving, the only difference is that this ensures that 
+     * the window isn't refocused after it stops moving when the window is
+     * created with nofocus.
+     */
+    TEST_FIXTURE(ClientModelFixture, test_moving_noflush)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1), false);
+        changes.flush();
+
+        // Start moving the client - ensure that its desktop changes
+        model.start_moving(a);
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
+                model.MOVING_DESKTOP), *the_change);
+        } 
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Stop moving the client, and ensure that we get a move event back after the client is restored.
+        model.stop_moving(a, Dimension2D(42, 43));
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.MOVING_DESKTOP, 
+                model.USER_DESKTOPS[0]), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(a, 42, 43), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_bad_moving)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
 #define FLUSH_AFTER(expr) expr ; changes.flush()
         // A window which is not moving, cannot cease moving
         model.stop_moving(a, Dimension2D(1, 1));
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
 
         // A window cannot be moved while it is iconified
         FLUSH_AFTER(model.iconify(a));
         model.start_moving(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.deiconify(a));
 
         // A window cannot be moved while it is being resized
         FLUSH_AFTER(model.start_resizing(a));
         model.start_moving(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(a, Dimension2D(1, 1)));
 
         // A window cannot be moved while *any* other window is being resized
         // or moved.
         model.add_client(b, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         FLUSH_AFTER(model.start_moving(b));
         model.start_moving(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(b, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(b));
         model.start_moving(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(b, Dimension2D(1, 1)));
         
 #undef FLUSH_AFER
@@ -1024,7 +1126,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_resizing)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // Start resizing the client - ensure that it is unfocused, and that 
@@ -1096,47 +1198,97 @@ SUITE(ClientModelMemberSuite)
         CHECK(!changes.has_more());
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_resizing_nofocus)
+    {
+        model.add_client(a, IS_VISIBLE, 
+            Dimension2D(1, 1), Dimension2D(1, 1), false);
+        changes.flush();
+
+        // Start resizing the client - ensure that it is unfocused, and that 
+        // it its desktop changes
+        model.start_resizing(a);
+
+        const Change * change = changes.get_next();
+        CHECK(change->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], 
+                model.RESIZING_DESKTOP), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Stop moving the client, and ensure that we get a move event back 
+        // after the client is restored.
+        model.stop_resizing(a, Dimension2D(42, 43));
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.RESIZING_DESKTOP, 
+                model.USER_DESKTOPS[0]), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_size_change());
+        {
+            const ChangeSize *the_change =
+                dynamic_cast<const ChangeSize*>(change);
+            CHECK_EQUAL(ChangeSize(a, 42, 43), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_bad_resizing)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
 #define FLUSH_AFTER(expr) expr ; changes.flush()
         // A window which is not resizing, cannot cease resizing
         model.stop_resizing(a, Dimension2D(1, 1));
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
 
         // A window cannot be resized while it is iconified
         FLUSH_AFTER(model.iconify(a));
         model.start_resizing(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.deiconify(a));
 
         // A window cannot be resized while it is being moved
         FLUSH_AFTER(model.start_moving(a));
         model.start_resizing(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(a, Dimension2D(1, 1)));
 
         // A window cannot be moved while *any* other window is being resized
         // or moved.
         model.add_client(b, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         FLUSH_AFTER(model.start_moving(b));
         model.start_resizing(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_moving(b, Dimension2D(1, 1)));
 
         FLUSH_AFTER(model.start_resizing(b));
         model.start_resizing(a);
 
-        CHECK_EQUAL(changes.get_next(), static_cast<const Change*>(0));
+        CHECK(!changes.has_more());
         FLUSH_AFTER(model.stop_resizing(b, Dimension2D(1, 1)));
 
         // Unfocus whatever is currently focused, so that it doesn't taint
@@ -1179,7 +1331,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_toggle_stick)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // First, stick a client and ensure that we get the desktop change event
@@ -1218,7 +1370,7 @@ SUITE(ClientModelMemberSuite)
     TEST_FIXTURE(ClientModelFixture, test_focus_unfocus)
     {
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // First, ensure that a is focused
@@ -1263,7 +1415,7 @@ SUITE(ClientModelMemberSuite)
         model.update_screens(screens);
 
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         // First, move the window manually and ensure a change happens
@@ -1308,7 +1460,7 @@ SUITE(ClientModelMemberSuite)
         // Ensure that a stuck window, after being iconified and deiconified,
         // gets put back onto ALL_DESKTOPS
         model.add_client(a, IS_VISIBLE, 
-            Dimension2D(1, 1), Dimension2D(1, 1));
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
         model.toggle_stick(a);
 
         model.iconify(a);
@@ -1335,7 +1487,7 @@ SUITE(ClientModelMemberSuite)
 
     TEST_FIXTURE(ClientModelFixture, test_mode_change)
     {
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
         CHECK_EQUAL(model.get_mode(a), CPS_FLOATING);
@@ -1404,7 +1556,7 @@ SUITE(ClientModelMemberSuite)
 
         for (int test = 0; test < sizeof(tests) / sizeof(tests[0]); test++)
         {
-            model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+            model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1), true);
             changes.flush();
 
 
@@ -1431,7 +1583,7 @@ SUITE(ClientModelMemberSuite)
         }
 
         // Ensure that no change occurs if we move it to an invalid screen
-        model.add_client(a, IS_VISIBLE, Dimension2D(0, 0), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(0, 0), Dimension2D(1, 1), true);
         changes.flush();
 
         model.to_relative_screen(a, DIR_LEFT);
@@ -1443,7 +1595,7 @@ SUITE(ClientModelMemberSuite)
 
         // Ensure that it isn't moved anywhere if we start from an invalid
         // place
-        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1), true);
         changes.flush();
 
         // This *would* be valid, if the location weren't off-screen
@@ -1471,7 +1623,7 @@ SUITE(ClientModelMemberSuite)
 
         for (int test = 0; test < sizeof(tests) / sizeof(tests[0]); test++)
         {
-            model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+            model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1), true);
             changes.flush();
 
             CHECK_EQUAL(model.get_screen(a), Box(100, 100, 100, 100));
@@ -1499,7 +1651,7 @@ SUITE(ClientModelMemberSuite)
         }
 
         // Ensure that moving to a non-existent screen does nothing
-        model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1), true);
         changes.flush();
 
         model.to_screen_box(a, Box(-1, -1, 100, 100));
@@ -1512,7 +1664,7 @@ SUITE(ClientModelMemberSuite)
         changes.flush();
 
         // Ensure that moving to the same screen does nothing
-        model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(100, 100), Dimension2D(1, 1), true);
         changes.flush();
 
         model.to_screen_box(a, Box(100, 100, 100, 100));
@@ -1535,7 +1687,7 @@ SUITE(ClientModelMemberSuite)
         for (int test = 0; test < sizeof(tests_start_box) / sizeof(tests_start_box[0]); test++)
         {
             Box &start = tests_start_box[test];
-            model.add_client(a, IS_VISIBLE, Dimension2D(start.x, start.y), Dimension2D(start.width, start.height));
+            model.add_client(a, IS_VISIBLE, Dimension2D(start.x, start.y), Dimension2D(start.width, start.height), true);
             changes.flush();
 
             // Each client should start out on different screens, but they should all end up
@@ -1565,7 +1717,7 @@ SUITE(ClientModelMemberSuite)
             changes.flush();
         }
 
-        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1), true);
         changes.flush();
 
         CHECK_EQUAL(model.get_screen(a), Box(-1, -1, 0, 0));
@@ -1588,13 +1740,16 @@ SUITE(ClientModelMemberSuite)
      */
     TEST_FIXTURE(ClientModelFixture, test_focus_history)
     {
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
-        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
+        model.add_client(c, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), false);
         changes.flush();
 
         // Since creating a new window alters the focus, the two windows should 
         // be in the focus history. b comes first since it was most recently
         // focused.
+        //
+        // c is not in the history since it is not set to autofocus.
         CHECK_EQUAL(model.get_next_in_focus_history(), b);
         CHECK_EQUAL(model.get_next_in_focus_history(), a);
 
@@ -1636,6 +1791,10 @@ SUITE(ClientModelMemberSuite)
         CHECK_EQUAL(model.remove_from_focus_history(42), false);
         CHECK_EQUAL(model.get_next_in_focus_history(), None);
 
+        // Force-focusing a nofocus window doesn't do anything
+        model.force_focus(c);
+        CHECK_EQUAL(model.get_next_in_focus_history(), None);
+
         // Finally, ensure that focus histories for different desktops are 
         // independent
         model.focus(b);
@@ -1655,7 +1814,7 @@ SUITE(ClientModelMemberSuite)
      */
     TEST_FIXTURE(ClientModelFixture, test_unmap)
     {
-        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1));
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1), true);
         changes.flush();
 
         model.unmap_client(a);

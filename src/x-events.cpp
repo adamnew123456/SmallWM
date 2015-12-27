@@ -266,7 +266,7 @@ void XEvents::handle_buttonpress()
             m_clients.start_resizing(m_event.xbutton.subwindow);
     }
     else if (is_client) // Any other click on a client focuses that client
-        m_clients.focus(m_event.xbutton.window);
+        m_clients.force_focus(m_event.xbutton.window);
 }
 
 /**
@@ -509,9 +509,18 @@ void XEvents::add_window(Window window)
                      hints.initial_state == IconicState)
         init_state = IS_HIDDEN;
 
+    std::string win_class;
+    m_xdata.get_class(window, win_class);
+    bool should_focus = 
+        std::find(m_config.no_autofocus.begin(), 
+                m_config.no_autofocus.end(), 
+                win_class) == 
+        m_config.no_autofocus.end();
+
     m_clients.add_client(window, init_state,
             Dimension2D(win_attr.x, win_attr.y), 
-            Dimension2D(win_attr.width, win_attr.height));
+            Dimension2D(win_attr.width, win_attr.height),
+            should_focus);
 
     // If the client is a dialog, this will be represented in the transient 
     // hint (which is None if the client is not a dialog, or not-None if it is)
@@ -519,8 +528,6 @@ void XEvents::add_window(Window window)
         m_clients.set_layer(window, DIALOG_LAYER);
 
     // Finally, execute the actions tied to the window's class
-    std::string win_class;
-    m_xdata.get_class(window, win_class);
 
     if (m_config.classactions.count(win_class) > 0 && init_state != IS_HIDDEN)
     {

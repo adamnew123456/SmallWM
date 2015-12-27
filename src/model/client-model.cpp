@@ -85,7 +85,7 @@ void ClientModel::get_visible_in_layer_order(std::vector<Window> &return_clients
  * Adds a new client with some basic initial state.
  */
 void ClientModel::add_client(Window client, InitialState state,
-    Dimension2D location, Dimension2D size)
+    Dimension2D location, Dimension2D size, bool autofocus)
 {
     if (DIM2D_WIDTH(size) <= 0 || DIM2D_HEIGHT(size) <= 0)
         return;
@@ -124,7 +124,13 @@ void ClientModel::add_client(Window client, InitialState state,
         m_screen[client] = screen_box;
     }
 
-    focus(client);
+    if (autofocus)
+    {
+        set_autofocus(client, true);
+        focus(client);
+    }
+    else
+        set_autofocus(client, false);
 }
 
 /**
@@ -156,6 +162,7 @@ void ClientModel::remove_client(Window client)
     m_size.erase(client);
     m_cps_mode.erase(client);
     m_screen.erase(client);
+    m_autofocus.erase(client);
 
     m_changes.push(new DestroyChange(client, desktop, layer));
 }
@@ -263,10 +270,54 @@ Window ClientModel::get_focused()
 }
 
 /**
+ * Returns true if a window can be automatically focused, or false otherwise.
+ */
+bool ClientModel::is_autofocusable(Window client)
+{
+    if (!is_client(client))
+        return false;
+
+    return m_autofocus[client];
+}
+
+/**
+ * Either allows, or prevents, a client from being autofocused.
+ */
+void ClientModel::set_autofocus(Window client, bool can_autofocus)
+{
+    if (!is_client(client))
+        return;
+
+    m_autofocus[client] = can_autofocus;
+}
+
+/**
  * Changes the focus to another window. Note that this fails if the client
  * is not currently visible.
+ *
+ * This is used for automated focusing, and is subject to the rules of
+ * autofocusing - in particular, if the user enables nofocus for this type of
+ * window, then this will do nothing.
  */
 void ClientModel::focus(Window client)
+{
+    if (!is_visible(client))
+        return;
+
+    if (!m_autofocus[client])
+        return;
+
+    Window old_focus = m_focused;
+    m_focused = client;
+
+    m_current_desktop->focus_history.push(client);
+    m_changes.push(new ChangeFocus(old_focus, client));
+}
+
+/**
+ * Forces a window to be focused, ignoring the nofocus policy.
+ */
+void ClientModel::force_focus(Window client)
 {
     if (!is_visible(client))
         return;
@@ -274,7 +325,11 @@ void ClientModel::focus(Window client)
     Window old_focus = m_focused;
     m_focused = client;
 
-    m_current_desktop->focus_history.push(client);
+    // Since the focus history is used for automatic focusing, avoid
+    // polluting it with windows that cannot be focused
+    if (m_autofocus[client])
+        m_current_desktop->focus_history.push(client);
+
     m_changes.push(new ChangeFocus(old_focus, client));
 }
 

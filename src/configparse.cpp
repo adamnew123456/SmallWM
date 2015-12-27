@@ -205,6 +205,12 @@ int WMConfig::config_parser(void *user, const char *c_section,
                     action.relative_y = relative_y;
                 }
             }
+            else if (!strcmp(stripped, "nofocus"))
+            {
+                // This looks different, because it is not an action, but a 
+                // persistent setting which is respected in multiple places
+                self->no_autofocus.push_back(name);
+            }
 
             delete[] stripped;
         } while((option = strtok(NULL, ",")));

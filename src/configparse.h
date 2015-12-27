@@ -7,6 +7,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "ini.h"
 #include "actions.h"
@@ -180,6 +181,9 @@ public:
 
     /// Handles all the configured class actions.
     std::map<std::string, ClassActions> classactions;
+
+    /// All of the X11 classes which should not be focusable by default
+    std::vector<std::string> no_autofocus;
 
     /// Whether or not to show images inside icons for hidden windows
     bool show_icons;
