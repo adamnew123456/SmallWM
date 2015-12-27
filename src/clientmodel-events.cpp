@@ -858,29 +858,39 @@ void ClientModelEvents::update_focus_cycle()
     bool previous_iter_erased_window = false;
     for (unsigned int win_idx = 0; win_idx < visible_windows.size(); win_idx++)
     {
+        Window win = visible_windows[win_idx];
+        bool should_erase = false;
+
         if (previous_iter_erased_window)
         {
             previous_iter_erased_window = false;
             win_idx--;
         }
 
-        if (!m_xdata.is_mapped(visible_windows[win_idx]))
+        if (!m_xdata.is_mapped(win))
         {
-            previous_iter_erased_window = true;
-            visible_windows.erase(visible_windows.begin() + win_idx);
+            should_erase = true;
         }
         else
         {
             XWindowAttributes props;
-            m_xdata.get_attributes(visible_windows[win_idx], props);
+            m_xdata.get_attributes(win, props);
 
             // Some windows are completely off-screen, and should be ignored when
             // figuring out which windows can be cycled
             if (props.x + props.width < 0 || props.y + props.height < 0)
-            {
-                previous_iter_erased_window = true;
-                visible_windows.erase(visible_windows.begin() + win_idx);
-            }
+                should_erase = true;
+
+            // Avoid putting any windows in the focus cycle which cannot be
+            // focused
+            if (!m_clients.is_autofocusable(win))
+                should_erase = true;
+        }
+
+        if (should_erase)
+        {
+            previous_iter_erased_window = true;
+            visible_windows.erase(visible_windows.begin() + win_idx);
         }
     }
 
