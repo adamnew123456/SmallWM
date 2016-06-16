@@ -852,29 +852,25 @@ void ClientModelEvents::reposition_icons()
 void ClientModelEvents::update_focus_cycle()
 {
     std::vector<Window> visible_windows;
+    std::vector<Window> focus_windows;
+
     m_clients.get_visible_clients(visible_windows);
 
     // Filter out any windows which are not currently mapped
-    bool previous_iter_erased_window = false;
-    for (unsigned int win_idx = 0; win_idx < visible_windows.size(); win_idx++)
+    for (std::vector<Window>::iterator client_iter = visible_windows.begin();
+         client_iter != visible_windows.end();
+         client_iter++)
     {
-        Window win = visible_windows[win_idx];
         bool should_erase = false;
 
-        if (previous_iter_erased_window)
-        {
-            previous_iter_erased_window = false;
-            win_idx--;
-        }
-
-        if (!m_xdata.is_mapped(win))
+        if (!m_xdata.is_mapped(*client_iter))
         {
             should_erase = true;
         }
         else
         {
             XWindowAttributes props;
-            m_xdata.get_attributes(win, props);
+            m_xdata.get_attributes(*client_iter, props);
 
             // Some windows are completely off-screen, and should be ignored when
             // figuring out which windows can be cycled
@@ -883,18 +879,17 @@ void ClientModelEvents::update_focus_cycle()
 
             // Avoid putting any windows in the focus cycle which cannot be
             // focused
-            if (!m_clients.is_autofocusable(win))
+            if (!m_clients.is_autofocusable(*client_iter))
                 should_erase = true;
         }
 
-        if (should_erase)
+        if (!should_erase)
         {
-            previous_iter_erased_window = true;
-            visible_windows.erase(visible_windows.begin() + win_idx);
+            focus_windows.push_back(*client_iter);
         }
     }
 
-    m_focus_cycle.update_window_list(visible_windows);
+    m_focus_cycle.update_window_list(focus_windows);
 }
 
 /**
