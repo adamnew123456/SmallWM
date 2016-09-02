@@ -1,50 +1,48 @@
 What is SmallWM?
 ================
 SmallWM is an extended version of TinyWM, made for actual desktop use.
-This is the newest version, rewritten in C++ - you can checkout the `legacy` 
-branch if you want to use the old C version.
 
 Improvements over TinyWM
 ========================
 - Window Iconification
 - Window Layering
-- Click-To-Focus (Focus Is Indicated By Colored Borders) and Focus Cycling
+- Click-To-Focus and Focus Cycling
 - Moving/Resizing Placeholders
-- Multiple Virtual Desktops (With Window Sticking)
+- Multiple Virtual Desktops 
 - Window Snapping
 - Class Actions
 
 Controls
 ========
 
-Note that these are the default controls - one of the improvements of the C++ 
-port is that it SmallWM now supports configurable keybindings. See the __Configuration__
-for details on how to setup keybindings. The only non-configurable key bindings are the
+Note that these are the default controls. See the __Configuration__ for 
+details on how to setup keybindings. The only non-configurable key bindings are the
 ones that involve clicking the mouse, and the `Super+1` ... `Super+9` bindings.
 
 ## Desktops ##
 
-- `Super+[`: Move a client to the previous desktop (`client-prev-desktop`).
-- `Super+]`: Move a client to the next desktop (`client-next-desktop`).
-- `Super+,`: Swicth to the previous desktop (`prev-desktop`).
+- `Super+[`: Move a window to the previous desktop (`client-prev-desktop`).
+- `Super+]`: Move a window to the next desktop (`client-next-desktop`).
+- `Super+,`: Switch to the previous desktop (`prev-desktop`).
 - `Super+.`: Switch to the next desktop (`next-desktop`).
 - `Super+\`: Sticks/unsticks a window; a _stuck_ window is shown on all desktops (`toggle-stick`).
 
 ## Clients ##
 
-- `Super+h`: Iconifies the current client (`iconify`).
-- `Super+m`: Maximizes the current client (`maximize`).
-- `Super+c`, Requests the current client to close (`request-close`).
-- `Super+x`: Force-closes the current client (`force-close`).
+- `Super+h`: Iconifies the current window (`iconify`).
+- `Super+m`: Maximizes the current window (`maximize`).
+- `Super+c`, Requests the current window to close (`request-close`).
+- `Super+x`: Force-closes the current window (`force-close`).
 - `Super+Up`, `Super+Down`, `Super+Left`, `Super+Right`: Snaps a window to either the top-half, bottom-half, left-half or right-half of the screen.
- - `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
-- `Super+Ctrl+Up`, `Super+Ctrl+Down`, ...: Moves a window to the screen in the relative direction of the arrow key. Note that the window will keep its maximized/split status.
- - `screen-top`, `screen-bottom`, `screen-left`, `screen-right`
-- `Super+PageUp`, `Super+PageDown`: Increments or decrements the layer of this client.
- - `layer-above`, `layer-below`
-- `Super+Home`, `Super+End`: Puts a client on the topmost or bottommost layer.
- - `layer-top`, `layer-bottom`
-- `Super+Tab`: Focuses the next visible client; note that, on occasion, SmallWM will focus a window which is not actually visible - in this case, just keep cycling until another visible window is chosen (`cycle-focus`).
+    - Actions: `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
+- `Super+Ctrl+Up`, `Super+Ctrl+Down`, ...: Moves a window to the screen in the
+  relative direction of the arrow key.
+    - Actions: `screen-top`, `screen-bottom`, `screen-left`, `screen-right`
+- `Super+PageUp`, `Super+PageDown`: Increments or decrements the layer of this window.
+    - Actions: `layer-above`, `layer-below`
+- `Super+Home`, `Super+End`: Puts a window on the topmost or bottommost layer.
+    - Actions: `layer-top`, `layer-bottom`
+- `Super+Tab`: Focuses the next visible window in the focus list (`cycle-focus`).
 - `Super+LClick`: Dragging the left mouse button starts moving a window - to place it, let go.
 - `Super+RClick`: Dragging the right mouse button starts resizing a window - to scale it, let go.
 - `Super+1` ... `Super+5` ... `Super+9`: These change the layer to the specified value (1, 5, or 9 respectively, in this example)
@@ -62,7 +60,9 @@ need a C++ compiler - GNU G++ and clang++ work well.
 
 Other than the dependencies, the Makefile contains everything you need to build and test SmallWM.
 
- - `make` compiles a version with symbols useful for debugging. Note that there is no optimized build - if you want an optimized version, open the Makefile and change `-g` to `-O3` in `CXXFLAGS`.
+- `make` compiles a version with symbols useful for debugging. Note that there
+  is no optimized build - if you want an optimized version, open the Makefile and
+  change `-g` to `-O3` in `CXXFLAGS`.
 
 For modifying SmallWM, the other target that you should be aware of is `make check` 
 which compiles everything but does no linking. This is useful for incremental building
@@ -81,9 +81,7 @@ If you want to run SmallWM from your login manager, you should put a file like t
     Type=Application
 
 Inside the script `/usr/local/bin/smallwm.sh`, you should enter something like 
-the following (my personal launch script is more complicated than what follows,
-because mine contains options to allow me to run SmallWM under GDB server or
-via valgrind):
+the following:
 
     #!/bin/bash
     if [ -x $HOME/.smallwmrc ]; then
@@ -128,17 +126,18 @@ For example:
 
 The options in the `[smallwm]` section are (in order):
 
- - The shell launched by `Super+LClick` (default: xterm). This can be any syntax supported by /bin/sh.
- - The number of desktops (default: 5).
- - The width in pixels of icons (default: 75).
- - The height in pixels of icons (default: 20).
- - The width of the border of windows (default: 4).
- - Whether to (1) or not to (0) show application icons inside icon windows (default: 1).
- - The severity of logging messages to send to syslog. By default, this is `WARNING`. See `syslog(3)` for the other log levels.
- - What window to apply hotkeys like MINIMIZE to - this can be either `focus` (which means that the currently focused window is acted upon) or `mouse` (which means that the window under the cursor is acted upon). The default is `mouse`, since that was the only behavior available in SmallWM until recently.
-
-The options in the `[actions]` section are covered next, and then the 
-`[keyboard]` section after that.
+- `shell` The shell launched by `Super+LClick` (default: xterm). This can be any syntax supported by /bin/sh.
+- `desktops` The number of desktops (default: 5).
+- `icon-width` The width in pixels of icons (default: 75).
+- `icon-height` The height in pixels of icons (default: 20).
+- `border-width` The width of the border of windows (default: 4).
+- `icon-icons` Whether to (1) or not to (0) show application icons inside icon windows (default: 1).
+- `log-level` The severity of logging messages to send to syslog. By
+  default, this is `WARNING`. See `syslog(3)` for the other log levels.
+- `hotkey-mode` What window to apply hotkeys like MINIMIZE to - this can be
+  either `focus` (which means that the currently focused window is acted upon) or
+  `mouse` (which means that the window under the cursor is acted upon).  The
+  default is `mouse`.
 
 Actions
 =======
@@ -150,29 +149,28 @@ manage status notifiers (like for NetworkManager, Dropbox, and the like). A
 quick `xprop` of the window shows that its class name is `stalonetray`.
 
 The example given in the _Configuration_ section shows how to stick any window 
-belonging to stalonetray and layer it on top of all other applictation windows. 
+belonging to stalonetray and layer it on top of all other application windows. 
 Generally speaking, any number of these class actions can be chained together 
 by separating them with commas.
 
 The possibilities for a class action are:
- - `stick` makes a particular window stick to all the desktops.
- - `maximize` maximizes that window.
- - `layer:x` sets the layer of the window to `x` where `x` is a number in the range 1 to 9; 9 is the highest layer, 1 is the lowest.
- - `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen.
- - `xpos:X` and `ypos:Y` set the relative position of the window on the screen. `X` and `Y` are decimals in the range 0 to 100,
-   inclusive. For example, setting `xpos:50` puts the window's left edge in the middle of the screen (because `xpos:50` is
-   equivalent to saying that the X position should be 50 percent of the screen's width).
- - `nofocus` prevents SmallWM from automatically focusing windows of the given class. This is useful for windows like system trays,
-   clocks, or other utility windows that you don't want to manipulate by accident. SmallWM will not focus this window after moving
-   it or resizing it; SmallWM will also not focus this window when another is closed, or when switching virtual desktops.
+
+- `stick` makes a particular window stick to all the desktops.
+- `maximize` maximizes that window.
+- `layer:x` sets the layer of the window to `x` where `x` is a number in the range 1 to 9; 9 is the highest layer, 1 is the lowest.
+- `snap:left`, `snap:right`, `snap:top`, `snap:bottom` snap the window to the relevant side of the screen.
+- `xpos:X` and `ypos:Y` set the relative position of the window on the screen. `X` and `Y` are decimals in the range 0 to 100,
+  inclusive. For example, setting `xpos:50` puts the window's left edge in the middle of the screen (because `xpos:50` is
+  equivalent to saying that the X position should be 50 percent of the screen's width).
+- `nofocus` prevents SmallWM from automatically focusing windows of the given class. This is useful for windows like system trays,
+  clocks, or other utility windows that you don't want to manipulate by accident.
 
 Keyboard Bindings
 =================
 
-Starting with the C++ rewrite, keyboard bindings in SmallWM are almost entirely 
-(except for `Super+1` ... `Super+9`) configurable. The mechanism isn't that
-sophisticated, however, so make sure that you have a copy of `/usr/include/X11/keysymdef.h`
-or an equivalent file open.
+Keyboard bindings in SmallWM are almost entirely (except for `Super+1` ... `Super+9`) 
+configurable. The mechanism isn't that sophisticated, so make sure that you
+have a copy of `/usr/include/X11/keysymdef.h` or an equivalent file open.
 
 In order to bind a key, you first have to know the name of the "keysym" that the
 key uses. To do this, search `keysymdef.h` for your key - the keysym name is the first 
@@ -182,24 +180,41 @@ keysym name but with the leading `XK_` removed. For example, take
 action to the `XK_asciitilde` keysym.
 
 The following options can be set under the `[keyboard]` section to configure SmallWM's
-keyboard bindings. Their meanings _should_ be fairly obvious - if not, go to the
-list of default bindings and see what each of these bindings mean.
+keyboard bindings.
 
- - `client-next-desktop`, `client-prev-desktop`
- - `next-desktop`, `prev-desktop`
- - `toggle-stick`
- - `iconify`
- - `maximize`
- - `request-close`
- - `force-close`
- - `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
- - `layer-above`, `layer-below`, `layer-top`, `layer-bottom`
- - `cycle-focus`
- - `exit-wm` 
+- `client-next-desktop`, `client-prev-desktop`
+    - These bindings move the current window to either the next or previous desktop
+- `next-desktop`, `prev-desktop`
+    - These bindings move the view the next or previous desktop
+- `toggle-stick`
+    - This toggles the desktop stickiness of the current window
+- `iconify`
+    - This iconifies the current window
+- `maximize`
+    - This maximizes the current window
+- `request-close`
+    - This requests that the current window close, allowing the application to
+      show save prompts and the like.
+- `force-close`
+    - This forces the current window to close. Only use this is an emergency -
+      most applications will crash after you do this.
+- `snap-top`, `snap-bottom`, `snap-left`, `snap-right`
+    - Snaps the current window to the top, bottom, left or right half of the screen.
+- `screen-left`, `screen-right`, `screen-top`, `screen-bottom`
+    - Moves the current window to the screen to the left of, to the right of,
+      above, or below the current screen it occupies.
+- `layer-above`, `layer-below`
+    - Moves the current window to the layer above or below its *current* layer.
+- `layer-top`, `layer-bottom`
+    - Moves the current window to the topmost or bottommost layer
+- `cycle-focus`
+    - Changes the focused window to the window next in the focus list.
+- `exit-wm` 
+    - Terminates SmallWM
 
 Note the key binding given for `snap-right` in the example - the `!` that prefixes
 the 'a' is used to indicate that this key bindings uses a secondary modifier key
-(Ctrl, by default) - that is, in order to activate `snap-left`, you need to press
+(Control, by default). In order to activate `snap-left`, you need to press 
 `Super+Ctrl+a` rather than just `Super+a`. Only the key bindings used to move windows
 between screens use this by default.
 
