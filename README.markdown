@@ -43,6 +43,7 @@ ones that involve clicking the mouse, and the `Super+1` ... `Super+9` bindings.
 - `Super+Home`, `Super+End`: Puts a window on the topmost or bottommost layer.
     - Actions: `layer-top`, `layer-bottom`
 - `Super+Tab`: Focuses the next visible window in the focus list (`cycle-focus`).
+- `Super-Alt-Tab`: Focuses the previous visible window in the focus list (`cycle-focus-back`)
 - `Super+LClick`: Dragging the left mouse button starts moving a window - to place it, let go.
 - `Super+RClick`: Dragging the right mouse button starts resizing a window - to scale it, let go.
 - `Super+1` ... `Super+5` ... `Super+9`: These change the layer to the specified value (1, 5, or 9 respectively, in this example)
@@ -207,8 +208,9 @@ keyboard bindings.
     - Moves the current window to the layer above or below its *current* layer.
 - `layer-top`, `layer-bottom`
     - Moves the current window to the topmost or bottommost layer
-- `cycle-focus`
-    - Changes the focused window to the window next in the focus list.
+- `cycle-focus`, `cycle-focus-back`
+    - Changes the focused window to the window next (or previous)in the focus
+    list.
 - `exit-wm` 
     - Terminates SmallWM
 
