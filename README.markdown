@@ -2,6 +2,8 @@ What is SmallWM?
 ================
 SmallWM is an extended version of TinyWM, made for actual desktop use.
 
+![Screenshot of SmallWM](screenshot.png)
+
 Improvements over TinyWM
 ========================
 - Window Iconification
