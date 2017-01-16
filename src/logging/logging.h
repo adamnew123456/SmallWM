@@ -13,7 +13,7 @@
  * A basic logging API, which can be used to define the various kinds of
  * loggers.
  */
-class Log 
+class Log
 {
 public:
     virtual void stop() = 0;

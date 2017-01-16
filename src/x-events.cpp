@@ -13,7 +13,7 @@ bool XEvents::step()
 
     if (m_event.type == m_xdata.randr_event_offset + RRNotify)
         handle_rrnotify();
-    
+
     if (m_event.type == KeyPress)
         handle_keypress();
 
@@ -179,7 +179,7 @@ void XEvents::handle_keypress()
         if (next_focused != None)
             m_clients.focus(next_focused);
     }; break;
-    
+
     case CYCLE_FOCUS_BACK:
     {
         Window prev_focused = m_focus_cycle.get_prev();
@@ -214,7 +214,7 @@ void XEvents::handle_buttonpress()
 
     Icon *icon = m_xmodel.find_icon_from_icon_window(m_event.xbutton.window);
 
-    if (!(is_client|| icon) && m_event.xbutton.button == LAUNCH_BUTTON 
+    if (!(is_client|| icon) && m_event.xbutton.button == LAUNCH_BUTTON
             && m_event.xbutton.state == ACTION_MASK)
     {
         if (!fork())
@@ -237,7 +237,7 @@ void XEvents::handle_buttonpress()
              * were not used in the /bin/sh command line, then /bin/sh would stick
              * around waiting for /usr/bin/xterm.
              *
-             * So, to avoid an extra smallwm process sticking around, _or_ an 
+             * So, to avoid an extra smallwm process sticking around, _or_ an
              * unnecessary /bin/sh process sticking around, use 'exec' twice.
              */
             std::string shell = std::string("exec ") + m_config.shell;
@@ -277,7 +277,7 @@ void XEvents::handle_buttonpress()
 void XEvents::handle_buttonrelease()
 {
     Window expected_placeholder = m_xmodel.get_move_resize_placeholder();
-    
+
     // If this is *not* the current placeholder, then bail
     if (expected_placeholder != m_event.xbutton.window)
         return;
@@ -296,7 +296,7 @@ void XEvents::handle_buttonrelease()
         m_clients.stop_moving(client, Dimension2D(attrs.x, attrs.y));
         break;
     case MR_RESIZE:
-        m_clients.stop_resizing(client, 
+        m_clients.stop_resizing(client,
                                 Dimension2D(attrs.width, attrs.height));
         break;
     }
@@ -361,8 +361,8 @@ void XEvents::handle_motionnotify()
     {
     case MR_MOVE:
         // Update the position of the placeholder
-        m_xdata.move_window(placeholder, 
-            attr.x + DIM2D_X(relative_change), 
+        m_xdata.move_window(placeholder,
+            attr.x + DIM2D_X(relative_change),
             attr.y + DIM2D_Y(relative_change));
         break;
     case MR_RESIZE:
@@ -417,7 +417,7 @@ void XEvents::handle_expose()
     }
     else
         text_x_offset = 0;
-        
+
     std::string preferred_icon_name;
     m_xdata.get_icon_name(the_icon->client, preferred_icon_name);
 
@@ -468,15 +468,15 @@ void XEvents::add_window(Window window)
             m_xdata.get_attributes(placeholder, placeholder_attr);
 
             if (mapped_desktop->is_moving_desktop())
-                m_clients.stop_moving(window, 
+                m_clients.stop_moving(window,
                     Dimension2D(placeholder_attr.x, placeholder_attr.y));
             else if (mapped_desktop->is_resizing_desktop())
-                m_clients.stop_resizing(window, 
+                m_clients.stop_resizing(window,
                     Dimension2D(placeholder_attr.width, placeholder_attr.height));
         }
 
-        // Clients which are currently stuck on all desktops don't need to have 
-        // anything done to them. Everybody else has to be moved onto the 
+        // Clients which are currently stuck on all desktops don't need to have
+        // anything done to them. Everybody else has to be moved onto the
         // current desktop.
         if (!mapped_desktop->is_all_desktop())
             m_clients.client_reset_desktop(window);
@@ -505,22 +505,22 @@ void XEvents::add_window(Window window)
     bool has_hints = m_xdata.get_wm_hints(window, hints);
 
     InitialState init_state = IS_VISIBLE;
-    if (has_hints && hints.flags & StateHint && 
+    if (has_hints && hints.flags & StateHint &&
                      hints.initial_state == IconicState)
         init_state = IS_HIDDEN;
 
     std::string win_class;
     m_xdata.get_class(window, win_class);
-    bool should_focus = contains(m_config.no_autofocus.begin(), 
-                                 m_config.no_autofocus.end(), 
+    bool should_focus = contains(m_config.no_autofocus.begin(),
+                                 m_config.no_autofocus.end(),
                                  win_class);
 
     m_clients.add_client(window, init_state,
-            Dimension2D(win_attr.x, win_attr.y), 
+            Dimension2D(win_attr.x, win_attr.y),
             Dimension2D(win_attr.width, win_attr.height),
             should_focus);
 
-    // If the client is a dialog, this will be represented in the transient 
+    // If the client is a dialog, this will be represented in the transient
     // hint (which is None if the client is not a dialog, or not-None if it is)
     if (m_xdata.get_transient_hint(window) != None)
         m_clients.set_layer(window, DIALOG_LAYER);
@@ -543,7 +543,7 @@ void XEvents::add_window(Window window)
         if (action.actions & ACT_SNAP)
         {
             ClientPosScale mode;
-            switch (action.snap) 
+            switch (action.snap)
             {
                 case DIR_LEFT:
                     mode = CPS_SPLIT_LEFT;

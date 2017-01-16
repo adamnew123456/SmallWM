@@ -37,7 +37,7 @@ void XGC::draw_string(Dimension x, Dimension y, const std::string &text)
  */
 Dimension2D XGC::copy_pixmap(Drawable pixmap, Dimension x, Dimension y)
 {
-    // First, get the size of the pixmap that we're interested in. We need 
+    // First, get the size of the pixmap that we're interested in. We need
     // several other parameters since XGetGeometry is pretty general.
     Window _u1;
     int _u2;
@@ -108,7 +108,7 @@ XGC *XData::create_gc(Window window)
 Window XData::create_window(bool ignore)
 {
     Window win = XCreateSimpleWindow(
-        m_display, m_root, 
+        m_display, m_root,
         -1, -1, // Location
         1, 1, // Size
         1, // Border thickness
@@ -175,7 +175,7 @@ void XData::add_hotkey(KeySym key, bool use_secondary_action)
     if (use_secondary_action)
         mask |= SECONDARY_MASK;
 
-    XGrabKey(m_display, keycode, mask, m_root, true, 
+    XGrabKey(m_display, keycode, mask, m_root, true,
         GrabModeAsync, GrabModeAsync);
 }
 
@@ -222,7 +222,7 @@ void XData::stop_confining_pointer()
 
 /**
  * Captures all the mouse clicks going to a window, rather than sending it off
- * to the application itself. 
+ * to the application itself.
  * @param window The window to intercept clicks from.
  */
 void XData::grab_mouse(Window window)
@@ -283,7 +283,7 @@ void XData::get_pointer_location(Dimension &x, Dimension &y)
     Window _u1;
     int _u2;
     unsigned int _u3;
-    XQueryPointer(m_display, m_root, &_u1, &_u1, 
+    XQueryPointer(m_display, m_root, &_u1, &_u1,
             &x, &y, &_u2, &_u2, &_u3);
 }
 
@@ -301,7 +301,7 @@ Window XData::get_input_focus()
 }
 
 /**
- * Sets the input focus,  
+ * Sets the input focus,
  * @param window The window to set the focus of.
  * @return true if the change succeeded or false otherwise.
  */
@@ -452,7 +452,7 @@ void XData::raise(Window window)
  */
 void XData::restack(const std::vector<Window> &windows)
 {
-    // We have to do some juggling to get a non-const pointer from a const 
+    // We have to do some juggling to get a non-const pointer from a const
     // iteartor
     Window *win_ptr = const_cast<Window*>(&(*windows.begin()));
     XRestackWindows(m_display, win_ptr, windows.size());
@@ -523,9 +523,9 @@ void XData::get_icon_name(Window window, std::string &name)
         XFree(icon_name);
         return;
     }
-   
+
     XFetchName(m_display, window, &icon_name);
-    
+
     if (icon_name)
     {
         name.assign(icon_name);
@@ -546,11 +546,11 @@ void XData::get_class(Window win, std::string &xclass)
 {
     XClassHint *hint = XAllocClassHint();
     XGetClassHint(m_display, win, hint);
-    
+
     if (hint->res_name)
         XFree(hint->res_name);
 
-    
+
     if (hint->res_class)
     {
         xclass.assign(hint->res_class);
@@ -565,8 +565,8 @@ void XData::get_class(Window win, std::string &xclass)
 /**
  * Gets a list of screen boxes, to update the ClientModel.
  *
- * This is the result of my crawling through Xrandr.h rather than any attempt 
- * at processing formal documentation. There aren't any good docs, from what 
+ * This is the result of my crawling through Xrandr.h rather than any attempt
+ * at processing formal documentation. There aren't any good docs, from what
  * I can find.
  *
  * The AwesomeWM codebase was helpful in finding out a few things, though.

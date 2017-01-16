@@ -39,7 +39,7 @@ private:
 
     /// The window this graphics context belongs to
     Window m_window;
-    
+
     /// The X graphics context this sits above
     GC m_gc;
 };
@@ -54,7 +54,7 @@ enum MonoColor
 };
 
 /**
- * This forms a layer above raw Xlib, which stores the X display, root 
+ * This forms a layer above raw Xlib, which stores the X display, root
  * window, etc. and provides the most common operations which use these data.
  */
 class XData
@@ -74,7 +74,7 @@ public:
     XGC *create_gc(Window);
     Window create_window(bool);
 
-    void change_property(Window, const std::string&, Atom, 
+    void change_property(Window, const std::string&, Atom,
             const unsigned char*, size_t);
 
     void next_event(XEvent&);
@@ -110,7 +110,7 @@ public:
 
     void move_window(Window, Dimension, Dimension);
     void resize_window(Window, Dimension, Dimension);
-    void raise(Window); 
+    void raise(Window);
     void restack(const std::vector<Window>&);
 
     bool get_wm_hints(Window, XWMHints&);

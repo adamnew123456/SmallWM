@@ -28,7 +28,7 @@ struct ClassActions
     ClassActions() : actions(0), snap(DIR_TOP), layer(0),
         relative_x(0), relative_y(0)
     {}
-    
+
     /// All the actions which are applied; the flags are the values of ACT_*.
     unsigned int actions;
 

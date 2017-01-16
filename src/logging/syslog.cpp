@@ -107,7 +107,7 @@ void SysLog::flush()
 {
     if (m_started)
         syslog(m_priority, "%s", m_formatter.str().c_str());
-        
+
     m_formatter.str("");
 }
 

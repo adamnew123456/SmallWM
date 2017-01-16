@@ -63,7 +63,7 @@ void XModel::get_icons(std::vector<Icon*> &icons)
  * @return true if the change is successful, false if the change cannot be
  *      done due to an invalid state.
  */
-void XModel::enter_move(Window client, Window placeholder, 
+void XModel::enter_move(Window client, Window placeholder,
     Dimension2D pointer)
 {
     if (m_moveresize)

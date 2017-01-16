@@ -54,7 +54,7 @@ SUITE(ChangeStreamSuite)
 
         stream.push(change1);
         stream.push(change2);
-        
+
         stream.flush();
 
         CHECK(!stream.has_more());

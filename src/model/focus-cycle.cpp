@@ -68,7 +68,7 @@ Window FocusCycle::get_next()
 
 /**
  * Finds the previous window which can get the focus.
- * 
+ *
  * @return The previous window or none.
  */
 Window FocusCycle::get_prev()

@@ -50,7 +50,7 @@ int main()
 {
     XSetErrorHandler(x_error_handler);
     signal(SIGCHLD, reap_child);
-        
+
     WMConfig config;
     config.load();
 
@@ -63,7 +63,7 @@ int main()
     Display *display = XOpenDisplay(NULL);
     if (!display)
     {
-        logger.log(LOG_ERR) << 
+        logger.log(LOG_ERR) <<
             "Could not open X display - terminating" << Log::endl;
         logger.stop();
 
@@ -72,7 +72,7 @@ int main()
 
     Window default_root = DefaultRootWindow(display);
     XData xdata(logger, display, default_root, DefaultScreen(display));
-    xdata.select_input(default_root, 
+    xdata.select_input(default_root,
         PointerMotionMask | StructureNotifyMask | SubstructureNotifyMask);
 
     CrtManager crt_manager;
@@ -99,8 +99,8 @@ int main()
     }
 
 
-    ClientModelEvents client_events(config, logger, changes, 
-                                    xdata, clients, xmodel, 
+    ClientModelEvents client_events(config, logger, changes,
+                                    xdata, clients, xmodel,
                                     focus_cycle);
 
     // Make sure to process all the changes produced by the class actions for

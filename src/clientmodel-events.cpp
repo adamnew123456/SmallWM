@@ -89,7 +89,7 @@ void ClientModelEvents::handle_focus_change()
     }
     else
     {
-        // Since this is now focused, let the client process events in by 
+        // Since this is now focused, let the client process events in by
         // ungrabbing the mouse and setting the keyboard focus
         if (m_xdata.set_input_focus(focused_client))
         {
@@ -148,7 +148,7 @@ void ClientModelEvents::handle_client_desktop_change()
     const Desktop *old_desktop = change->prev_desktop;
     const Desktop *new_desktop = change->next_desktop;
     Window client = change->window;
-    
+
     // The previous desktop can be NULL if this client has been freshly mapped
     if (!old_desktop)
         handle_new_client_desktop_change(new_desktop, client);
@@ -260,7 +260,7 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
             m_xdata.map_win(client);
             m_clients.focus(client);
         }
-    } 
+    }
     else if (new_desktop->is_icon_desktop())
     {
         bool is_visible = m_clients.is_visible_desktop(old_desktop);
@@ -363,7 +363,7 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
         {
             XWindowAttributes placeholder_attr;
             m_xdata.get_attributes(placeholder, placeholder_attr);
-            m_xdata.move_window(client, placeholder_attr.x, 
+            m_xdata.move_window(client, placeholder_attr.x,
                                 placeholder_attr.y);
 
             m_xdata.stop_confining_pointer();
@@ -427,7 +427,7 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
  */
 void ClientModelEvents::handle_current_desktop_change()
 {
-    ChangeCurrentDesktop const *change = 
+    ChangeCurrentDesktop const *change =
         dynamic_cast<ChangeCurrentDesktop const*>(m_change);
 
     std::vector<Window> old_desktop_list;
@@ -436,7 +436,7 @@ void ClientModelEvents::handle_current_desktop_change()
     m_clients.get_clients_of(change->next_desktop, new_desktop_list);
 
     // The output size will have, at most, the size of its largest input
-    size_t max_output_size = std::max(old_desktop_list.size(), 
+    size_t max_output_size = std::max(old_desktop_list.size(),
         new_desktop_list.size());
 
     // std::set_difference requires sorted inputs
@@ -445,7 +445,7 @@ void ClientModelEvents::handle_current_desktop_change()
 
     std::vector<Window> to_make_invisible;
     std::vector<Window> to_make_visible;
-   
+
     // Fill out all of the output vectors to the length of the input iterators,
     // so that std::set_difference has somewhere to put the data
     to_make_invisible.resize(max_output_size, None);
@@ -463,7 +463,7 @@ void ClientModelEvents::handle_current_desktop_change()
             /* The extra check that the iterator is not None is necessary,
              * since the vector was padded with None when it was resized.
              */
-            to_hide != to_make_invisible.end() && *to_hide != None; 
+            to_hide != to_make_invisible.end() && *to_hide != None;
             to_hide++)
         m_xdata.unmap_win(*to_hide);
 
@@ -519,9 +519,9 @@ void ClientModelEvents::handle_screen_change()
 
     ClientPosScale cps_mode = m_clients.get_mode(change->window);
 
-    Dimension new_x = attrib.x, 
+    Dimension new_x = attrib.x,
               new_y = attrib.y,
-              new_width = attrib.width, 
+              new_width = attrib.width,
               new_height = attrib.height;
 
     switch (cps_mode)
@@ -572,7 +572,7 @@ void ClientModelEvents::handle_mode_change()
  */
 void ClientModelEvents::handle_location_change()
 {
-    ChangeLocation const *change = 
+    ChangeLocation const *change =
         dynamic_cast<ChangeLocation const*>(m_change);
 
     m_xdata.move_window(change->window, change->x, change->y);
@@ -583,7 +583,7 @@ void ClientModelEvents::handle_location_change()
  */
 void ClientModelEvents::handle_size_change()
 {
-    ChangeSize const *change = 
+    ChangeSize const *change =
         dynamic_cast<ChangeSize const*>(m_change);
 
     m_xdata.resize_window(change->window, change->w, change->h);
@@ -598,7 +598,7 @@ void ClientModelEvents::handle_size_change()
  */
 void ClientModelEvents::handle_destroy_change()
 {
-    DestroyChange const *change = 
+    DestroyChange const *change =
         dynamic_cast<DestroyChange const*>(m_change);
     Window destroyed_window = change->window;
     const Desktop *old_desktop = change->desktop;
@@ -624,7 +624,7 @@ void ClientModelEvents::handle_destroy_change()
             m_should_reposition_icons = true;
 
         }
-        else if (old_desktop->is_moving_desktop() || 
+        else if (old_desktop->is_moving_desktop() ||
                  old_desktop->is_resizing_desktop())
         {
             Window placeholder = m_xmodel.get_move_resize_placeholder();
@@ -657,7 +657,7 @@ void ClientModelEvents::register_new_icon(Window client, bool do_unmap)
     m_xdata.select_input(icon_window,
         ButtonPressMask | ButtonReleaseMask | ExposureMask);
 
-    m_xdata.resize_window(icon_window, m_config.icon_width, 
+    m_xdata.resize_window(icon_window, m_config.icon_width,
                           m_config.icon_height);
     m_xdata.map_win(icon_window);
 
@@ -690,7 +690,7 @@ Window ClientModelEvents::create_placeholder(Window client)
     // to be managed
     Window placeholder = m_xdata.create_window(true);
     m_xdata.move_window(placeholder, client_attrs.x, client_attrs.y);
-    m_xdata.resize_window(placeholder, client_attrs.width, 
+    m_xdata.resize_window(placeholder, client_attrs.width,
                           client_attrs.height);
 
     // With the window in place, show it and make sure that the cursor is
@@ -743,14 +743,14 @@ void ClientModelEvents::start_resizing(Window client)
     Dimension pointer_x, pointer_y;
     m_xdata.get_pointer_location(pointer_x, pointer_y);
 
-    m_xmodel.enter_resize(client, placeholder, Dimension2D(pointer_x, 
+    m_xmodel.enter_resize(client, placeholder, Dimension2D(pointer_x,
                                                            pointer_y));
 }
 
 /**
  * Actually does the relayering.
  *
- * This involves sorting the clients, and then sticking the icons and 
+ * This involves sorting the clients, and then sticking the icons and
  * move/resize placeholder on the top.
  */
 void ClientModelEvents::do_relayer()
@@ -772,8 +772,8 @@ void ClientModelEvents::do_relayer()
         Window current_client = *client_iter;
         Layer current_layer = m_clients.find_layer(current_client);
 
-        // We have to check if we're at the point where we can put up the 
-        // focused window - this happens when we've passed the layer that the 
+        // We have to check if we're at the point where we can put up the
+        // focused window - this happens when we've passed the layer that the
         // focused window is on. We want to put the focused window above all of
         // its peers, so before putting up the first client on the next layer,
         // put up the focused window
@@ -909,7 +909,7 @@ void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosSca
 
     // If the client is on the root screen, then the icon row has to be taken
     // into account
-    if (screen.x == 0 && screen.y == 0) 
+    if (screen.x == 0 && screen.y == 0)
     {
         top_y = screen.y + m_config.icon_height;
 

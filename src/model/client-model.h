@@ -52,9 +52,9 @@ public:
         m_max_desktops(max_desktops),
         m_focused(None),
         // Initialize all the desktops
-        ALL_DESKTOPS(new AllDesktops()), 
+        ALL_DESKTOPS(new AllDesktops()),
         ICON_DESKTOP(new IconDesktop()),
-        MOVING_DESKTOP(new MovingDesktop()), 
+        MOVING_DESKTOP(new MovingDesktop()),
         RESIZING_DESKTOP(new ResizingDesktop())
     {
         m_desktops.add_category(ALL_DESKTOPS);
@@ -87,7 +87,7 @@ public:
     void get_clients_of(desktop_ptr, std::vector<Window>&);
     void get_visible_clients(std::vector<Window>&);
     void get_visible_in_layer_order(std::vector<Window>&);
-    
+
     void add_client(Window, InitialState, Dimension2D, Dimension2D, bool);
     void remove_client(Window);
     void unmap_client(Window);
@@ -157,7 +157,7 @@ private:
     unsigned long long m_max_desktops;
 
     /// A mapping between clients and their desktops
-    UniqueMultimap<desktop_ptr, Window, 
+    UniqueMultimap<desktop_ptr, Window,
         PointerLess<const Desktop>> m_desktops;
     /// A mapping between clients and the layers they inhabit
     UniqueMultimap<Layer, Window> m_layers;
@@ -173,7 +173,7 @@ private:
     /// Which clients may be auto-focused, and which may not
     std::map<Window, bool> m_autofocus;
 
-    /** A mapping between clients that are iconified, or being moved/resized, 
+    /** A mapping between clients that are iconified, or being moved/resized,
         and whether or not they were stuck before they were moved/resized or
         iconfied. */
     std::map<Window, bool> m_was_stuck;

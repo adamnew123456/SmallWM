@@ -41,7 +41,7 @@ enum MoveResizeState
  */
 struct MoveResize
 {
-    MoveResize(Window _client, Window _placeholder, MoveResizeState _state) : 
+    MoveResize(Window _client, Window _placeholder, MoveResizeState _state) :
         client(_client), placeholder(_placeholder), state(_state)
     {};
 

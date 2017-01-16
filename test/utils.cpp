@@ -6,7 +6,7 @@
 TEST(test_strip_string)
 {
     char buffer[100];
-    /* 
+    /*
      * This test data checks a number of things:
      *
      *  1. That data not part of the removal list is not removed.
@@ -113,14 +113,14 @@ TEST(test_UniqueStack)
     CHECK(stack.empty());
     CHECK_EQUAL(stack.size(), 0);
 
-    // Ensure that duplicate removals don't do anything, and removals of 
+    // Ensure that duplicate removals don't do anything, and removals of
     // non-existent items don't either
     stack.push('a');
     CHECK_EQUAL(stack.top(), 'a');
 
     CHECK_EQUAL(stack.remove('a'), true);
     CHECK_EQUAL(stack.remove('a'), false);
-    
+
     CHECK_EQUAL(stack.remove('X'), false);
 
     CHECK(stack.empty());

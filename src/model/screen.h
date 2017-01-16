@@ -26,7 +26,7 @@ struct Crt {
     Crt() : left(NULL), right(NULL), top(NULL), bottom(NULL), m_deleting(false)
     {}
 
-    ~Crt() 
+    ~Crt()
     {
         m_deleting = true;
 

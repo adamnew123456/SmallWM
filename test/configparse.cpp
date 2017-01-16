@@ -42,7 +42,7 @@ SUITE(WMConfigSuitePlainOptions)
         CHECK_EQUAL(std::string("/usr/bin/xterm"), config.shell);
     }
 
-    TEST(test_shell) 
+    TEST(test_shell)
     {
         // Make sure that any particular setting is acceptable
         write_config_file(*config_path,
@@ -51,7 +51,7 @@ SUITE(WMConfigSuitePlainOptions)
 
         CHECK_EQUAL(std::string("some-terminal"), config.shell);
     }
-    
+
     TEST(test_shell_empty)
     {
         // Make sure that an empty configuration option is not accepted
@@ -254,7 +254,7 @@ SUITE(WMConfigSuitePlainOptions)
 
     TEST(test_icon_icons_yes)
     {
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[smallwm]\nicon-icons= 1 \n");
         config.load();
 
@@ -263,7 +263,7 @@ SUITE(WMConfigSuitePlainOptions)
 
     TEST(test_icon_icons_no)
     {
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[smallwm]\nicon-icons= 0 \n");
 
         config.load();
@@ -272,7 +272,7 @@ SUITE(WMConfigSuitePlainOptions)
 
     TEST(test_icon_icons_invalid)
     {
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[smallwm]\nicon-icons= 42 \n");
         config.load();
 
@@ -347,7 +347,7 @@ SUITE(WMConfigSuiteActions)
     {
         // Check that we get an entry in the class actions mapping, but with
         // the default values
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=\n");
         config.load();
 
@@ -368,7 +368,7 @@ SUITE(WMConfigSuiteActions)
         // Check that we get an entry in the class actions mapping, but with
         // the default values, whenever the configuration encounters an
         // invalid value
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=not an action\n");
 
         config.load();
@@ -386,7 +386,7 @@ SUITE(WMConfigSuiteActions)
     {
         // Check that the created class action sticks the window and nothing
         // else
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class= stick \n");
 
         config.load();
@@ -405,7 +405,7 @@ SUITE(WMConfigSuiteActions)
 
         // Check that the created class action sticks the window and nothing
         // else
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class= maximize \n");
         config.load();
 
@@ -427,7 +427,7 @@ SUITE(WMConfigSuiteActions)
         {
 
             std::stringstream stream;
-            stream << "[actions]\ntest-class= layer:" << 
+            stream << "[actions]\ntest-class= layer:" <<
                 static_cast<int>(layers[idx]) << " \n";
             write_config_file(*config_path, stream.str().c_str());
             config.load();
@@ -455,7 +455,7 @@ SUITE(WMConfigSuiteActions)
         {
 
             std::stringstream stream;
-            stream << "[actions]\ntest-class= layer:" << 
+            stream << "[actions]\ntest-class= layer:" <<
                 static_cast<int>(layers[idx]) << " \n";
             write_config_file(*config_path, stream.str().c_str());
             config.load();
@@ -497,7 +497,7 @@ SUITE(WMConfigSuiteActions)
         {
 
             std::stringstream stream;
-            stream << "[actions]\ntest-class= snap:" << 
+            stream << "[actions]\ntest-class= snap:" <<
                 snap_names[idx] << " \n";
             write_config_file(*config_path, stream.str().c_str());
             config.load();
@@ -519,13 +519,13 @@ SUITE(WMConfigSuiteActions)
         // Snap some invalid sides
         const char *invalid_snaps[] = {"LEFT", "lEfT", "not a layer", "42"};
 
-        for (int idx = 0; 
+        for (int idx = 0;
                 idx < sizeof(invalid_snaps) / sizeof(*invalid_snaps);
                 idx++)
         {
 
             std::stringstream stream;
-            stream << "[actions]\ntest-class= snap:" << 
+            stream << "[actions]\ntest-class= snap:" <<
                 invalid_snaps[idx] << " \n";
             write_config_file(*config_path, stream.str().c_str());
             config.load();
@@ -542,7 +542,7 @@ SUITE(WMConfigSuiteActions)
 
     TEST(test_x_pos)
     {
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=xpos:57.32\n");
         config.load();
 
@@ -562,7 +562,7 @@ SUITE(WMConfigSuiteActions)
     {
         // The only valid range is in [0, 100], so test two values outside of
         // that range
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=xpos:-15.05\n");
         config.load();
 
@@ -575,7 +575,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
 
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=xpos:-15.05\n");
         config.load();
 
@@ -588,10 +588,10 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
-    
+
     TEST(test_y_pos)
     {
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=ypos:57.32\n");
         config.load();
 
@@ -611,7 +611,7 @@ SUITE(WMConfigSuiteActions)
     {
         // The only valid range is in [0, 100], so test two values outside of
         // that range
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=ypos:-15.05\n");
         config.load();
 
@@ -624,7 +624,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
 
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=ypos:109.52\n");
         config.load();
 
@@ -637,10 +637,10 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
     }
-    
+
     TEST(test_no_autofocus)
     {
-        write_config_file(*config_path, 
+        write_config_file(*config_path,
             "[actions]\ntest-class=nofocus\n");
         config.load();
 
@@ -790,9 +790,9 @@ SUITE(WMConfigSuiteKeyboardOptions)
         config.load();
 
         KeyBinding layer_1_binding(XK_asciitilde, false);
-        CHECK_EQUAL(layer_1_binding, 
+        CHECK_EQUAL(layer_1_binding,
             config.key_commands.action_to_binding[LAYER_1]);
-        CHECK_EQUAL(LAYER_1, 
+        CHECK_EQUAL(LAYER_1,
             config.key_commands.binding_to_action[layer_1_binding]);
 
         KeyBinding layer_2_binding(XK_colon, false);
@@ -825,7 +825,7 @@ SUITE(WMConfigSuiteKeyboardOptions)
         /**
          * The '!' is used to denote a binding which requires the secondary key.
          *
-         * Also, 'h' is used to ensure that secondary bindings do not overlap with 
+         * Also, 'h' is used to ensure that secondary bindings do not overlap with
          * non-secondary bindings.
          */
         write_config_file(*config_path,
@@ -833,7 +833,7 @@ SUITE(WMConfigSuiteKeyboardOptions)
         config.load();
 
         KeyBinding layer_1_binding(XK_h, true);
-        CHECK_EQUAL(layer_1_binding, 
+        CHECK_EQUAL(layer_1_binding,
             config.key_commands.action_to_binding[LAYER_1]);
         CHECK_EQUAL(LAYER_1,
             config.key_commands.binding_to_action[layer_1_binding]);

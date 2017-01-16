@@ -17,7 +17,7 @@ struct FocusCycleFixture
     FocusCycleFixture() :
         cycle(&log)
     {
-        for (int win = 0; win < last_window + 1; win++) 
+        for (int win = 0; win < last_window + 1; win++)
         {
             windows.push_back(win);
         }
@@ -57,9 +57,9 @@ SUITE(FocusModelSuite)
             CHECK_EQUAL(cycle.get_prev(), win);
         }
     }
-    
+
     /**
-     * This ensures that the FocusCycle wraps around when it gets past the 
+     * This ensures that the FocusCycle wraps around when it gets past the
      * last window.
      */
     TEST_FIXTURE(FocusCycleFixture, test_wraparound)
@@ -73,7 +73,7 @@ SUITE(FocusModelSuite)
     }
 
     /**
-     * This ensures that the FocusCycle wraps around when it gets past the 
+     * This ensures that the FocusCycle wraps around when it gets past the
      * first window (cycling backwards)
      */
     TEST_FIXTURE(FocusCycleFixture, test_wraparound_reverse)

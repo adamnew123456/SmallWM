@@ -22,7 +22,7 @@ struct UniqueMultimapFixture
         multimap.add_category(0);
         multimap.add_category(1);
 
-        for (int i = 0; i <= 10; i++) 
+        for (int i = 0; i <= 10; i++)
         {
             multimap.add_member(i % 2, i);
         }
@@ -65,7 +65,7 @@ SUITE(UniqueMultimapTests)
             CHECK_EQUAL(multimap.get_category_of(i), i % 2);
         }
     }
-    
+
     /**
      * Ensures that getting the members of a category returns all the
      * members in that category.
@@ -73,7 +73,7 @@ SUITE(UniqueMultimapTests)
     TEST_FIXTURE(UniqueMultimapFixture, test_get_members_of)
     {
         int member = 0;
-        for (UniqueMultimap<int,int>::member_iter iter = 
+        for (UniqueMultimap<int,int>::member_iter iter =
                 multimap.get_members_of_begin(0);
             iter != multimap.get_members_of_end(0);
             ++iter, member += 2)

@@ -22,7 +22,7 @@ Crt *CrtManager::screen_of_coord(Dimension x, Dimension y)
 /**
  * Finds the box of a particular screen.
  */
-Box &CrtManager::box_of_screen(Crt *screen) 
+Box &CrtManager::box_of_screen(Crt *screen)
 {
     return m_boxes[screen];
 }
@@ -66,7 +66,7 @@ void CrtManager::rebuild_graph(std::vector<Box> &screens)
     // Start building the screen hierarchy at (0, 0) - the root screen
     m_root = new Crt();
     m_boxes[m_root] = origin_to_box[Dimension2D(0, 0)];
-    
+
     build_node(m_root, origin_to_box);
 }
 

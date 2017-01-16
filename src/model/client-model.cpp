@@ -55,13 +55,13 @@ void ClientModel::get_clients_of(desktop_ptr desktop,
  */
 void ClientModel::get_visible_clients(std::vector<Window> &return_clients)
 {
-    for (client_iter iter = 
+    for (client_iter iter =
                 m_desktops.get_members_of_begin(m_current_desktop);
             iter != m_desktops.get_members_of_end(m_current_desktop);
             iter++)
         return_clients.push_back(*iter);
 
-    for (client_iter iter = 
+    for (client_iter iter =
                 m_desktops.get_members_of_begin(ALL_DESKTOPS);
             iter != m_desktops.get_members_of_end(ALL_DESKTOPS);
             iter++)
@@ -191,7 +191,7 @@ ClientPosScale ClientModel::get_mode(Window client)
  * Changes the position/scale mode of a client.
  *
  * Note that this change doesn't actually update the location or the size, since
- * the ClientModel is isolated from the information necessary to make that 
+ * the ClientModel is isolated from the information necessary to make that
  * change.
  */
 void ClientModel::change_mode(Window client, ClientPosScale cps)
@@ -463,7 +463,7 @@ void ClientModel::client_next_desktop(Window client)
     if (!old_desktop->is_user_desktop())
         return;
 
-    user_desktop_ptr user_desktop = 
+    user_desktop_ptr user_desktop =
         dynamic_cast<user_desktop_ptr>(old_desktop);
     unsigned long long desktop_index = user_desktop->desktop;
     desktop_index  = (desktop_index + 1) % m_max_desktops;
@@ -479,10 +479,10 @@ void ClientModel::client_prev_desktop(Window client)
     if (!old_desktop->is_user_desktop())
         return;
 
-    user_desktop_ptr user_desktop = 
+    user_desktop_ptr user_desktop =
         dynamic_cast<user_desktop_ptr>(old_desktop);
     unsigned long long desktop_index = user_desktop->desktop;
-    desktop_index = (desktop_index - 1 + m_max_desktops) 
+    desktop_index = (desktop_index - 1 + m_max_desktops)
         % m_max_desktops;
     move_to_desktop(client, USER_DESKTOPS[desktop_index], true);
 }
@@ -492,7 +492,7 @@ void ClientModel::client_prev_desktop(Window client)
  */
 void ClientModel::next_desktop()
 {
-    unsigned long long desktop_index = 
+    unsigned long long desktop_index =
         (m_current_desktop->desktop + 1) % m_max_desktops;
 
     // We can't change while a window is being moved or resized
@@ -516,8 +516,8 @@ void ClientModel::prev_desktop()
 {
     // We have to add the maximum desktops back in, since C++ doesn't
     // guarantee what will happen with a negative modulus
-    unsigned long long desktop_index = 
-        (m_current_desktop->desktop - 1 + m_max_desktops) 
+    unsigned long long desktop_index =
+        (m_current_desktop->desktop - 1 + m_max_desktops)
         % m_max_desktops;
 
     // We can't change while a window is being moved or resized
@@ -768,7 +768,7 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
 /**
  * Moves a client between two desktops and fires the resulting event.
  */
-void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop, 
+void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
         bool unfocus)
 {
     desktop_ptr old_desktop = m_desktops.get_category_of(client);

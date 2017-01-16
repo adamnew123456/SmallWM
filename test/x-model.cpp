@@ -112,7 +112,7 @@ SUITE(XModelMemberSuite)
         // First, move a client and then check the values
         model.enter_move(the_client, the_placeholder, Dimension2D(0, 0));
 
-        // Stop moving a client and ensure that the values are as they were 
+        // Stop moving a client and ensure that the values are as they were
         // originally
         model.exit_move_resize();
         CHECK_EQUAL(model.get_move_resize_placeholder(), None);
@@ -135,7 +135,7 @@ SUITE(XModelMemberSuite)
         // First, move a client and then check the values
         model.enter_resize(the_client, the_placeholder, Dimension2D(0, 0));
 
-        // Stop moving a client and ensure that the values are as they were 
+        // Stop moving a client and ensure that the values are as they were
         // originally
         model.exit_move_resize();
         CHECK_EQUAL(model.get_move_resize_placeholder(), None);

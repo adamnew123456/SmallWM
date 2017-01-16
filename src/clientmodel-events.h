@@ -28,7 +28,7 @@ public:
         XData &xdata, ClientModel &clients, XModel &xmodel,
         FocusCycle &focus_cycle) :
         m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-        m_changes(changes), m_logger(logger), m_focus_cycle(focus_cycle), 
+        m_changes(changes), m_logger(logger), m_focus_cycle(focus_cycle),
         m_change(0), m_should_relayer(false), m_should_reposition_icons(false)
     {};
 
@@ -56,15 +56,15 @@ private:
     void handle_unmap_change();
 
     void handle_new_client_desktop_change(const Desktop*, Window);
-    void handle_client_change_from_user_desktop(const Desktop*, const Desktop*, 
+    void handle_client_change_from_user_desktop(const Desktop*, const Desktop*,
                                                 Window);
-    void handle_client_change_from_all_desktop(const Desktop*, const Desktop*, 
+    void handle_client_change_from_all_desktop(const Desktop*, const Desktop*,
                                                 Window);
-    void handle_client_change_from_icon_desktop(const Desktop*, const Desktop*, 
+    void handle_client_change_from_icon_desktop(const Desktop*, const Desktop*,
                                                 Window);
-    void handle_client_change_from_moving_desktop(const Desktop*, const Desktop*, 
+    void handle_client_change_from_moving_desktop(const Desktop*, const Desktop*,
                                                 Window);
-    void handle_client_change_from_resizing_desktop(const Desktop*, const Desktop*, 
+    void handle_client_change_from_resizing_desktop(const Desktop*, const Desktop*,
                                                 Window);
 
     /// The stream of changes to read from
@@ -93,10 +93,10 @@ private:
     FocusCycle &m_focus_cycle;
 
     /** Whether or not to relayer the visible windows - this allows this class
-     * to avoid restacking windows on every `ChangeLayer`, and instead only do 
+     * to avoid restacking windows on every `ChangeLayer`, and instead only do
      * it once at the end of `handle_queued_changes`. */
     bool m_should_relayer;
-    
+
     /** Similar to `m_should_relayer`, this indicates whether the change handler
      * should reposition all the icon windows at the end of `handle_queued_changes`.
      */

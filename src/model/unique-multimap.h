@@ -17,7 +17,7 @@
  *      C1      C2      C3      C4
  *    __|___    |      / \
  *   /  |   \   |     /   \
- *  M1  M2  M3  M4   M5   M6 
+ *  M1  M2  M3  M4   M5   M6
  * @endcode
  *
  * This two-level tree has the following structure:
@@ -66,7 +66,7 @@ public:
         // Avoid including duplicates
         if (is_category(category))
             return false;
-        
+
         m_category_members[category] = new std::vector<member_t>();
         return true;
     }

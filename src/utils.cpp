@@ -56,7 +56,7 @@ unsigned long try_parse_ulong(const char *string, unsigned long default_)
     // This has to happen, since GCC causes the buffer to be cleared to zeroes.
     //
     // Since we use a comparison to zero when figuring out whether or not our
-    // conversion succeeded, we have to wait until here to get rid of the 
+    // conversion succeeded, we have to wait until here to get rid of the
     // buffer.
     delete[] buffer;
     return result;

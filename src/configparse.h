@@ -50,7 +50,7 @@ struct DefaultShortcut
 };
 
 /**
- * Key bindings consist of both a main key, a modifier, and (possibly) 
+ * Key bindings consist of both a main key, a modifier, and (possibly)
  * a secondary modifier (the boolean).
  */
 typedef std::pair<KeySym, bool> KeyBinding;
@@ -152,7 +152,7 @@ public:
     /// Loads a couple of defaults for the WMConfig.
     WMConfig()
     { reset(); };
-    
+
     void load();
     void reset();
 
@@ -172,7 +172,7 @@ public:
     unsigned long long num_desktops;
 
     /// The width of hidden icons.
-    Dimension icon_width, 
+    Dimension icon_width,
     /// The height of the hidden icons.
               icon_height;
 

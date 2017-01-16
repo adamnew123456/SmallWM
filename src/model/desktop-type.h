@@ -114,7 +114,7 @@ struct IconDesktop : public Desktop
 {
     IconDesktop() : Desktop(ICON_DESKTOP_SORT_KEY)
     {};
-    
+
     bool is_icon_desktop() const
     { return true; }
 };

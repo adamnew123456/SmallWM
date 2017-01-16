@@ -89,7 +89,7 @@ struct ChangeLayer : Change
 
 static std::ostream &operator<<(std::ostream &out, const ChangeLayer &change)
 {
-    out << "[ChangeLayer Window<" << change.window << 
+    out << "[ChangeLayer Window<" << change.window <<
         "> Layer(" << static_cast<int>(change.layer) << ")]";
     return out;
 }
@@ -120,7 +120,7 @@ struct ChangeFocus : Change
 
 static std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
 {
-    out << "[ChangeFocus Window<" << change.prev_focus << "> ==> Window<" 
+    out << "[ChangeFocus Window<" << change.prev_focus << "> ==> Window<"
         << change.next_focus << ">]";
     return out;
 }
@@ -174,7 +174,7 @@ struct ChangeClientDesktop : Change
 
 static std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
 {
-    out << "[ChangeClientDesktop Window<" << change.window << "> Desktop(" 
+    out << "[ChangeClientDesktop Window<" << change.window << "> Desktop("
         << *change.prev_desktop << "-->" << *change.next_desktop <<  ")]";
     return out;
 }
@@ -194,7 +194,7 @@ struct ChangeCurrentDesktop : Change
         if (!other.is_current_desktop_change())
             return false;
 
-        const ChangeCurrentDesktop &cast_other = 
+        const ChangeCurrentDesktop &cast_other =
             dynamic_cast<const ChangeCurrentDesktop&>(other);
 
         if ((cast_other.prev_desktop == 0 && prev_desktop != 0) ||
@@ -217,7 +217,7 @@ struct ChangeCurrentDesktop : Change
 
 static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)
 {
-    out << "[ChangeCurrentDesktop Desktop(" << *change.prev_desktop << "-->" << 
+    out << "[ChangeCurrentDesktop Desktop(" << *change.prev_desktop << "-->" <<
         *change.next_desktop << ")]";
     return out;
 }
@@ -238,7 +238,7 @@ struct ChangeScreen : Change
         if (!other.is_screen_change())
             return false;
 
-        const ChangeScreen &cast_other = 
+        const ChangeScreen &cast_other =
             dynamic_cast<const ChangeScreen&>(other);
 
         return cast_other.window == window && cast_other.bounds == bounds;
@@ -269,7 +269,7 @@ struct ChangeCPSMode : Change
         if (!other.is_mode_change())
             return false;
 
-        const ChangeCPSMode &cast_other = 
+        const ChangeCPSMode &cast_other =
             dynamic_cast<const ChangeCPSMode&>(other);
 
         return cast_other.window == window && cast_other.mode == mode;
@@ -307,7 +307,7 @@ struct ChangeLocation : Change
 
 static std::ostream &operator<<(std::ostream &out, const ChangeLocation &change)
 {
-    out << "[ChangeLocation Window<" << change.window 
+    out << "[ChangeLocation Window<" << change.window
         << "> Location(" << change.x << "," << change.y << ")]";
     return out;
 }
@@ -340,7 +340,7 @@ struct ChangeSize : Change
 
 static std::ostream &operator<<(std::ostream &out, const ChangeSize &change)
 {
-    out << "[ChangeSize Window<" << change.window 
+    out << "[ChangeSize Window<" << change.window
         << "> Size(" << change.w << "," << change.h << ")]";
     return out;
 }
@@ -360,7 +360,7 @@ struct DestroyChange : Change
         if (!other.is_destroy_change())
             return false;
 
-        const DestroyChange &cast_other = 
+        const DestroyChange &cast_other =
             dynamic_cast<const DestroyChange&>(other);
         return (cast_other.window == window &&
                 (cast_other.desktop == desktop ||
@@ -374,7 +374,7 @@ struct DestroyChange : Change
 };
 
 /**
- * Indicates that a client is still in the model, but requires special 
+ * Indicates that a client is still in the model, but requires special
  * because it is no longer valid (this is a kludge to handle unmapped
  * windows, without destroying their state inside SmallWM)
  */

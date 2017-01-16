@@ -6,7 +6,7 @@
  */
 void WMConfig::load()
 {
-    // This is meant to help out the unit tests, which would otherwise have 
+    // This is meant to help out the unit tests, which would otherwise have
     // 'reset()' calls sprinkled about
     reset();
 
@@ -54,7 +54,7 @@ std::string WMConfig::get_config_path() const
  * @param c_name The name of the configuration option.
  * @param c_value The value of the configuration option.
  */
-int WMConfig::config_parser(void *user, const char *c_section, 
+int WMConfig::config_parser(void *user, const char *c_section,
         const char *c_name, const char *c_value)
 {
     WMConfig *self = static_cast<WMConfig*>(user);
@@ -117,8 +117,8 @@ int WMConfig::config_parser(void *user, const char *c_section,
         else if (name == std::string("icon-icons"))
         {
             bool old_value = self->show_icons;
-            self->show_icons = 
-                try_parse_ulong(value.c_str(), 
+            self->show_icons =
+                try_parse_ulong(value.c_str(),
                      static_cast<unsigned long>(old_value)) != 0;
         }
     }
@@ -133,7 +133,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
 
         // All the configuration options are separated by commas
         char *option = strtok(copied_value, ",");
-       
+
         // Catch an empty configuration setting (which returns NULL) before it
         // gets into the loop below, which will cause a crash. However, we still
         // have to assign the empty ClassAction, so we can't just return here.
@@ -209,7 +209,7 @@ int WMConfig::config_parser(void *user, const char *c_section,
             }
             else if (!strcmp(stripped, "nofocus"))
             {
-                // This looks different, because it is not an action, but a 
+                // This looks different, because it is not an action, but a
                 // persistent setting which is respected in multiple places
                 self->no_autofocus.push_back(name);
             }

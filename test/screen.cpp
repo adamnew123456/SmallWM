@@ -5,7 +5,7 @@
 #include "model/screen.h"
 
 // Useful for doing 'screen_of_coord' testing so that I can avoid repeating code
-struct CrtOfCoordTest 
+struct CrtOfCoordTest
 {
     int x, y;
     Crt *expected_screen;
@@ -147,7 +147,7 @@ SUITE(CrtMemberSuite)
             {1000, 250, root},
             {1750, 250, right},
             {750, 750, bottom},
-            
+
             // Test a few external points as well
             // 1. Below the bottom
             // 2. Right of the right

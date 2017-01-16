@@ -39,7 +39,7 @@ struct Box {
 
     bool operator ==(const Box &other) const
     {
-        return other.x == x && other.y == y && 
+        return other.x == x && other.y == y &&
                 other.width == width && other.height == height;
     }
 
@@ -92,7 +92,7 @@ const Layer MAX_LAYER = 10,
       DIALOG_LAYER = 11,
       /// The default layer assigned to all windows.
       DEF_LAYER = 5;
-    
+
 /// The button to click to launch a terminal
 const int LAUNCH_BUTTON = 1,
       /// The button to click to move a client
@@ -114,11 +114,11 @@ operator<<(std::basic_ostream<CharT, Traits> &out, const T &value)
     return out;
 }
 
-// Note that this would otherwise be a circular dependency between 
+// Note that this would otherwise be a circular dependency between
 // model/changes.h and model/client-model.h
 
 /**
- * How a client is positioned and scaled - all but CPS_FLOATING are managed 
+ * How a client is positioned and scaled - all but CPS_FLOATING are managed
  * by SmallWM.
  */
 enum ClientPosScale
