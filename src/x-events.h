@@ -9,6 +9,7 @@
 #include "model/x-model.h"
 #include "configparse.h"
 #include "common.h"
+#include "utils.h"
 #include "xdata.h"
 
 /**

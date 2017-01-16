@@ -511,11 +511,9 @@ void XEvents::add_window(Window window)
 
     std::string win_class;
     m_xdata.get_class(window, win_class);
-    bool should_focus = 
-        std::find(m_config.no_autofocus.begin(), 
-                m_config.no_autofocus.end(), 
-                win_class) == 
-        m_config.no_autofocus.end();
+    bool should_focus = contains(m_config.no_autofocus.begin(), 
+                                 m_config.no_autofocus.end(), 
+                                 win_class);
 
     m_clients.add_client(window, init_state,
             Dimension2D(win_attr.x, win_attr.y), 

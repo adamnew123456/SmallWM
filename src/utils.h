@@ -10,6 +10,13 @@ unsigned long try_parse_ulong(const char *string, unsigned long default_);
 unsigned long try_parse_ulong_nonzero(const char *string, unsigned long default_);
 void strip_string(const char *text, const char *remove, char *buffer);
 
+template<class InputIt, class T>
+bool contains(InputIt start, InputIt end, T& value)
+{
+    InputIt result = std::find(start, end, value);
+    return result != end;
+}
+
 /**
  * This appears similar to a stack, but it works slightly differently, the
  * difference being that an element can only exist in the stack once - if
