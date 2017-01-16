@@ -139,6 +139,8 @@ int WMConfig::config_parser(void *user, const char *c_section,
         // have to assign the empty ClassAction, so we can't just return here.
         if (option == static_cast<char*>(0))
             goto set_actions;
+        if (!option)
+            goto finish_actions;
 
         // The configuration values are stripped of spaces
         char *stripped;
@@ -213,9 +215,11 @@ int WMConfig::config_parser(void *user, const char *c_section,
             }
 
             delete[] stripped;
-        } while((option = strtok(NULL, ",")));
+        } while (option = strtok(NULL, ","));
 
-set_actions:
+
+finish_actions:
+        free(copied_value);
         self->classactions[name] = action;
     }
 
