@@ -249,7 +249,12 @@ void XData::ungrab_mouse(Window window)
  */
 void XData::select_input(Window window, long mask)
 {
-    XSelectInput(m_display, window, mask);
+    if (window == m_root)
+        m_old_root_mask = mask;
+
+    // Only change this for real if we're not playing with the mask ourselves
+    if (m_substructure_depth == 0)
+        XSelectInput(m_display, window, mask);
 }
 
 /**
@@ -412,7 +417,9 @@ void XData::set_border_color(Window window, MonoColor color)
  */
 void XData::set_border_width(Window window, Dimension size)
 {
+    enable_substructure_events();
     XSetWindowBorderWidth(m_display, window, size);
+    disable_substructure_events();
 }
 
 /**
@@ -423,7 +430,9 @@ void XData::set_border_width(Window window, Dimension size)
  */
 void XData::move_window(Window window, int x, int y)
 {
+    disable_substructure_events();
     XMoveWindow(m_display, window, x, y);
+    enable_substructure_events();
 }
 
 /**
@@ -434,7 +443,9 @@ void XData::move_window(Window window, int x, int y)
  */
 void XData::resize_window(Window window, Dimension width, Dimension height)
 {
+    disable_substructure_events();
     XResizeWindow(m_display, window, width, height);
+    enable_substructure_events();
 }
 
 /**
@@ -443,7 +454,9 @@ void XData::resize_window(Window window, Dimension width, Dimension height)
  */
 void XData::raise(Window window)
 {
+    disable_substructure_events();
     XRaiseWindow(m_display, window);
+    enable_substructure_events();
 }
 
 /**
@@ -452,10 +465,14 @@ void XData::raise(Window window)
  */
 void XData::restack(const std::vector<Window> &windows)
 {
+    disable_substructure_events();
+
     // We have to do some juggling to get a non-const pointer from a const
     // iteartor
     Window *win_ptr = const_cast<Window*>(&(*windows.begin()));
     XRestackWindows(m_display, win_ptr, windows.size());
+
+    enable_substructure_events();
 }
 
 /**
@@ -671,4 +688,40 @@ unsigned long XData::decode_monocolor(MonoColor color)
         case X_WHITE:
             return WhitePixel(m_display, m_screen);
     }
+}
+
+/**
+ * Enables substructure events on the root.
+ */
+void XData::enable_substructure_events()
+{
+    m_substructure_depth--;
+
+    // Don't re-enable if we're not out of our chain yet
+    if (m_substructure_depth != 0) return;
+
+    // Don't synthesize the flag if it was never there to start with
+    if (m_old_root_mask & SubstructureNotifyMask == 0)
+        return;
+
+    XSelectInput(m_display, m_root, m_old_root_mask | SubstructureNotifyMask);
+    XFlush(m_display);
+}
+
+/**
+ * Disables substructure events on the root if they were enabled before.
+ */
+void XData::disable_substructure_events()
+{
+    m_substructure_depth++;
+
+    // If we're still in the chain, then there's no reason to do this again
+    if (m_substructure_depth != 1)
+        return;
+
+    if (m_old_root_mask & SubstructureNotifyMask == 0)
+        return;
+
+    XSelectInput(m_display, m_root, m_old_root_mask & ~SubstructureNotifyMask);
+    XFlush(m_display);
 }

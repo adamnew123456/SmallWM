@@ -61,7 +61,8 @@ class XData
 {
 public:
     XData(Log &logger, Display *dpy, Window root, int screen) :
-        m_display(dpy), m_logger(logger), m_confined(None)
+        m_display(dpy), m_logger(logger), m_confined(None),
+        m_old_root_mask(NoEventMask), m_substructure_depth(0)
     {
         m_root = DefaultRootWindow(dpy);
         m_screen = DefaultScreen(dpy);
@@ -130,6 +131,17 @@ public:
 private:
     Atom intern_if_needed(const std::string&);
     unsigned long decode_monocolor(MonoColor);
+
+    void enable_substructure_events();
+    void disable_substructure_events();
+
+    /**  We save this to ensure that we can re-enable substructure events if they
+     * were enabled before a call to disable_substructure_events.
+     */
+    long m_old_root_mask;
+
+    /// How deep we are inside of a nested group of enable/disable substruture events
+    int m_substructure_depth;
 
     /// The logging interface
     Log &m_logger;
