@@ -92,11 +92,17 @@ public:
     void remove_client(Window);
     void unmap_client(Window);
 
+    void pack_client(Window, PackCorner, unsigned long);
+    bool is_packed_client(Window);
+    PackCorner get_pack_corner(Window);
+    void repack_corner(PackCorner);
+
     ClientPosScale get_mode(Window);
     void change_mode(Window, ClientPosScale);
 
     void change_location(Window, Dimension, Dimension);
     void change_size(Window, Dimension, Dimension);
+    void update_size(Window, Dimension, Dimension);
 
     Window get_next_in_focus_history();
     bool remove_from_focus_history(Window);
@@ -177,6 +183,16 @@ private:
         and whether or not they were stuck before they were moved/resized or
         iconfied. */
     std::map<Window, bool> m_was_stuck;
+
+    /**
+     * A mapping between clients and their packing corner.
+     */
+    std::map<Window, PackCorner> m_pack_corners;
+
+    /**
+     * A mapping between clients and their packing priorities.
+     */
+    std::map<Window, unsigned long> m_pack_priority;
 
     /// The currently visible desktop
     UserDesktop * m_current_desktop;

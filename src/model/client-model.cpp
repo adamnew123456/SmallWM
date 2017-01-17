@@ -180,6 +180,122 @@ void ClientModel::unmap_client(Window client)
 }
 
 /**
+ * Configures the client for packing.
+ */
+void ClientModel::pack_client(Window client, PackCorner corner, unsigned long priority)
+{
+    if (is_packed_client(client))
+        return;
+
+    m_pack_corners[client] = corner;
+    m_pack_priority[client] = priority;
+}
+
+/**
+ * Returns true if the client is packed, or false otherwise.
+ */
+bool ClientModel::is_packed_client(Window client)
+{
+    return m_pack_corners.count(client) == 1;
+}
+
+/**
+ * Returns the packing corner this client is assigned to. Undefined if
+ * is_packed_client(the_client) is false.
+ */
+PackCorner ClientModel::get_pack_corner(Window client)
+{
+    return m_pack_corners[client];
+}
+
+/**
+ * Repacks the clients at the given corner.
+ */
+void ClientModel::repack_corner(PackCorner corner)
+{
+    // We only need X because SmallWM doesn't currently support the vertical
+    // packing case
+    int x_incr_sign;
+    int x_coord, y_coord;
+
+    // For east/south side packings, we have to subtract the width/height of
+    // the window from the current coordinate
+    bool subtract_width_first, subtract_height_first;
+
+    Box &screen = get_root_screen();
+
+    switch (corner)
+    {
+    case PACK_NORTHWEST:
+        x_incr_sign = 1;
+        subtract_width_first = false;
+        subtract_height_first = false;
+        x_coord = screen.x;
+        y_coord = screen.y;
+        break;
+    case PACK_NORTHEAST:
+        x_incr_sign = -1;
+        subtract_width_first = true;
+        subtract_height_first = false;
+        x_coord = screen.width;
+        y_coord = screen.y;
+        break;
+    case PACK_SOUTHWEST:
+        x_incr_sign = 1;
+        subtract_width_first = false;
+        subtract_height_first = true;
+        x_coord = 0;
+        y_coord = screen.height;
+        break;
+    case PACK_SOUTHEAST:
+        x_incr_sign = -1;
+        subtract_width_first = true;
+        subtract_height_first = true;
+        x_coord = screen.width;
+        y_coord = screen.height;
+        break;
+    }
+
+    // We need to collect all the windows so that we can sort them by layout
+    // order (low priority closest to the corner, higher priority farther
+    // away)
+    std::vector<Window> windows_on_this_corner;
+    for (std::map<Window, PackCorner>::iterator iter = m_pack_corners.begin();
+         iter != m_pack_corners.end();
+         iter++)
+    {
+        if (iter->second == corner)
+            windows_on_this_corner.push_back(iter->first);
+    }
+
+    MapSorter<Window, unsigned long> sorter(m_pack_priority);
+    std::sort(windows_on_this_corner.begin(),
+              windows_on_this_corner.end(),
+              sorter);
+
+    for (std::vector<Window>::iterator iter = windows_on_this_corner.begin();
+         iter != windows_on_this_corner.end();
+         iter++)
+    {
+        Dimension2D &size = m_size[*iter];
+
+        int real_x, real_y;
+        if (subtract_width_first)
+            real_x = x_coord - DIM2D_WIDTH(size);
+        else
+            real_x = x_coord;
+
+        if (subtract_height_first)
+            real_y = y_coord - DIM2D_HEIGHT(size);
+        else
+            real_y = y_coord;
+
+        change_location(*iter, real_x, real_y);
+        x_coord += x_incr_sign * DIM2D_WIDTH(size);
+    }
+}
+
+/**
  * Gets  the position/scale mode of a client.
  */
 ClientPosScale ClientModel::get_mode(Window client)
@@ -228,9 +344,21 @@ void ClientModel::change_size(Window client, Dimension width, Dimension height)
 {
     if (width > 0 && height > 0)
     {
-        m_size[client] = Dimension2D(width, height);
+        update_size(client, width, height);
         m_changes.push(new ChangeSize(client, width, height));
     }
+}
+
+/**
+ * Updates the size of a client without causing a change.
+ *
+ * This is meant to inform the model of changes that happened because of the
+ * client doing things on its own, and not because of us.
+ */
+void ClientModel::update_size(Window client, Dimension width, Dimension height)
+{
+    if (width > 0 && height > 0)
+        m_size[client] = Dimension2D(width, height);
 }
 
 /**
