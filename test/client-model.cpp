@@ -1831,6 +1831,167 @@ SUITE(ClientModelMemberSuite)
 
         CHECK(!changes.has_more());
     }
+
+    /**
+     * This ensures that windows have their information assigned properly,
+     * without doing any packing.
+     */
+    TEST_FIXTURE(ClientModelFixture, test_pack_basic_info)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.pack_client(a, PACK_NORTHWEST, 1);
+
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(30, 10), true);
+
+        // Ensure that all the basic information is there
+        CHECK(model.is_packed_client(a));
+        CHECK(!model.is_packed_client(b));
+        CHECK_EQUAL(PACK_NORTHWEST, model.get_pack_corner(a));
+    }
+
+    /// Ensure that windows pack correctly into the northeast
+    TEST_FIXTURE(ClientModelFixture, test_pack_northwest)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.pack_client(a, PACK_NORTHWEST, 1);
+
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(30, 10), true);
+        model.pack_client(b, PACK_NORTHWEST, 2);
+
+        changes.flush();
+
+        model.repack_corner(PACK_NORTHWEST);
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(a, 0, 0), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(b, 10, 0), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    /// Ensure that windows pack correctly into the northeast
+    TEST_FIXTURE(ClientModelFixture, test_pack_northeast)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.pack_client(a, PACK_NORTHEAST, 1);
+
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(30, 10), true);
+        model.pack_client(b, PACK_NORTHEAST, 2);
+
+        changes.flush();
+
+        model.repack_corner(PACK_NORTHEAST);
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(a, 100 - 10, 0), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(b, 100 - (10 + 30), 0), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    /// Ensure that windows pack correctly into the southwest
+    TEST_FIXTURE(ClientModelFixture, test_pack_southwest)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.pack_client(a, PACK_SOUTHWEST, 1);
+
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(30, 10), true);
+        model.pack_client(b, PACK_SOUTHWEST, 2);
+
+        changes.flush();
+
+        model.repack_corner(PACK_SOUTHWEST);
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(a, 0, 100 - 10), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(b, 10, 100 - 10), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    /// Ensure that windows pack correctly into the southeast
+    TEST_FIXTURE(ClientModelFixture, test_pack_southeast)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.pack_client(a, PACK_SOUTHEAST, 1);
+
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(30, 10), true);
+        model.pack_client(b, PACK_SOUTHEAST, 2);
+
+        changes.flush();
+
+        model.repack_corner(PACK_SOUTHEAST);
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(a, 100 - 10, 100 - 10), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_location_change());
+        {
+            const ChangeLocation *the_change =
+                dynamic_cast<const ChangeLocation*>(change);
+            CHECK_EQUAL(ChangeLocation(b, 100 - (10 + 30), 100 - 10), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
 }
 
 int main()
