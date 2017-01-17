@@ -26,6 +26,9 @@ bool XEvents::step()
     if (m_event.type == MotionNotify)
         handle_motionnotify();
 
+    if (m_event.type == ConfigureNotify)
+        handle_configurenotify();
+
     if (m_event.type == MapNotify)
         handle_mapnotify();
 
@@ -257,6 +260,11 @@ void XEvents::handle_buttonpress()
                 m_event.xbutton.button != RESIZE_BUTTON)
             return;
 
+        // If we're a packed client, then the user can't move/resize because it
+        // would be undone by the packer later
+        if (m_clients.is_packed_client(m_event.xbutton.subwindow))
+            return;
+
         // A left-click, with the action modifier, start resizing
         if (m_event.xbutton.button == MOVE_BUTTON)
             m_clients.start_moving(m_event.xbutton.subwindow);
@@ -299,6 +307,27 @@ void XEvents::handle_buttonrelease()
         m_clients.stop_resizing(client,
                                 Dimension2D(attrs.width, attrs.height));
         break;
+    }
+}
+
+/**
+ * Handles ConfigureNotify events, which updates the size of the window, and
+ * re-packs the corner it's on if it's packed.
+ */
+void XEvents::handle_configurenotify()
+{
+    Window client = m_event.xconfigure.window;
+    if (!m_clients.is_client(client))
+        return;
+
+    m_clients.update_size(client,
+                          m_event.xconfigure.width,
+                          m_event.xconfigure.height);
+
+    if (m_clients.is_packed_client(client))
+    {
+        PackCorner corner = m_clients.get_pack_corner(client);
+        m_clients.repack_corner(corner);
     }
 }
 
@@ -581,6 +610,12 @@ void XEvents::add_window(Window window)
 
             if (win_attr.x != win_x_pos || win_attr.x != win_y_pos)
                 m_clients.change_location(window, win_x_pos, win_y_pos);
+        }
+
+        if (action.actions & ACT_PACK)
+        {
+            m_clients.pack_client(window, action.pack_corner, action.pack_priority);
+            m_clients.repack_corner(action.pack_corner);
         }
     }
 }

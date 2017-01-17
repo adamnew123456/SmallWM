@@ -64,6 +64,7 @@ private:
     void handle_buttonpress();
     void handle_buttonrelease();
     void handle_motionnotify();
+    void handle_configurenotify();
     void handle_mapnotify();
     void handle_unmapnotify();
     void handle_expose();
