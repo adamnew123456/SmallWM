@@ -137,8 +137,6 @@ int WMConfig::config_parser(void *user, const char *c_section,
         // Catch an empty configuration setting (which returns NULL) before it
         // gets into the loop below, which will cause a crash. However, we still
         // have to assign the empty ClassAction, so we can't just return here.
-        if (option == static_cast<char*>(0))
-            goto set_actions;
         if (!option)
             goto finish_actions;
 
