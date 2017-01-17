@@ -163,6 +163,8 @@ void ClientModel::remove_client(Window client)
     m_cps_mode.erase(client);
     m_screen.erase(client);
     m_autofocus.erase(client);
+    m_pack_corners.erase(client);
+    m_pack_priority.erase(client);
 
     m_changes.push(new DestroyChange(client, desktop, layer));
 }

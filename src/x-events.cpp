@@ -466,7 +466,21 @@ void XEvents::handle_expose()
 void XEvents::handle_destroynotify()
 {
     Window destroyed_window = m_event.xdestroywindow.window;
+
+    // Ensure to re-pack if we're removing something that should be
+    // packed
+    bool should_pack = false;
+    PackCorner corner;
+    if (m_clients.is_packed_client(destroyed_window))
+    {
+        should_pack = true;
+        corner = m_clients.get_pack_corner(destroyed_window);
+    }
+
     m_clients.remove_client(destroyed_window);
+
+    if (should_pack)
+        m_clients.repack_corner(corner);
 }
 
 /**
