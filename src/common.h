@@ -71,6 +71,17 @@ enum Direction
     DIR_RIGHT
 };
 
+/**
+ * The different corners that windows can be packed into.
+ */
+enum PackCorner
+{
+    PACK_NORTHEAST,
+    PACK_NORTHWEST,
+    PACK_SOUTHEAST,
+    PACK_SOUTHWEST
+};
+
 // Note '(value) < (max)' - this is mostly used for finding screen boundaries,
 // and a window on the left edge of a screen should not be considered to be on
 // a different monitor

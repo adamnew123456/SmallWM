@@ -194,6 +194,9 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 {
                     action.actions |= ACT_MOVE_X;
                     action.relative_x = relative_x;
+
+                    // Since this overrides packing, disable it
+                    action.actions &= ~ACT_PACK;
                 }
             }
             else if (!strncmp(stripped, "ypos:", 5))
@@ -203,6 +206,9 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 {
                     action.actions |= ACT_MOVE_Y;
                     action.relative_y = relative_y;
+
+                    // Since this overrides packing, disable it
+                    action.actions &= ~ACT_PACK;
                 }
             }
             else if (!strcmp(stripped, "nofocus"))
@@ -210,6 +216,30 @@ int WMConfig::config_parser(void *user, const char *c_section,
                 // This looks different, because it is not an action, but a
                 // persistent setting which is respected in multiple places
                 self->no_autofocus.push_back(name);
+            }
+            else if (!strncmp(stripped, "pack:", 5))
+            {
+                bool is_valid = true;
+                if (!strncmp(stripped + 5, "NW", 2))
+                    action.pack_corner = PACK_NORTHWEST;
+                else if (!strncmp(stripped + 5, "NE", 2))
+                    action.pack_corner = PACK_NORTHEAST;
+                else if (!strncmp(stripped + 5, "SW", 2))
+                    action.pack_corner = PACK_SOUTHWEST;
+                else if (!strncmp(stripped + 5, "SE", 2))
+                    action.pack_corner = PACK_SOUTHEAST;
+                else
+                    is_valid = false;
+
+                if (is_valid)
+                {
+                    action.actions |= ACT_PACK;
+                    action.pack_priority = try_parse_ulong(stripped + 7, action.pack_corner);
+
+                    // Since this overrides xpos/ypos, get rid of those
+                    action.actions &= ~ACT_MOVE_X;
+                    action.actions &= ~ACT_MOVE_Y;
+                }
             }
 
             delete[] stripped;

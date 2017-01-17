@@ -15,7 +15,9 @@ const unsigned int ACT_STICK = 1 << 0,
     /// Moves a client in the X direction
     ACT_MOVE_X = 1 << 4,
     /// Moves a client in the Y direction
-    ACT_MOVE_Y = 1 << 5;
+    ACT_MOVE_Y = 1 << 5,
+    /// Packs the window into a corner, and manages location/size automatically
+    ACT_PACK = 1 << 6;
 
 /**
  * A grouping of class actions which are applied to all clients of a particular class.
@@ -26,7 +28,8 @@ struct ClassActions
 {
     /// Initialize a blank ClassAction, with a few defaults.
     ClassActions() : actions(0), snap(DIR_TOP), layer(0),
-        relative_x(0), relative_y(0)
+        relative_x(0), relative_y(0),
+        pack_corner(PACK_NORTHWEST), pack_priority(0)
     {}
 
     /// All the actions which are applied; the flags are the values of ACT_*.
@@ -42,6 +45,12 @@ struct ClassActions
      * the window.
      */
     double relative_x, relative_y;
+
+    /// What corner to pack the window into.
+    PackCorner pack_corner;
+
+    /// What priority to pack with (lower is closer to the edge)
+    unsigned long pack_priority;
 };
 
 #endif
