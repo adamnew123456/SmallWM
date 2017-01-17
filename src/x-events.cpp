@@ -347,6 +347,11 @@ void XEvents::handle_mapnotify()
     Window being_mapped = m_event.xmap.window;
 
     add_window(being_mapped);
+    if (m_clients.is_packed_client(being_mapped))
+    {
+        PackCorner corner = m_clients.get_pack_corner(being_mapped);
+        m_clients.repack_corner(corner);
+    }
 }
 
 /**
@@ -627,9 +632,6 @@ void XEvents::add_window(Window window)
         }
 
         if (action.actions & ACT_PACK)
-        {
             m_clients.pack_client(window, action.pack_corner, action.pack_priority);
-            m_clients.repack_corner(action.pack_corner);
-        }
     }
 }
