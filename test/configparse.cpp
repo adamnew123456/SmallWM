@@ -359,6 +359,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
 
         CHECK_EQUAL(0, config.no_autofocus.size());
     }
@@ -380,6 +381,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
     }
 
     TEST(test_stick)
@@ -398,6 +400,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
     }
 
     TEST(test_maximize)
@@ -417,6 +420,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
     }
 
     TEST(test_set_valid_layers)
@@ -440,6 +444,9 @@ SUITE(WMConfigSuiteActions)
             CHECK_EQUAL(0, action.actions & ACT_SNAP);
             CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
             CHECK(action.actions & ACT_SETLAYER);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+            CHECK_EQUAL(0, action.actions & ACT_PACK);
 
             // ... and that it is changed correctly
             CHECK_EQUAL(action.layer, layers[idx]);
@@ -469,6 +476,9 @@ SUITE(WMConfigSuiteActions)
             CHECK_EQUAL(0, action.actions & ACT_SNAP);
             CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
             CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+            CHECK_EQUAL(0, action.actions & ACT_PACK);
         }
 
         // Test with something non-numeric
@@ -485,6 +495,9 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_SNAP);
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
     }
 
     TEST(test_set_snap_sides)
@@ -509,6 +522,9 @@ SUITE(WMConfigSuiteActions)
             CHECK(action.actions & ACT_SNAP);
             CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
             CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+            CHECK_EQUAL(0, action.actions & ACT_PACK);
 
             CHECK_EQUAL(action.snap, snaps[idx]);
         }
@@ -537,6 +553,9 @@ SUITE(WMConfigSuiteActions)
             CHECK_EQUAL(0, action.actions & ACT_SNAP);
             CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
             CHECK_EQUAL(0, action.actions & ACT_SETLAYER);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+            CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+            CHECK_EQUAL(0, action.actions & ACT_PACK);
         }
     }
 
@@ -554,6 +573,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK(action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
 
         CHECK_CLOSE(action.relative_x, 57.32 / 100.0, 0.001);
     }
@@ -574,6 +594,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
 
         write_config_file(*config_path,
             "[actions]\ntest-class=xpos:-15.05\n");
@@ -587,6 +608,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
     }
 
     TEST(test_y_pos)
@@ -603,6 +625,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK(action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
 
         CHECK_CLOSE(action.relative_y, 57.32 / 100.0, 0.001);
     }
@@ -623,6 +646,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
 
         write_config_file(*config_path,
             "[actions]\ntest-class=ypos:109.52\n");
@@ -636,6 +660,7 @@ SUITE(WMConfigSuiteActions)
         CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
         CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
     }
 
     TEST(test_no_autofocus)
@@ -644,8 +669,221 @@ SUITE(WMConfigSuiteActions)
             "[actions]\ntest-class=nofocus\n");
         config.load();
 
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
         CHECK_EQUAL(1, config.no_autofocus.size());
         CHECK_EQUAL(std::string("test-class"), config.no_autofocus[0]);
+    }
+
+    TEST(test_pack_nw_no_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:NW\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_NORTHWEST, action.pack_corner);
+        CHECK_EQUAL(0, action.pack_priority);
+    }
+
+    TEST(test_pack_nw_with_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:NW7\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_NORTHWEST, action.pack_corner);
+        CHECK_EQUAL(7, action.pack_priority);
+    }
+
+    TEST(test_pack_ne_no_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:NE\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_NORTHEAST, action.pack_corner);
+        CHECK_EQUAL(0, action.pack_priority);
+    }
+
+    TEST(test_pack_ne_with_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:NE7\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_NORTHEAST, action.pack_corner);
+        CHECK_EQUAL(7, action.pack_priority);
+    }
+
+
+    TEST(test_pack_sw_no_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:SW\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_SOUTHWEST, action.pack_corner);
+        CHECK_EQUAL(0, action.pack_priority);
+    }
+
+    TEST(test_pack_sw_with_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:SW7\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_SOUTHWEST, action.pack_corner);
+        CHECK_EQUAL(7, action.pack_priority);
+    }
+
+    TEST(test_pack_se_no_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:SE\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_SOUTHEAST, action.pack_corner);
+        CHECK_EQUAL(0, action.pack_priority);
+    }
+
+    TEST(test_pack_se_with_priority)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:SE7\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_SOUTHEAST, action.pack_corner);
+        CHECK_EQUAL(7, action.pack_priority);
+    }
+
+    TEST(test_pack_overwrites_pos)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=xpos:90,pack:SE7\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK(action.actions & ACT_PACK);
+
+        CHECK_EQUAL(PACK_SOUTHEAST, action.pack_corner);
+        CHECK_EQUAL(7, action.pack_priority);
+    }
+
+    TEST(test_pos_overwrites_pack)
+    {
+        write_config_file(
+            *config_path,
+            "[actions]\ntest-class=pack:SE7,xpos:57.32\n");
+        config.load();
+
+        ClassActions &action = config.classactions[
+            std::string("test-class")];
+
+        CHECK_EQUAL(0, action.actions & ACT_STICK);
+        CHECK_EQUAL(0, action.actions & ACT_SNAP);
+        CHECK_EQUAL(0, action.actions & ACT_MAXIMIZE);
+        CHECK(action.actions & ACT_MOVE_X);
+        CHECK_EQUAL(0, action.actions & ACT_MOVE_Y);
+        CHECK_EQUAL(0, action.actions & ACT_PACK);
+
+        CHECK_CLOSE(action.relative_x, 57.32 / 100.0, 0.001);
     }
 
     TEST(test_hotkey_default)
