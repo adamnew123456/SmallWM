@@ -893,6 +893,13 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
             m_changes.push(new ChangeScreen(client, m_screen[client]));
         }
     }
+
+    // Since the location of the primary screen's corners may have changed, we
+    // have to repack everything
+    repack_corner(PACK_NORTHEAST);
+    repack_corner(PACK_NORTHWEST);
+    repack_corner(PACK_SOUTHEAST);
+    repack_corner(PACK_SOUTHWEST);
 }
 
 /**
