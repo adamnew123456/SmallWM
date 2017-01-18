@@ -314,6 +314,11 @@ ClientPosScale ClientModel::get_mode(Window client)
  */
 void ClientModel::change_mode(Window client, ClientPosScale cps)
 {
+    // Packed clients are at a bit of a weird state, since they aren't movable
+    // nor resizble by the user at all
+    if (is_packed_client(client))
+        return;
+
     if (m_cps_mode[client] != cps)
     {
         m_cps_mode[client] = cps;
@@ -804,6 +809,11 @@ void ClientModel::to_relative_screen(Window client, Direction dir)
     if (!current_screen)
         return;
 
+    // Since packing is only for the main screen for now, it doesn't make
+    // sense to try to do this
+    if (is_packed_client(client))
+        return;
+
     Crt *target = NULL;
 
     switch (dir)
@@ -870,6 +880,11 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
     {
         Window client = client_location->first;
         Dimension2D &location = client_location->second;
+
+        // Although this technically *should* occur, the way that this is handled would
+        // cause the client to be moved outside of our control, and we don't want that
+        if (is_packed_client(client))
+            continue;
 
         // Keep the old screen - if the new screen is the same, we don't want
         // to send out a change notification
