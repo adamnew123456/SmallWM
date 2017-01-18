@@ -12,6 +12,7 @@ Improvements over TinyWM
 - Moving/Resizing Placeholders
 - Multiple Virtual Desktops 
 - Window Snapping
+- Window Packing
 - Class Actions
 
 Controls
@@ -120,6 +121,7 @@ For example:
     hotkey-mode=focus
     [actions]
     stalonetray=stick,layer:9,xpos:90,ypos:0
+    xclock=pack:NE1
     [keyboard]
     toggle-stick=asciitilde
     snap-top=w
@@ -165,8 +167,56 @@ The possibilities for a class action are:
 - `xpos:X` and `ypos:Y` set the relative position of the window on the screen. `X` and `Y` are decimals in the range 0 to 100,
   inclusive. For example, setting `xpos:50` puts the window's left edge in the middle of the screen (because `xpos:50` is
   equivalent to saying that the X position should be 50 percent of the screen's width).
+- `pack:CORNERPRIORITY` directs SmallWM to fix the position of a group of
+  windows, re-adjusting when they are resized. The CORNER is one of NE, SE, NW or
+  SW (indicating the upper-left, lower-left, upper-right and lower-right corners
+  respectively), and the *optional* PRIORITY is a non-negative integer (0 by default). 
+  See the **Packing** section below.
 - `nofocus` prevents SmallWM from automatically focusing windows of the given class. This is useful for windows like system trays,
   clocks, or other utility windows that you don't want to manipulate by accident.
+
+It is important to know that `xpos`/`ypos` and `pack` are mutually exclusive - whatever
+is listed last in a class's action list is what is applied. For example, `packme`
+is packed but `posme` is relative-positioned:
+    
+    [actions]
+    packme=xpos:42,ypos:42,pack:NE7
+    posme=pack:SW4,xpos:9,ypos:9
+
+Packing
+=======
+
+Packing allows SmallWM to automatically position windows, according to a very
+simple set of rules. However, when a window is packed, you lose the ability to
+manually move and resize it.
+
+The way that the packer works is that it looks at each corner of the screen
+individually. It then looks at the packed windows, and starts placing them in
+order of priority, with the lowest priority elements going closest to the
+corner. 
+
+For example, if you have 3 windows:
+
+    |  A  |
+    |B|
+    | C |
+
+With the priorities:
+
+- *A* 1
+- *B* 2
+- *C* 3
+
+And you want to pack them into the northwest corner, the result will look like
+the following; A, the lowest priority,  is first placed directly into the corner,
+with B horizontally placed on the side of A opposite the corner, and then C placed
+on the edge of B.
+
+    -------------------------+
+                 | C |B|  A  |
+
+SmallWM currently does not have a way to pack on secondary monitors (it will always
+choose the primary minitor), or a way to pack vertically.
 
 Keyboard Bindings
 =================
