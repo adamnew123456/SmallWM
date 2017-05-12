@@ -373,6 +373,12 @@ struct DestroyChange : Change
     Layer layer;
 };
 
+static std::ostream &operator<<(std::ostream &out, const DestroyChange &change)
+{
+    out << "[DestroyChange Window<" << change.window << ">]";
+    return out;
+}
+
 /**
  * Indicates that a client is still in the model, but requires special
  * because it is no longer valid (this is a kludge to handle unmapped
@@ -398,6 +404,12 @@ struct UnmapChange : Change
 
     Window window;
 };
+
+static std::ostream &operator<<(std::ostream &out, const UnmapChange &change)
+{
+    out << "[UnmapChange Window<" << change.window << ">]";
+    return out;
+}
 
 /**
  * Contains a series of changes. Changes can be pushed to the ChangeStream, and
