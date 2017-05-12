@@ -9,6 +9,8 @@
 #include "unique-multimap.h"
 
 #include <algorithm>
+#include <map>
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -83,14 +85,20 @@ public:
     bool is_client(Window);
     bool is_visible(Window);
     bool is_visible_desktop(desktop_ptr);
+    bool is_child(Window);
 
     void get_clients_of(desktop_ptr, std::vector<Window>&);
     void get_visible_clients(std::vector<Window>&);
     void get_visible_in_layer_order(std::vector<Window>&);
+    Window get_parent_of(Window);
+    void get_children_of(Window, std::vector<Window>&);
 
     void add_client(Window, InitialState, Dimension2D, Dimension2D, bool);
     void remove_client(Window);
     void unmap_client(Window);
+
+    void add_child(Window, Window);
+    void remove_child(Window, bool);
 
     void pack_client(Window, PackCorner, unsigned long);
     bool is_packed_client(Window);
@@ -194,8 +202,19 @@ private:
      */
     std::map<Window, unsigned long> m_pack_priority;
 
+    /**
+     * This maps between clients and their child windows.
+     */
+    std::map<Window, std::set<Window>*> m_children;
+
+    /**
+     * A mapping between child windows and their parents.
+     */
+    std::map<Window, Window> m_parents;
+
     /// The currently visible desktop
     UserDesktop * m_current_desktop;
+
     /// The currently focused client
     Window m_focused;
 };

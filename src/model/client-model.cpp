@@ -39,6 +39,14 @@ bool ClientModel::is_visible_desktop(desktop_ptr desktop)
 }
 
 /**
+ * Returns whether a particular window is a child of a client.
+ */
+bool ClientModel::is_child(Window child)
+{
+    return m_parents.count(child) > 0;
+}
+
+/**
  * Gets a list of all of the clients on a desktop.
  */
 void ClientModel::get_clients_of(desktop_ptr desktop,
@@ -79,6 +87,34 @@ void ClientModel::get_visible_in_layer_order(std::vector<Window> &return_clients
     UniqueMultimapSorter<Layer, Window> layer_sorter(m_layers);
     std::sort(return_clients.begin(), return_clients.end(),
             layer_sorter);
+}
+
+/**
+ * Gets the parent of a child window, or None if there is no such child.
+ */
+Window ClientModel::get_parent_of(Window child)
+{
+    if (!is_child(child))
+        return None;
+
+    return m_parents[child];
+}
+
+/**
+ * Gets the children of a client.
+ */
+void ClientModel::get_children_of(Window client,
+                                  std::vector<Window> &return_children)
+{
+    if (!is_client(client))
+        return;
+
+    for (std::set<Window>::iterator child = m_children[client]->begin();
+         child != m_children[client]->end();
+         child++)
+    {
+        return_children.push_back(*child);
+    }
 }
 
 /**
@@ -131,6 +167,8 @@ void ClientModel::add_client(Window client, InitialState state,
     }
     else
         set_autofocus(client, false);
+
+    m_children[client] = new std::set<Window>();
 }
 
 /**
@@ -145,6 +183,7 @@ void ClientModel::remove_client(Window client)
 {
     if (!is_client(client))
         return;
+
 
     // A destroyed window cannot be focused.
     unfocus_if_focused(client);
@@ -166,6 +205,18 @@ void ClientModel::remove_client(Window client)
     m_pack_corners.erase(client);
     m_pack_priority.erase(client);
 
+    std::set<Window> children(*m_children[client]);
+    for (std::set<Window>::iterator child = children.begin();
+         child != children.end();
+         child++)
+    {
+        remove_child(*child, false);
+    }
+
+
+    delete m_children[client];
+    m_children.erase(client);
+
     m_changes.push(new DestroyChange(client, desktop, layer));
 }
 
@@ -179,6 +230,49 @@ void ClientModel::unmap_client(Window client)
         return;
 
     m_changes.push(new UnmapChange(client));
+}
+
+/**
+ * Adds a new child window to the given client.
+ */
+void ClientModel::add_child(Window client, Window child)
+{
+    if (!is_client(client))
+        return;
+
+    if (is_child(child))
+        return;
+
+    m_children[client]->insert(child);
+    m_parents[child] = client;
+
+    m_changes.push(new ChildAddChange(client, child));
+
+    if (is_autofocusable(client))
+        focus(child);
+}
+
+/**
+ * Removes a child from the given client.
+ */
+void ClientModel::remove_child(Window child, bool focus_parent)
+{
+    if (!is_child(child))
+        return;
+
+    Window parent = m_parents[child];
+    m_children[parent]->erase(child);
+    m_parents.erase(child);
+
+    if (m_focused == child)
+    {
+        if (focus_parent)
+            focus(parent);
+        else
+            unfocus();
+    }
+
+    m_changes.push(new ChildRemoveChange(parent, child));
 }
 
 /**
@@ -377,9 +471,13 @@ Window ClientModel::get_next_in_focus_history()
     while (!focus_history.empty())
     {
         Window candidate = focus_history.top();
+        Window parent = candidate;
         focus_history.pop();
 
-        if (m_desktops.is_member(candidate) &&is_visible(candidate))
+        if (is_child(candidate))
+            parent = get_parent_of(candidate);
+
+        if (m_desktops.is_member(parent) && is_visible(parent))
             return candidate;
     }
 
@@ -436,10 +534,17 @@ void ClientModel::set_autofocus(Window client, bool can_autofocus)
  */
 void ClientModel::focus(Window client)
 {
-    if (!is_visible(client))
+    Window parent = client;
+    if (is_child(client))
+        parent = get_parent_of(client);
+
+    if (!is_client(parent))
         return;
 
-    if (!m_autofocus[client])
+    if (!is_visible(parent))
+        return;
+
+    if (!m_autofocus[parent])
         return;
 
     Window old_focus = m_focused;
@@ -454,7 +559,11 @@ void ClientModel::focus(Window client)
  */
 void ClientModel::force_focus(Window client)
 {
-    if (!is_visible(client))
+    Window parent = client;
+    if (is_child(client))
+        parent = get_parent_of(client);
+
+    if (!is_visible(parent))
         return;
 
     Window old_focus = m_focused;
@@ -462,7 +571,7 @@ void ClientModel::force_focus(Window client)
 
     // Since the focus history is used for automatic focusing, avoid
     // polluting it with windows that cannot be focused
-    if (m_autofocus[client])
+    if (m_autofocus[parent])
         m_current_desktop->focus_history.push(client);
 
     m_changes.push(new ChangeFocus(old_focus, client));

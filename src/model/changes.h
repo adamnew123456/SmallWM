@@ -50,6 +50,12 @@ struct Change
     virtual bool is_destroy_change() const
     { return false; }
 
+    virtual bool is_child_add_change() const
+    { return false; }
+
+    virtual bool is_child_remove_change() const
+    { return false; }
+
     virtual bool is_unmap_change() const
     { return false; }
 
@@ -408,6 +414,68 @@ struct UnmapChange : Change
 static std::ostream &operator<<(std::ostream &out, const UnmapChange &change)
 {
     out << "[UnmapChange Window<" << change.window << ">]";
+    return out;
+}
+
+/// Indicates that a child has been added to the model
+struct ChildAddChange : Change
+{
+ChildAddChange(Window client_, Window child_) :
+    client(client_), child(child_)
+    {};
+
+    bool is_child_add_change() const
+    { return true; }
+
+    virtual bool operator==(const Change &other) const
+    {
+        if (!other.is_child_add_change())
+            return false;
+
+        const ChildAddChange &cast_other =
+        dynamic_cast<const ChildAddChange&>(other);
+        return (cast_other.client == client &&
+                cast_other.child == child);
+    }
+
+    Window client, child;
+};
+
+static std::ostream &operator<<(std::ostream &out, const ChildAddChange &change)
+{
+    out << "[ChildAddChange Client<" << change.client << "> Child<" <<
+        change.child << ">]";
+    return out;
+}
+
+/// Indicates that a child has been removed from the model
+struct ChildRemoveChange : Change
+{
+ChildRemoveChange(Window client_, Window child_) :
+    client(client_), child(child_)
+    {};
+
+    bool is_child_remove_change() const
+    { return true; }
+
+    virtual bool operator==(const Change &other) const
+    {
+        if (!other.is_child_remove_change())
+            return false;
+
+        const ChildRemoveChange &cast_other =
+        dynamic_cast<const ChildRemoveChange&>(other);
+        return (cast_other.client == client &&
+                cast_other.child == child);
+    }
+
+    Window client, child;
+};
+
+static std::ostream &operator<<(std::ostream &out, const ChildRemoveChange &change)
+{
+    out << "[ChildRemoveChange Client<" << change.client << "> Child<" <<
+        change.child << ">]";
     return out;
 }
 
