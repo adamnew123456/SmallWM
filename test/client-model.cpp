@@ -82,6 +82,11 @@ SUITE(ClientModelMemberSuite)
         // Make sure that a is now listed as a client
         CHECK_EQUAL(true, model.is_client(a));
 
+        // Make sure that the client has no children by default
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(0, children.size());
+
         // Make sure that a is now focused
         CHECK_EQUAL(a, model.get_focused());
 
@@ -163,6 +168,10 @@ SUITE(ClientModelMemberSuite)
         model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), false);
 
         CHECK_EQUAL(true, model.is_client(a));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(0, children.size());
 
         CHECK(model.get_focused() != a);
 
@@ -1991,6 +2000,272 @@ SUITE(ClientModelMemberSuite)
         delete change;
 
         CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_child_add)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        changes.flush();
+
+        model.add_child(a, b);
+
+        // Make sure that the change propagates outside the model
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_child_add_change());
+        {
+            const ChildAddChange *the_change =
+                dynamic_cast<const ChildAddChange*>(change);
+            CHECK_EQUAL(ChildAddChange(a, b), *the_change);
+        }
+        delete change;
+
+        // Children of autofocusable windows should themselves be focused
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Ensure that the model changes in the expected ways
+        CHECK(model.is_child(b));
+        CHECK_EQUAL(a, model.get_parent_of(b));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(1, children.size());
+        CHECK_EQUAL(b, children[0]);
+
+        // Children still aren't actual clients, though
+        CHECK(!model.is_client(b));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_child_add_no_autofocus)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), false);
+        changes.flush();
+
+        model.add_child(a, b);
+
+        // Make sure that the change propagates outside the model
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_child_add_change());
+        {
+            const ChildAddChange *the_change =
+                dynamic_cast<const ChildAddChange*>(change);
+            CHECK_EQUAL(ChildAddChange(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Ensure that the model changes in the expected ways
+        CHECK(model.is_child(b));
+        CHECK_EQUAL(a, model.get_parent_of(b));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(1, children.size());
+        CHECK_EQUAL(b, children[0]);
+
+        // Children still aren't actual clients, though
+        CHECK(!model.is_client(b));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_remove_child_focus_parent)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.add_child(a, b);
+        changes.flush();
+
+        model.remove_child(b, true);
+
+        // Deleting the child should restore focus to the parent
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_child_remove_change());
+        {
+            const ChildRemoveChange *the_change =
+                dynamic_cast<const ChildRemoveChange*>(change);
+            CHECK_EQUAL(ChildRemoveChange(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Ensure that the model changes in the expected ways
+        CHECK(!model.is_child(b));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(0, children.size());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_remove_child_unfocus)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.add_child(a, b);
+        changes.flush();
+
+        model.remove_child(b, false);
+
+        // Deleting the child should unfocus it
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, None), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_child_remove_change());
+        {
+            const ChildRemoveChange *the_change =
+                dynamic_cast<const ChildRemoveChange*>(change);
+            CHECK_EQUAL(ChildRemoveChange(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Ensure that the model changes in the expected ways
+        CHECK(!model.is_child(b));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(0, children.size());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_cannot_add_duplicate_children)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.add_child(a, b);
+        changes.flush();
+        model.add_child(a, b);
+
+        // Duplicate children shouldn't trigger any changes
+        CHECK(!changes.has_more());
+
+        // All the standard child assumptions should still hold
+        CHECK(model.is_child(b));
+        CHECK_EQUAL(a, model.get_parent_of(b));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(1, children.size());
+        CHECK_EQUAL(b, children[0]);
+
+        CHECK(!model.is_client(b));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_cannot_add_orphans)
+    {
+        model.add_child(a, b);
+        changes.flush();
+
+        // Trying to add a child for a non-existent parent should do nothing
+        CHECK(!changes.has_more());
+        CHECK(!model.is_child(b));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_cannot_adopt)
+    {
+        Window c = 42;
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.add_child(a, c);
+        changes.flush();
+        model.add_child(b, c);
+
+        // Children can't be moved between parents, so this should do nothing
+        CHECK(!changes.has_more());
+
+        // All the standard child assumptions should still hold
+        CHECK(model.is_child(c));
+        CHECK_EQUAL(a, model.get_parent_of(c));
+
+        std::vector<Window> children;
+        model.get_children_of(a, children);
+        CHECK_EQUAL(1, children.size());
+        CHECK_EQUAL(c, children[0]);
+
+        children.clear();
+        model.get_children_of(b, children);
+        CHECK_EQUAL(0, children.size());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_removing_parent_removes_children)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.add_child(a, b);
+        changes.flush();
+
+        model.remove_client(a);
+
+        // First, the child should unfocus itself when destroyed
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, None), *the_change);
+        }
+        delete change;
+
+        // Removing the child
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_child_remove_change());
+        {
+            const ChildRemoveChange *the_change =
+                dynamic_cast<const ChildRemoveChange*>(change);
+            CHECK_EQUAL(ChildRemoveChange(a, b), *the_change);
+        }
+        delete change;
+
+        // Finally, the parent should remove itself
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_destroy_change());
+        {
+            const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
+            const Desktop *desktop(new UserDesktop(0));
+            CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // The both the child and the parent should be gone now
+        CHECK(!model.is_child(b));
+        CHECK(!model.is_client(a));
     }
 }
 
