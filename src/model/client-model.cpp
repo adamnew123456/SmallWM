@@ -747,8 +747,14 @@ void ClientModel::next_desktop()
     user_desktop_ptr old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
-    if (m_focused != None && !is_visible(m_focused))
-        unfocus();
+    if (m_focused != None)
+    {
+        if (is_child(m_focused) && !is_visible(get_parent_of(m_focused)))
+            unfocus();
+
+        if (is_client(m_focused) && !is_visible(m_focused))
+            unfocus();
+    }
 
     m_changes.push(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
 }
@@ -772,8 +778,14 @@ void ClientModel::prev_desktop()
     user_desktop_ptr old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
-    if (m_focused != None && !is_visible(m_focused))
-        unfocus();
+    if (m_focused != None)
+    {
+        if (is_child(m_focused) && !is_visible(get_parent_of(m_focused)))
+            unfocus();
+
+        if (is_client(m_focused) && !is_visible(m_focused))
+            unfocus();
+    }
 
     m_changes.push(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
 }
