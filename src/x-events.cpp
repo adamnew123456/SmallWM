@@ -209,15 +209,23 @@ void XEvents::handle_buttonpress()
     // We have to test both the window and the subwindow, because different
     // events use different windows
     bool is_client = false;
+    bool is_child = false;
     if (m_clients.is_client(m_event.xbutton.window))
         is_client = true;
 
     if (m_clients.is_client(m_event.xbutton.subwindow))
         is_client = true;
 
+    if (m_clients.is_child(m_event.xbutton.window))
+        is_child = true;
+
+    if (m_clients.is_child(m_event.xbutton.subwindow))
+        is_child = true;
+
     Icon *icon = m_xmodel.find_icon_from_icon_window(m_event.xbutton.window);
 
-    if (!(is_client|| icon) && m_event.xbutton.button == LAUNCH_BUTTON
+    if (!(is_client || is_child || icon)
+            && m_event.xbutton.button == LAUNCH_BUTTON
             && m_event.xbutton.state == ACTION_MASK)
     {
         if (!fork())
@@ -273,7 +281,7 @@ void XEvents::handle_buttonpress()
         if (m_event.xbutton.button == RESIZE_BUTTON)
             m_clients.start_resizing(m_event.xbutton.subwindow);
     }
-    else if (is_client) // Any other click on a client focuses that client
+    else if (is_client || is_child) // Any other click on a client focuses that client
         m_clients.force_focus(m_event.xbutton.window);
 }
 
@@ -378,6 +386,7 @@ void XEvents::handle_motionnotify()
     Window placeholder = m_xmodel.get_move_resize_placeholder();
     if (placeholder == None)
         return;
+
     XWindowAttributes attr;
     m_xdata.get_attributes(placeholder, attr);
 
@@ -472,20 +481,28 @@ void XEvents::handle_destroynotify()
 {
     Window destroyed_window = m_event.xdestroywindow.window;
 
-    // Ensure to re-pack if we're removing something that should be
-    // packed
-    bool should_pack = false;
-    PackCorner corner;
-    if (m_clients.is_packed_client(destroyed_window))
+    if (m_clients.is_client(destroyed_window))
     {
-        should_pack = true;
-        corner = m_clients.get_pack_corner(destroyed_window);
+        // Ensure to re-pack if we're removing something that should be
+        // packed
+        bool should_pack = false;
+        PackCorner corner;
+        if (m_clients.is_packed_client(destroyed_window))
+        {
+            should_pack = true;
+            corner = m_clients.get_pack_corner(destroyed_window);
+        }
+
+        m_clients.remove_client(destroyed_window);
+
+        if (should_pack)
+            m_clients.repack_corner(corner);
     }
 
-    m_clients.remove_client(destroyed_window);
-
-    if (should_pack)
-        m_clients.repack_corner(corner);
+    if (m_clients.is_child(destroyed_window))
+    {
+        m_clients.remove_child(destroy_window, true);
+    }
 }
 
 /**
@@ -541,6 +558,14 @@ void XEvents::add_window(Window window)
     if (win_attr.override_redirect)
         return;
 
+    // If this is a child window, then register it as such
+    Window parent = m_xdata.get_transient_hint(window);
+    if (m_clients.is_client(parent))
+    {
+        m_clients.add_child(parent, window);
+        return;
+    }
+
     // This is a new, manageable client - register it with the client database.
     // This requires we know 3 things:
     //  - What the client wants, with regards to its initial state - either
@@ -567,11 +592,6 @@ void XEvents::add_window(Window window)
             Dimension2D(win_attr.x, win_attr.y),
             Dimension2D(win_attr.width, win_attr.height),
             should_focus);
-
-    // If the client is a dialog, this will be represented in the transient
-    // hint (which is None if the client is not a dialog, or not-None if it is)
-    if (m_xdata.get_transient_hint(window) != None)
-        m_clients.set_layer(window, DIALOG_LAYER);
 
     // Finally, execute the actions tied to the window's class
 

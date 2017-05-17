@@ -1,6 +1,51 @@
 #include "clientmodel-events.h"
 
 /**
+ * Maps all the windows in the given window list.
+ */
+void ClientModelEvents::map_all(std::vector<Window> &windows)
+{
+    for (std::vector<Window>::iterator win = windows.begin();
+         win != windows.end();
+         win++)
+    {
+        m_xdata.map_win(*win);
+    }
+}
+
+/**
+ * Unmaps all the windows in the given window list, and unfocuses any that might
+ * be focused.
+ */
+void ClientModelEvents::unmap_unfocus_all(std::vector<Window> &windows)
+{
+    for (std::vector<Window>::iterator win = windows.begin();
+         win != windows.end();
+         win++)
+    {
+        m_clients.unfocus_if_focused(*win);
+        m_xdata.unmap_win(*win);
+    }
+}
+
+/**
+ * Raises a client first, and then puts all its children above it.
+ */
+void ClientModelEvents::raise_family(Window client)
+{
+    std::vector<Window> children;
+    m_clients.get_children_of(*client_iter, children);
+    
+    m_xdata.raise(client);
+    for (std::vector<Window>::iterator win = children.begin();
+         win != children.end();
+         win++)
+    {
+        m_xdata.raise(*win);
+    }
+}
+
+/**
  * Handles all the currently queued change events, returning when the
  * ClientModel change list is exhausted.
  */
@@ -64,7 +109,8 @@ void ClientModelEvents::handle_focus_change()
     // First, unfocus whatever the model says is foucsed. Note that the
     // client which is being unfocused may not exist anymore.
     Window unfocused_client = change_event->prev_focus;
-    if (m_clients.is_client(unfocused_client))
+    if (m_clients.is_client(unfocused_client) ||
+        m_clients.is_child(unfocused_client))
     {
         // Since this window will possibly be focused later, capture the clicks
         // going to it so we know when it needs to be focused again
@@ -220,6 +266,9 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
+    std::vector<Window> children;
+    m_clients.get_children_of(client, children);
+
     if (new_desktop->is_user_desktop())
     {
         bool is_currently_visible = m_clients.is_visible_desktop(old_desktop);
@@ -229,11 +278,13 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
         {
             m_clients.unfocus_if_focused(client);
             m_xdata.unmap_win(client);
+            unmap_unfocus_all(children);
         }
         else if (!is_currently_visible && will_be_visible)
         {
             m_xdata.map_win(client);
             m_clients.focus(client);
+            map_all(children);
             m_should_relayer = true;
         }
         else if (!is_currently_visible && !will_be_visible)
@@ -260,18 +311,28 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
         {
             m_xdata.map_win(client);
             m_clients.focus(client);
+            map_all(children);
             m_should_relayer = true;
         }
     }
     else if (new_desktop->is_icon_desktop())
     {
         bool is_visible = m_clients.is_visible_desktop(old_desktop);
+        if (is_visible)
+            unmap_unfocus_all(children);
+
         register_new_icon(client, is_visible);
     }
     else if (new_desktop->is_moving_desktop())
+    {
+        unmap_unfocus_all(children);
         start_moving(client);
+    }
     else if (new_desktop->is_resizing_desktop())
+    {
+        unmap_unfocus_all(children);
         start_resizing(client);
+    }
 }
 
 /**
@@ -287,6 +348,9 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
+    std::vector<Window> children;
+    m_clients.get_children_of(client, children);
+
     if (new_desktop->is_user_desktop())
     {
         bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
@@ -295,15 +359,25 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
         {
             m_clients.unfocus_if_focused(client);
             m_xdata.unmap_win(client);
+            unmap_unfocus_all(children);
             m_should_relayer = true;
         }
     }
     else if (new_desktop->is_icon_desktop())
+    {
+        unmap_unfocus_all(children);
         register_new_icon(client, true);
+    }
     else if (new_desktop->is_moving_desktop())
+    {
+        unmap_unfocus_all(children);
         start_moving(client);
+    }
     else if (new_desktop->is_resizing_desktop())
+    {
+        unmap_unfocus_all(children);
         start_resizing(client);
+    }
 }
 
 /**
@@ -316,6 +390,9 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
+    std::vector<Window> children;
+    m_clients.get_children_of(client, children);
+
     if (new_desktop->is_user_desktop() || new_desktop->is_all_desktop())
     {
         // Get the relevant icon information, and destroy it
@@ -339,7 +416,7 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
             {
                 m_xdata.map_win(client);
                 m_clients.focus(client);
-                m_should_relayer = true;
+                map_all(children);
             }
             m_should_reposition_icons = true;
         }
@@ -355,6 +432,9 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
+    std::vector<Window> children;
+    m_clients.get_children_of(client, children);
+
     if (new_desktop->is_user_desktop() || new_desktop->is_all_desktop())
     {
         Window placeholder = m_xmodel.get_move_resize_placeholder();
@@ -378,6 +458,7 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
             {
                 m_xdata.map_win(client);
                 m_clients.focus(client);
+                map_all(children);
                 m_should_relayer = true;
             }
         }
@@ -394,6 +475,9 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
                         const Desktop *new_desktop,
                         Window client)
 {
+    std::vector<Window> children;
+    m_clients.get_children_of(client, children);
+
     if (new_desktop->is_user_desktop() || new_desktop->is_all_desktop())
     {
         Window placeholder = m_xmodel.get_move_resize_placeholder();
@@ -417,6 +501,7 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
             {
                 m_xdata.map_win(client);
                 m_clients.focus(client);
+                map_all(children);
                 m_should_relayer = true;
             }
         }
@@ -468,7 +553,13 @@ void ClientModelEvents::handle_current_desktop_change()
              */
             to_hide != to_make_invisible.end() && *to_hide != None;
             to_hide++)
+    {
         m_xdata.unmap_win(*to_hide);
+
+        std::vector<Window> children;
+        m_clients.get_children_of(*to_hide, children);
+        unmap_unfocus_all(children);
+    }
 
     // The new -> old set difference will produce the list of windows which
     // are on the new desktop, but not on the old - these need to be made
@@ -481,7 +572,13 @@ void ClientModelEvents::handle_current_desktop_change()
     for (std::vector<Window>::iterator to_show = to_make_visible.begin();
             to_show != to_make_visible.end() && *to_show != None;
             to_show++)
+    {
         m_xdata.map_win(*to_show);
+
+        std::vector<Window> children;
+        m_clients.get_children_of(*to_show, children);
+        map_all(children);
+    }
 
     update_focus_cycle();
 
@@ -763,16 +860,25 @@ void ClientModelEvents::do_relayer()
 
     // Figure out the currently focused client, and where it's at. We'll need
     // this information in order to place it above its peers.
-    Window focused_client = m_clients.get_focused();
+    Window focused_window = m_clients.get_focused();
+
+    // Children aren't raised in any particular order, but we need to make
+    // sure that the parent is raised if any child is
+    if (focused_window != None && m_clients.is_child(focused_window))
+        focused_window = m_clients.get_parent_of(focused_window);
+
     Layer focused_layer;
-    if (focused_client != None)
-        focused_layer = m_clients.find_layer(focused_client);
+    if (focused_window != None)
+        focused_layer = m_clients.find_layer(focused_window);
 
     for (std::vector<Window>::iterator client_iter = ordered_windows.begin();
             client_iter != ordered_windows.end();
             client_iter++)
     {
         Window current_client = *client_iter;
+        std::vector<Window> children;
+        m_clients.get_children_of(*client_iter, children);
+
         Layer current_layer = m_clients.find_layer(current_client);
 
         // We have to check if we're at the point where we can put up the
@@ -780,24 +886,24 @@ void ClientModelEvents::do_relayer()
         // focused window is on. We want to put the focused window above all of
         // its peers, so before putting up the first client on the next layer,
         // put up the focused window
-        if (focused_client != None &&
+        if (focused_window != None &&
             current_layer > focused_layer)
         {
-            m_xdata.raise(focused_client);
+            raise_family(focused_window);
 
             // Make sure to erase the focused client, so that we don't raise
             // it more than once
-            focused_client = None;
+            focused_window = None;
         }
 
-        if (current_client != focused_client)
-            m_xdata.raise(current_client);
+        if (current_client != focused_window)
+            raise_family(current_client);
     }
 
     // If we haven't cleared the focused window, then we need to raise it before
     // moving on
     if (focused_client != None)
-        m_xdata.raise(focused_client);
+        raise_family(focused_client);
 
     // Now, raise all the icons since they should always be above all other
     // windows so they aren't obscured
@@ -889,6 +995,16 @@ void ClientModelEvents::update_focus_cycle()
         if (!should_erase)
         {
             focus_windows.push_back(*client_iter);
+
+            std::vector<Window> children;
+            m_clients.get_children_of(*client_iter);
+
+            for (std::vector<Window>::iterator child = children.begin();
+                 child != children.end();
+                 child++)
+            {
+                focus_windows.push_back(*child);
+            }
         }
     }
 
@@ -958,6 +1074,10 @@ void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosSca
 void ClientModelEvents::handle_unmap_change()
 {
     UnmapChange const *change_event = dynamic_cast<UnmapChange const*>(m_change);
+
+    std::vector<Window> children;
+    m_clients.get_children_of(change_event->window, children);
+    unmap_unfocus_all(children):
 
     // Ensure that the window doesn't steal the focus away from SmallWM
     m_clients.unfocus_if_focused(change_event->window);

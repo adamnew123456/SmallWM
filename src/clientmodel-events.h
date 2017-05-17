@@ -67,6 +67,10 @@ private:
     void handle_client_change_from_resizing_desktop(const Desktop*, const Desktop*,
                                                 Window);
 
+    void map_all(std::vector<Window>&);
+    void unmap_unfocus_all(std::vector<Window>&);
+    void raise_family(Window);
+
     /// The stream of changes to read from
     ChangeStream &m_changes;
 
