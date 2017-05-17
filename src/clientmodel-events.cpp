@@ -339,7 +339,7 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
             {
                 m_xdata.map_win(client);
                 m_clients.focus(client);
-                m_should_relayer = 1;
+                m_should_relayer = true;
             }
             m_should_reposition_icons = true;
         }
@@ -378,7 +378,7 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
             {
                 m_xdata.map_win(client);
                 m_clients.focus(client);
-                m_should_relayer = 1;
+                m_should_relayer = true;
             }
         }
     }
@@ -417,7 +417,7 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
             {
                 m_xdata.map_win(client);
                 m_clients.focus(client);
-                m_should_relayer = 1;
+                m_should_relayer = true;
             }
         }
     }
