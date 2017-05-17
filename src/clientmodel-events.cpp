@@ -234,6 +234,7 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
         {
             m_xdata.map_win(client);
             m_clients.focus(client);
+            m_should_relayer = true;
         }
         else if (!is_currently_visible && !will_be_visible)
         {
@@ -259,6 +260,7 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
         {
             m_xdata.map_win(client);
             m_clients.focus(client);
+            m_should_relayer = true;
         }
     }
     else if (new_desktop->is_icon_desktop())
@@ -293,6 +295,7 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
         {
             m_clients.unfocus_if_focused(client);
             m_xdata.unmap_win(client);
+            m_should_relayer = true;
         }
     }
     else if (new_desktop->is_icon_desktop())
