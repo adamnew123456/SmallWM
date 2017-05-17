@@ -34,7 +34,7 @@ void ClientModelEvents::unmap_unfocus_all(std::vector<Window> &windows)
 void ClientModelEvents::raise_family(Window client)
 {
     std::vector<Window> children;
-    m_clients.get_children_of(*client_iter, children);
+    m_clients.get_children_of(client, children);
     
     m_xdata.raise(client);
     for (std::vector<Window>::iterator win = children.begin();
@@ -902,8 +902,8 @@ void ClientModelEvents::do_relayer()
 
     // If we haven't cleared the focused window, then we need to raise it before
     // moving on
-    if (focused_client != None)
-        raise_family(focused_client);
+    if (focused_window != None)
+        raise_family(focused_window);
 
     // Now, raise all the icons since they should always be above all other
     // windows so they aren't obscured
@@ -997,7 +997,7 @@ void ClientModelEvents::update_focus_cycle()
             focus_windows.push_back(*client_iter);
 
             std::vector<Window> children;
-            m_clients.get_children_of(*client_iter);
+            m_clients.get_children_of(*client_iter, children);
 
             for (std::vector<Window>::iterator child = children.begin();
                  child != children.end();
@@ -1077,7 +1077,7 @@ void ClientModelEvents::handle_unmap_change()
 
     std::vector<Window> children;
     m_clients.get_children_of(change_event->window, children);
-    unmap_unfocus_all(children):
+    unmap_unfocus_all(children);
 
     // Ensure that the window doesn't steal the focus away from SmallWM
     m_clients.unfocus_if_focused(change_event->window);

@@ -500,9 +500,7 @@ void XEvents::handle_destroynotify()
     }
 
     if (m_clients.is_child(destroyed_window))
-    {
-        m_clients.remove_child(destroy_window, true);
-    }
+        m_clients.remove_child(destroyed_window, true);
 }
 
 /**
