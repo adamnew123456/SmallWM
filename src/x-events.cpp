@@ -206,21 +206,37 @@ void XEvents::handle_keypress()
  */
 void XEvents::handle_buttonpress()
 {
-    // We have to test both the window and the subwindow, because different
-    // events use different windows
+    // We have to test both the window and the subwindow, because we might want
+    // to route to the parent or the child, depending upon the event
     bool is_client = false;
     bool is_child = false;
+
+    Window parent = None;
+    Window child = None;
+
     if (m_clients.is_client(m_event.xbutton.window))
+    {
         is_client = true;
+        parent = m_event.xbutton.window;
+    }
 
     if (m_clients.is_client(m_event.xbutton.subwindow))
+    {
         is_client = true;
+        parent = m_event.xbutton.subwindow;
+    }
 
     if (m_clients.is_child(m_event.xbutton.window))
+    {
         is_child = true;
+        child = m_event.xbutton.window;
+    }
 
     if (m_clients.is_child(m_event.xbutton.subwindow))
+    {
         is_child = true;
+        child = m_event.xbutton.subwindow;
+    }
 
     Icon *icon = m_xmodel.find_icon_from_icon_window(m_event.xbutton.window);
 
@@ -270,19 +286,21 @@ void XEvents::handle_buttonpress()
 
         // If we're a packed client, then the user can't move/resize because it
         // would be undone by the packer later
-        if (m_clients.is_packed_client(m_event.xbutton.subwindow))
+        if (m_clients.is_packed_client(parent))
             return;
 
         // A left-click, with the action modifier, start resizing
         if (m_event.xbutton.button == MOVE_BUTTON)
-            m_clients.start_moving(m_event.xbutton.subwindow);
+            m_clients.start_moving(parent);
 
         // A right-click, with the action modifier, start resizing
         if (m_event.xbutton.button == RESIZE_BUTTON)
-            m_clients.start_resizing(m_event.xbutton.subwindow);
+            m_clients.start_resizing(parent);
     }
-    else if (is_client || is_child) // Any other click on a client focuses that client
-        m_clients.force_focus(m_event.xbutton.window);
+    else if (is_child) // Any other click on a client focuses that child or client
+        m_clients.force_focus(child);
+    else if (is_client)
+        m_clients.force_focus(parent);
 }
 
 /**
