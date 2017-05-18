@@ -678,7 +678,7 @@ void ClientModel::toggle_stick(Window client)
     if (old_desktop->is_user_desktop())
         move_to_desktop(client, ALL_DESKTOPS, false);
     else
-        move_to_desktop(client, m_current_desktop, true);
+        move_to_desktop(client, m_current_desktop, false);
 }
 
 /**
@@ -1042,7 +1042,7 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
  * Moves a client between two desktops and fires the resulting event.
  */
 void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
-        bool unfocus)
+        bool should_unfocus)
 {
     desktop_ptr old_desktop = m_desktops.get_category_of(client);
     if (*old_desktop == *new_desktop)
@@ -1050,8 +1050,17 @@ void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
 
     m_desktops.move_member(client, new_desktop);
 
-    if (unfocus && !is_visible(client))
-        unfocus_if_focused(client);
+    if (should_unfocus)
+    {
+        if (m_focused == client)
+        {
+            unfocus();
+        }
+        else if (is_child(m_focused) && get_parent_of(m_focused) == client)
+        {
+            unfocus();
+        }
+    }
 
     m_changes.push(new ChangeClientDesktop(client, old_desktop, new_desktop));
 }

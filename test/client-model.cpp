@@ -217,8 +217,13 @@ SUITE(ClientModelMemberSuite)
 
     TEST_FIXTURE(ClientModelFixture, test_visibility)
     {
-        // Add a new client and ensure that it is present
+        // Add a new client, and ensure that it is present
         model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
+
+        // The child goes along for the ride - we don't check anything about it,
+        // we just want to make sure nothing explodes when we do all of the following
+        // things
+        model.add_child(a, b);
 
         // Make sure that the client is visible by default
         CHECK(model.is_visible(a));
@@ -627,6 +632,44 @@ SUITE(ClientModelMemberSuite)
         CHECK(!changes.has_more());
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_client_desktop_change_child_loses_focus)
+    {
+        model.add_client(a, IS_VISIBLE,
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
+        model.add_child(a, b);
+
+        CHECK_EQUAL(b, model.get_focused());
+        changes.flush();
+
+        // First, move the client ahead and make sure it changes accordingly
+        model.client_next_desktop(a);
+
+        // The child should lose the focus, since it will not be visible soon
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, None), *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_client_desktop_change());
+        {
+            const ChangeClientDesktop *the_change =
+                dynamic_cast<const ChangeClientDesktop*>(change);
+            CHECK_EQUAL(ChangeClientDesktop(a, model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
     TEST_FIXTURE(ClientModelFixture, test_bad_client_desktop_change)
     {
         model.add_client(a, IS_VISIBLE,
@@ -773,6 +816,46 @@ SUITE(ClientModelMemberSuite)
                 dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[max_desktops - 1],
                 model.USER_DESKTOPS[0]), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_desktop_change_child_loses_focus)
+    {
+        model.add_client(a, IS_VISIBLE,
+            Dimension2D(1, 1), Dimension2D(1, 1), true);
+        model.add_child(a, b);
+
+        CHECK_EQUAL(b, model.get_focused());
+        changes.flush();
+
+        model.next_desktop();
+
+        // The child should lose the focus, since it will not be visible soon
+        // The focus should also not revert to the parent, since the parent won't
+        // be either
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, None), *the_change);
+
+            CHECK_EQUAL(None, model.get_focused());
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_current_desktop_change());
+        {
+            const ChangeCurrentDesktop *the_change =
+                dynamic_cast<const ChangeCurrentDesktop*>(change);
+            CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[0], model.USER_DESKTOPS[1]),
+                *the_change);
         }
         delete change;
 
