@@ -230,8 +230,6 @@ void ClientModelEvents::handle_client_desktop_change()
 void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desktop,
                                                          Window client)
 {
-    m_xdata.set_border_width(client, m_config.border_width);
-
     if (new_desktop->is_user_desktop())
     {
         bool will_be_visible = m_clients.is_visible_desktop(new_desktop);

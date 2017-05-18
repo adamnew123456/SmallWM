@@ -574,6 +574,9 @@ void XEvents::add_window(Window window)
     if (win_attr.override_redirect)
         return;
 
+    // At this point, anything we find will have a border
+    m_xdata.set_border_width(window, m_config.border_width);
+
     // If this is a child window, then register it as such
     Window parent = m_xdata.get_transient_hint(window);
     if (m_clients.is_client(parent))
