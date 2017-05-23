@@ -2,41 +2,63 @@
 #ifndef __SMALLWM_FOCUS_CYCLE__
 #define __SMALLWM_FOCUS_CYCLE__
 
-#include <map>
-#include <vector>
+#include <algorithm>
+#include <list>
 
 #include "common.h"
-#include "logging/logging.h"
 
 /**
- * Handles focus cycling, which is the ability to use a single keyboard
- * action to focus each visible window in turn, rather than having to click
- * them.
+ * Handles a focus cycle for a group of windows, which provides an order
+ * across those windows as well as a 'cursor' that can be used to move
+ * the focus forward/backward.
  */
 class FocusCycle
 {
 public:
-    FocusCycle(Log *logger) :
-        m_logger(logger)
+    FocusCycle() :
+        m_currently_focused(false),
+        m_has_subcycle(false),
+        m_subcycle_in_use(false),
+        m_subcycle(NULL)
     {};
 
-    void update_window_list(const std::vector<Window>&);
-    void set_focus(Window);
-    Window get_next();
-    Window get_prev();
+    void add(Window);
+    void add_after(Window, Window);
+    bool remove(Window, bool);
+
+    void set_subcycle(FocusCycle&);
+    void clear_subcycle();
+
+    bool empty();
+    bool valid();
+    Window get();
+    bool set(Window);
+    void unset();
+
+    bool forward();
+    bool backward();
 
 private:
-    /// The index of the currently focused window.
-    unsigned int m_current_focus;
+    /// Whether or not the current focus is actually on any window
+    bool m_currently_focused;
 
-    /// The table of windows, and their locations in the focus cycle
-    std::map<Window, unsigned int> m_window_indexes;
+    /// The list of windows attached to this cycle
+    std::list<Window> m_windows;
 
-    /// The list of windows
-    std::vector<Window> m_focus_list;
+    /**
+     * The currently focused window - note that this might be invalid if no
+     * window is currently focused
+     */
+    std::list<Window>::iterator m_current_focus;
 
-    /// The current logger
-    Log *m_logger;
+    /// Whether or not there is a subcycle
+    bool m_has_subcycle;
+
+    /// Whether we are using our elements, or waiting on the subcycle
+    bool m_subcycle_in_use;
+
+    /// The currently attached subcycle, if any
+    FocusCycle *m_subcycle;
 };
 
 #endif

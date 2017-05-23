@@ -1,85 +1,295 @@
 #include "focus-cycle.h"
 
 /**
- * Updates the list of currently visible windows.
- *
- * @param[in] The list of currently visible windows.
+ * Adds a new window to the end of the focus cycle.
  */
-void FocusCycle::update_window_list(const std::vector<Window> &windows)
+void FocusCycle::add(Window window)
 {
-    m_focus_list.clear();
-    m_window_indexes.clear();
-
-    // Unfortunately, C++ doesn't support multiple inline declarations, unlike
-    // C99. Grumble grumble...
-    unsigned int win_idx = 0;
-    for (std::vector<Window>::const_iterator win_iter = windows.begin();
-         win_iter != windows.end();
-         win_iter++, win_idx++)
-    {
-        m_focus_list.push_back(*win_iter);
-        m_window_indexes[*win_iter] = win_idx;
-    }
-
-    m_current_focus = 0;
+    m_windows.push_back(window);
 }
 
 /**
- * Updates the currently focused window.
- *
- * @param window The window that is currently focused.
+ * Adds a new window immediately after the other window. If the other window
+ * is not present, then nothing happens.
  */
-void FocusCycle::set_focus(Window window)
+void FocusCycle::add_after(Window window, Window after)
 {
-    if (window == None)
+    std::list<Window>::iterator insert_pos = std::find(m_windows.begin(),
+                                                       m_windows.end(),
+                                                       after);
+
+    if (insert_pos == m_windows.end())
         return;
 
-    if (m_window_indexes.count(window) == 0)
-    {
-        // This window isn't actually inside the known list of windows. Since
-        // the window list needs to be updated every time it changes, this
-        // shouldn't happen.
-        m_logger->log(LOG_ERR) <<
-            "Tried to change focus to a window that FocusCycle does not know "
-            "about." << Log::endl;
-        return;
-    }
-
-    m_current_focus = m_window_indexes[window];
+    insert_pos++;
+    m_windows.insert(insert_pos, window);
 }
 
 /**
- * Finds the next window which can get the focus.
+ * Removes a window from the focus cycle.
  *
- * @return The next window, or None.
+ * If the focused window is removed, one of two things can happen:
+ * (1) If move_back is true, and the window list has at least 1 other element,
+ *     the focus will move backward.
+ * (2) Otherwise, the focus is invalidated.
+ *
+ * If the focus ends up being invalidated, then false is returned. If the focus is
+ * still valid, true is returned.
  */
-Window FocusCycle::get_next()
+bool FocusCycle::remove(Window window, bool move_back)
 {
-    if (m_focus_list.size() == 0)
-        return None;
+    if (*m_current_focus == window)
+    {
+        bool subcycle_has_windows = m_has_subcycle && !m_subcycle->empty();
 
-    if (m_current_focus == m_focus_list.size() - 1)
-        m_current_focus = 0;
+        if (move_back && (m_windows.size() > 1 || subcycle_has_windows))
+            backward();
+        else
+            m_currently_focused = false;
+    }
+
+    m_windows.remove(window);
+    return m_currently_focused;
+}
+
+/**
+ * Sets the current subcycle, if there isn't already one.
+ */
+void FocusCycle::set_subcycle(FocusCycle &subcycle)
+{
+    if (m_has_subcycle)
+        return;
+
+    m_has_subcycle = true;
+    m_subcycle_in_use = false;
+    m_subcycle = &subcycle;
+}
+
+/**
+ * Clears the current subcycle, if there is one.
+ */
+void FocusCycle::clear_subcycle()
+{
+    m_has_subcycle = false;
+    m_subcycle_in_use = false;
+}
+
+/**
+ * Checks to see if the current focus is valid.
+ */
+bool FocusCycle::valid()
+{
+    return m_currently_focused || (m_subcycle_in_use && m_subcycle->valid());
+}
+
+/**
+ * Returns true if there are no windows in this cycle (or its subcycle)
+ */
+bool FocusCycle::empty()
+{
+    bool empty = m_windows.empty();
+    if (empty && m_has_subcycle)
+        return m_subcycle->empty();
     else
+        return empty;
+}
+
+/**
+ * Retrieves the current focus, either from us or possibly the subcycle, if
+ * it is active.
+ */
+Window FocusCycle::get()
+{
+    if (m_subcycle_in_use)
+        return m_subcycle->get();
+    else
+        return *m_current_focus;
+}
+
+/**
+ * Sets the current focus to the given window (which could possibly be in a
+ * subcycle)
+ *
+ * If the window is not present then the current focus is invalidated and
+ * false is returned. Otherwise, true is returned.
+ */
+bool FocusCycle::set(Window window)
+{
+    m_current_focus = std::find(m_windows.begin(),
+                                m_windows.end(),
+                                window);
+
+    m_currently_focused = m_current_focus != m_windows.end();
+
+    if (!m_currently_focused && m_has_subcycle)
+        m_subcycle_in_use = m_subcycle->set(window);
+    else if (m_currently_focused)
+        m_subcycle_in_use = false;
+
+    return m_currently_focused || m_subcycle_in_use;
+}
+
+/**
+ * Removes the current focus.
+ */
+void FocusCycle::unset()
+{
+    m_subcycle_in_use = false;
+    m_currently_focused = false;
+}
+
+/**
+ * Moves the focus forward, which can have several different results:
+ *
+ * (1) If the current focus is invalid, then the focus is set to the
+ *     first window in the cycle.
+ * (2) If the current focus is the last window in the cycle, and:
+ *   (a) There is a subcycle: Moves the focus into the subcycle.
+ *       (i) If the subcycle wraps, and there are windows in our cycle, then
+ *           the focus moves to the first window in our cycle.
+ *       (ii) If the subcycle wraps, and there are not windows in our cycle,
+ *            then the focus stays in the subcycle after it wraps.
+ *   (b) There is not a subcycle: Moves the focus to the first window in the
+ *       cycle.
+ *
+ *  Returns true if we wrapped around to the front, or false otherwise.
+ */
+bool FocusCycle::forward()
+{
+    bool we_wrapped = false;
+
+    // If the subcycle became invalid since the last time we looked at it,
+    // then we should also reset
+    if (m_subcycle_in_use && !m_subcycle->valid())
+    {
+        we_wrapped = true;
+        m_subcycle_in_use = false;
+    }
+
+    if (m_subcycle_in_use)
+    {
+        bool subcycle_wrapped = m_subcycle->forward();
+
+        if (subcycle_wrapped && !m_windows.empty())
+        {
+            we_wrapped = true;
+            m_current_focus = m_windows.begin();
+            m_currently_focused = true;
+            m_subcycle_in_use = false;
+        }
+        else if (subcycle_wrapped)
+            we_wrapped = true;
+    }
+    else if (m_currently_focused)
+    {
         m_current_focus++;
+        if (m_current_focus == m_windows.end())
+        {
+            if (m_has_subcycle && !m_subcycle->empty())
+            {
+                m_subcycle_in_use = true;
+                m_currently_focused = false;
 
-    return m_focus_list[m_current_focus];
+                if (!m_subcycle->valid())
+                    m_subcycle->forward();
+
+            }
+            else
+            {
+                we_wrapped = true;
+                m_current_focus = m_windows.begin();
+            }
+        }
+    }
+    else if (!m_windows.empty())
+    {
+        m_currently_focused = true;
+        m_current_focus = m_windows.begin();
+    }
+    else if (m_has_subcycle && !m_subcycle->empty())
+    {
+        m_currently_focused = false;
+        m_subcycle_in_use = true;
+
+        if (!m_subcycle->valid())
+            m_subcycle->forward();
+    }
+    else
+        we_wrapped = true; // No to anything, but we did hit the end
+
+    return we_wrapped;
 }
 
 /**
- * Finds the previous window which can get the focus.
+ * Moves the focus backward. See forward() for how the focus is determined;
+ * there are several cases to consider.
  *
- * @return The previous window or none.
+ *  Returns true if we wrapped around to the back, or false otherwise.
  */
-Window FocusCycle::get_prev()
+bool FocusCycle::backward()
 {
-    if (m_focus_list.size() == 0)
-        return None;
+    bool we_wrapped = false;
 
-    if (m_current_focus == 0)
-        m_current_focus = m_focus_list.size() - 1;
-    else
+    if (m_subcycle_in_use && !m_subcycle->valid())
+    {
+        we_wrapped = true;
+        m_subcycle_in_use = false;
+    }
+
+    if (m_subcycle_in_use)
+    {
+        bool subcycle_wrapped = m_subcycle->backward();
+
+        if (subcycle_wrapped && !m_windows.empty())
+        {
+            we_wrapped = true;
+            m_current_focus = m_windows.end();
+            m_current_focus--;
+            m_currently_focused = true;
+            m_subcycle_in_use = false;
+        }
+        else if (subcycle_wrapped)
+            we_wrapped = true;
+    }
+    else if (m_currently_focused)
+    {
+        if (m_current_focus == m_windows.begin())
+        {
+            if (m_has_subcycle && !m_subcycle->empty())
+            {
+                m_subcycle_in_use = true;
+                m_currently_focused = false;
+
+                if (!m_subcycle->valid())
+                    m_subcycle->backward();
+            }
+            else
+            {
+                we_wrapped = true;
+                m_current_focus = m_windows.end();
+                m_current_focus--;
+            }
+        }
+        else
+            m_current_focus--;
+    }
+    else if (m_has_subcycle && !m_subcycle->empty())
+    {
+        m_currently_focused = false;
+        m_subcycle_in_use = true;
+
+        if (!m_subcycle->valid())
+            m_subcycle->backward();
+    }
+    else if (!m_windows.empty())
+    {
+        m_currently_focused = true;
+        m_current_focus = m_windows.end();
         m_current_focus--;
 
-    return m_focus_list[m_current_focus];
+    }
+    else
+        we_wrapped = true; // No to anything, but we did hit the end
+
+    return we_wrapped;
 }
