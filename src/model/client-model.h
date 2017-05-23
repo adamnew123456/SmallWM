@@ -158,8 +158,6 @@ protected:
 
     void to_screen_crt(Window, Crt*);
 
-    Window find_focus_after_move();
-
 private:
     // The screen manager, used to map positions to screens
     CrtManager &m_crt_manager;
