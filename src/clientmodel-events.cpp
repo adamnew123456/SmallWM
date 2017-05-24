@@ -3,10 +3,10 @@
 /**
  * Maps all the windows in the given window list.
  */
-void ClientModelEvents::map_all(std::vector<Window> &windows)
+void ClientModelEvents::map_all(const std::vector<Window> &windows)
 {
-    for (std::vector<Window>::iterator win = windows.begin();
-         win != windows.end();
+    for (std::vector<Window>::const_iterator win = windows.cbegin();
+         win != windows.cend();
          win++)
     {
         m_xdata.map_win(*win);
@@ -17,10 +17,10 @@ void ClientModelEvents::map_all(std::vector<Window> &windows)
  * Unmaps all the windows in the given window list, and unfocuses any that might
  * be focused.
  */
-void ClientModelEvents::unmap_unfocus_all(std::vector<Window> &windows)
+void ClientModelEvents::unmap_unfocus_all(const std::vector<Window> &windows)
 {
-    for (std::vector<Window>::iterator win = windows.begin();
-         win != windows.end();
+    for (std::vector<Window>::const_iterator win = windows.cbegin();
+         win != windows.cend();
          win++)
     {
         m_clients.unfocus_if_focused(*win);
@@ -35,7 +35,7 @@ void ClientModelEvents::raise_family(Window client)
 {
     std::vector<Window> children;
     m_clients.get_children_of(client, children);
-    
+
     m_xdata.raise(client);
     for (std::vector<Window>::iterator win = children.begin();
          win != children.end();
@@ -104,7 +104,7 @@ void ClientModelEvents::handle_layer_change()
  */
 void ClientModelEvents::handle_focus_change()
 {
-    ChangeFocus const *change_event = dynamic_cast<ChangeFocus const*>(m_change);
+    const ChangeFocus *change_event = dynamic_cast<const ChangeFocus*>(m_change);
 
     // First, unfocus whatever the model says is foucsed. Note that the
     // client which is being unfocused may not exist anymore.
@@ -178,11 +178,10 @@ void ClientModelEvents::handle_focus_change()
  */
 void ClientModelEvents::handle_client_desktop_change()
 {
-    ChangeClientDesktop const *change =
-        dynamic_cast<ChangeClientDesktop const*>(m_change);
+    const ChangeClientDesktop *change = dynamic_cast<const ChangeClientDesktop*>(m_change);
 
-    const Desktop *old_desktop = change->prev_desktop;
-    const Desktop *new_desktop = change->next_desktop;
+    Desktop *old_desktop = change->prev_desktop;
+    Desktop *new_desktop = change->next_desktop;
     Window client = change->window;
 
     // The previous desktop can be NULL if this client has been freshly mapped
@@ -215,8 +214,7 @@ void ClientModelEvents::handle_client_desktop_change()
  * In this state, the only possibilities are either a UserDesktop or an
  * IconDesktop if the window starts out minimized.
  */
-void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desktop,
-                                                         Window client)
+void ClientModelEvents::handle_new_client_desktop_change(Desktop *new_desktop, Window client)
 {
     if (new_desktop->is_user_desktop())
     {
@@ -248,8 +246,8 @@ void ClientModelEvents::handle_new_client_desktop_change(const Desktop *new_desk
  * since user desktops are the starting point for every window.
  */
 void ClientModelEvents::handle_client_change_from_user_desktop(
-                        const Desktop *old_desktop,
-                        const Desktop *new_desktop,
+                        Desktop *old_desktop,
+                        Desktop *new_desktop,
                         Window client)
 {
     std::vector<Window> children;
@@ -330,8 +328,8 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
  * desktop as well.
  */
 void ClientModelEvents::handle_client_change_from_all_desktop(
-                        const Desktop *old_desktop,
-                        const Desktop *new_desktop,
+                        Desktop *old_desktop,
+                        Desktop *new_desktop,
                         Window client)
 {
     std::vector<Window> children;
@@ -372,8 +370,8 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
  * is a user desktop.
  */
 void ClientModelEvents::handle_client_change_from_icon_desktop(
-                        const Desktop *old_desktop,
-                        const Desktop *new_desktop,
+                        Desktop *old_desktop,
+                        Desktop *new_desktop,
                         Window client)
 {
     std::vector<Window> children;
@@ -414,8 +412,8 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
  * of desktop. The only supported target desktop is a user desktop.
  */
 void ClientModelEvents::handle_client_change_from_moving_desktop(
-                        const Desktop *old_desktop,
-                        const Desktop *new_desktop,
+                        Desktop *old_desktop,
+                        Desktop *new_desktop,
                         Window client)
 {
     std::vector<Window> children;
@@ -457,8 +455,8 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
  * user desktops are supported targets).
  */
 void ClientModelEvents::handle_client_change_from_resizing_desktop(
-                        const Desktop *old_desktop,
-                        const Desktop *new_desktop,
+                        Desktop *old_desktop,
+                        Desktop *new_desktop,
                         Window client)
 {
     std::vector<Window> children;
@@ -501,8 +499,7 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
  */
 void ClientModelEvents::handle_current_desktop_change()
 {
-    ChangeCurrentDesktop const *change =
-        dynamic_cast<ChangeCurrentDesktop const*>(m_change);
+    const ChangeCurrentDesktop *change = dynamic_cast<const ChangeCurrentDesktop*>(m_change);
 
     std::vector<Window> old_desktop_list;
     std::vector<Window> new_desktop_list;
@@ -577,11 +574,10 @@ void ClientModelEvents::handle_current_desktop_change()
  */
 void ClientModelEvents::handle_screen_change()
 {
-    ChangeScreen const *change =
-        dynamic_cast<ChangeScreen const*>(m_change);
+    const ChangeScreen *change = dynamic_cast<const ChangeScreen*>(m_change);
 
     Window client = change->window;
-    Box &box = change->bounds;
+    const Box &box = change->bounds;
 
     // If the window went to an invalid screen, then there's nothing we can do
     if (box == Box(-1, -1, 0, 0))
@@ -630,8 +626,7 @@ void ClientModelEvents::handle_screen_change()
  */
 void ClientModelEvents::handle_mode_change()
 {
-    ChangeCPSMode const *change =
-        dynamic_cast<ChangeCPSMode const*>(m_change);
+    const ChangeCPSMode *change = dynamic_cast<const ChangeCPSMode*>(m_change);
 
     // Floating doesn't impose any position or size requirements on the window
     if (change->mode == CPS_FLOATING)
@@ -645,8 +640,7 @@ void ClientModelEvents::handle_mode_change()
  */
 void ClientModelEvents::handle_location_change()
 {
-    ChangeLocation const *change =
-        dynamic_cast<ChangeLocation const*>(m_change);
+    const ChangeLocation *change = dynamic_cast<const ChangeLocation*>(m_change);
 
     m_xdata.move_window(change->window, change->x, change->y);
 }
@@ -656,8 +650,7 @@ void ClientModelEvents::handle_location_change()
  */
 void ClientModelEvents::handle_size_change()
 {
-    ChangeSize const *change =
-        dynamic_cast<ChangeSize const*>(m_change);
+    const ChangeSize *change = dynamic_cast<const ChangeSize *>(m_change);
 
     m_xdata.resize_window(change->window, change->w, change->h);
 }
@@ -671,10 +664,9 @@ void ClientModelEvents::handle_size_change()
  */
 void ClientModelEvents::handle_destroy_change()
 {
-    DestroyChange const *change =
-        dynamic_cast<DestroyChange const*>(m_change);
+    const DestroyChange *change = dynamic_cast<const DestroyChange*>(m_change);
     Window destroyed_window = change->window;
-    const Desktop *old_desktop = change->desktop;
+    Desktop *old_desktop = change->desktop;
 
     if (old_desktop->is_icon_desktop() || old_desktop->is_moving_desktop() ||
         old_desktop->is_resizing_desktop())
@@ -902,7 +894,7 @@ void ClientModelEvents::reposition_icons()
 
     const Dimension icon_width = m_config.icon_width,
                     icon_height = m_config.icon_height;
-    Box &screen = m_clients.get_root_screen();
+    const Box &screen = m_clients.get_root_screen();
 
     std::vector<Icon*> icon_list;
     m_xmodel.get_icons(icon_list);
@@ -926,7 +918,7 @@ void ClientModelEvents::reposition_icons()
  */
 void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosScale mode)
 {
-    Box &screen = m_clients.get_screen(client);
+    const Box &screen = m_clients.get_screen(client);
 
     int left_x = screen.x;
     int right_x = left_x + screen.width;
@@ -983,7 +975,7 @@ void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosSca
  */
 void ClientModelEvents::handle_unmap_change()
 {
-    UnmapChange const *change_event = dynamic_cast<UnmapChange const*>(m_change);
+    const UnmapChange *change_event = dynamic_cast<const UnmapChange*>(m_change);
 
     std::vector<Window> children;
     m_clients.get_children_of(change_event->window, children);

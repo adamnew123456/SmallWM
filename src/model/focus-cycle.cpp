@@ -77,7 +77,7 @@ void FocusCycle::clear_subcycle()
 /**
  * Checks to see if the current focus is valid.
  */
-bool FocusCycle::valid()
+bool FocusCycle::valid() const
 {
     return m_currently_focused || (m_subcycle_in_use && m_subcycle->valid());
 }
@@ -85,7 +85,7 @@ bool FocusCycle::valid()
 /**
  * Returns true if there are no windows in this cycle (or its subcycle)
  */
-bool FocusCycle::empty()
+bool FocusCycle::empty() const
 {
     bool empty = m_windows.empty();
     if (empty && m_has_subcycle)
@@ -98,7 +98,7 @@ bool FocusCycle::empty()
  * Retrieves the current focus, either from us or possibly the subcycle, if
  * it is active.
  */
-Window FocusCycle::get()
+Window FocusCycle::get() const
 {
     if (m_subcycle_in_use)
         return m_subcycle->get();

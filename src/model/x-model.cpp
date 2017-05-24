@@ -29,17 +29,17 @@ void XModel::unregister_icon(Icon *icon)
 /**
  * Gets the icon from the client window the icon is hiding.
  */
-Icon* XModel::find_icon_from_client(Window client)
+Icon* XModel::find_icon_from_client(Window client) const
 {
-    return m_clients_to_icons[client];
+    return m_clients_to_icons.find(client)->second;
 }
 
 /**
  * Gets the icon from the icon window which is being shown.
  */
-Icon* XModel::find_icon_from_icon_window(Window icon_win)
+Icon* XModel::find_icon_from_icon_window(Window icon_win) const
 {
-    return m_icon_windows_to_icons[icon_win];
+    return m_icon_windows_to_icons.find(icon_win)->second;
 }
 
 /**
@@ -115,7 +115,7 @@ Dimension2D XModel::update_pointer(Dimension x, Dimension y)
  *
  * @return The placeholder, or None if no window is being moved/resized.
  */
-Window XModel::get_move_resize_placeholder()
+Window XModel::get_move_resize_placeholder() const
 {
     if (!m_moveresize)
         return None;
@@ -128,7 +128,7 @@ Window XModel::get_move_resize_placeholder()
  *
  * @return The client, or None if no window is being moved/resized.
  */
-Window XModel::get_move_resize_client()
+Window XModel::get_move_resize_client() const
 {
     if (!m_moveresize)
         return None;
@@ -139,7 +139,7 @@ Window XModel::get_move_resize_client()
 /**
  * Gets the current move/resize state.
  */
-MoveResizeState XModel::get_move_resize_state()
+MoveResizeState XModel::get_move_resize_state() const
 {
     if (!m_moveresize)
         return MR_INVALID;

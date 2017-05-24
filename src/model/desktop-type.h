@@ -30,7 +30,7 @@ const unsigned long long DESKTOP_SORT_KEY = 1,
  */
 struct Desktop
 {
-    Desktop(unsigned long long _sort_key) : sort_key(_sort_key)
+    Desktop(const unsigned long long _sort_key) : sort_key(_sort_key)
     {};
 
     Desktop() : sort_key(DESKTOP_SORT_KEY)
@@ -60,7 +60,7 @@ struct Desktop
     bool operator==(const Desktop &other) const
     { return sort_key == other.sort_key; }
 
-    unsigned long long sort_key;
+    const unsigned long long sort_key;
 };
 
 /**
@@ -72,14 +72,14 @@ struct Desktop
  */
 struct UserDesktop : public Desktop
 {
-    UserDesktop(unsigned long long _desktop) :
+    UserDesktop(const unsigned long long _desktop) :
         desktop(_desktop), Desktop(_desktop + USER_DESKTOP_SORT_KEY)
     {};
 
     bool is_user_desktop() const
     { return true; }
 
-    unsigned long long desktop;
+    const unsigned long long desktop;
     FocusCycle focus_cycle;
 };
 

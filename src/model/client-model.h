@@ -25,25 +25,20 @@ enum InitialState
  *
  * This is intended to be totally divorced from Xlib, and is meant to do
  * transformations of data relating to clients and validations of that data.
- *
- * Note that the type of the client doesn't matter, so the user is allowed to
- * fill that in via a template.
  */
 class ClientModel
 {
 private:
-    typedef Desktop const *desktop_ptr;
-    typedef UserDesktop const *user_desktop_ptr;
     typedef Change const * change_ptr;
 
 public:
-    desktop_ptr ALL_DESKTOPS;
-    desktop_ptr ICON_DESKTOP;
-    desktop_ptr MOVING_DESKTOP;
-    desktop_ptr RESIZING_DESKTOP;
+    Desktop* ALL_DESKTOPS;
+    Desktop* ICON_DESKTOP;
+    Desktop* MOVING_DESKTOP;
+    Desktop* RESIZING_DESKTOP;
     std::vector<UserDesktop*> USER_DESKTOPS;
 
-    typedef UniqueMultimap<desktop_ptr,Window>::member_iter client_iter;
+    typedef UniqueMultimap<Desktop*,Window>::member_iter client_iter;
 
     /**
      * Initializes all of the categories in the maps
@@ -86,10 +81,10 @@ public:
 
     bool is_client(Window);
     bool is_visible(Window);
-    bool is_visible_desktop(desktop_ptr);
+    bool is_visible_desktop(Desktop*);
     bool is_child(Window);
 
-    void get_clients_of(desktop_ptr, std::vector<Window>&);
+    void get_clients_of(Desktop*, std::vector<Window>&);
     void get_visible_clients(std::vector<Window>&);
     void get_visible_in_layer_order(std::vector<Window>&);
     Window get_parent_of(Window);
@@ -126,7 +121,7 @@ public:
     void unfocus();
     void unfocus_if_focused(Window);
 
-    desktop_ptr find_desktop(Window);
+    Desktop* find_desktop(Window);
     Layer find_layer(Window);
 
     void up_layer(Window);
@@ -148,15 +143,15 @@ public:
     void start_resizing(Window);
     void stop_resizing(Window, Dimension2D);
 
-    Box &get_root_screen();
-    Box &get_screen(Window);
+    const Box &get_root_screen() const;
+    const Box &get_screen(Window) const;
     void to_relative_screen(Window, Direction);
     void to_screen_box(Window, Box);
 
     void update_screens(std::vector<Box>&);
 
 protected:
-    void move_to_desktop(Window, desktop_ptr, bool);
+    void move_to_desktop(Window, Desktop*, bool);
 
     void to_screen_crt(Window, Crt*);
 
@@ -173,8 +168,8 @@ private:
     unsigned long long m_max_desktops;
 
     /// A mapping between clients and their desktops
-    UniqueMultimap<desktop_ptr, Window,
-        PointerLess<const Desktop>> m_desktops;
+    UniqueMultimap<Desktop*, Window,
+        PointerLess<Desktop>> m_desktops;
     /// A mapping between clients and the layers they inhabit
     UniqueMultimap<Layer, Window> m_layers;
     /// A mapping between clients and their locations
@@ -184,7 +179,7 @@ private:
     /// A mapping between clients and their position/scale modes
     std::map<Window, ClientPosScale> m_cps_mode;
     /// A mapping between clients and their screens
-    std::map<Window, Box> m_screen;
+    std::map<Window, const Box> m_screen;
 
     /// Which clients may be auto-focused, and which may not
     std::map<Window, bool> m_autofocus;

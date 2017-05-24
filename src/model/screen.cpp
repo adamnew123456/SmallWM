@@ -4,12 +4,13 @@
 /**
  * Finds out which screen a particular coordinate inhabits.
  */
-Crt *CrtManager::screen_of_coord(Dimension x, Dimension y)
+Crt *CrtManager::screen_of_coord(Dimension x, Dimension y) const
 {
-    for (std::map<Crt*, Box>::iterator iter = m_boxes.begin();
-         iter != m_boxes.end(); iter++)
+    for (std::map<Crt*, Box>::const_iterator iter = m_boxes.cbegin();
+         iter != m_boxes.cend();
+         iter++)
     {
-        Box &value = iter->second;
+        const Box &value = iter->second;
 
         if (IN_BOUNDS(x, value.x, value.x + value.width) &&
             IN_BOUNDS(y, value.y, value.y + value.height))
@@ -22,9 +23,9 @@ Crt *CrtManager::screen_of_coord(Dimension x, Dimension y)
 /**
  * Finds the box of a particular screen.
  */
-Box &CrtManager::box_of_screen(Crt *screen)
+const Box &CrtManager::box_of_screen(Crt* screen) const
 {
-    return m_boxes[screen];
+    return m_boxes.find(screen)->second;
 }
 
 /**
@@ -37,10 +38,10 @@ Box &CrtManager::box_of_screen(Crt *screen)
 Crt *CrtManager::screen_of_box(const Box &box)
 {
     for (std::map<Crt*, Box>::iterator iter = m_boxes.begin();
-         iter != m_boxes.end(); iter++)
+         iter != m_boxes.end();
+         iter++)
     {
-        Box &value = iter->second;
-        if (value == box)
+        if (iter->second == box)
             return iter->first;
     }
 

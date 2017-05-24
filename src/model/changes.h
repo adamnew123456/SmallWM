@@ -89,8 +89,8 @@ struct ChangeLayer : Change
                 cast_other.layer == layer);
     }
 
-    Window window;
-    Layer layer;
+    const Window window;
+    const Layer layer;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeLayer &change)
@@ -120,8 +120,8 @@ struct ChangeFocus : Change
                 cast_other.next_focus == next_focus);
     }
 
-    Window prev_focus;
-    Window next_focus;
+    const Window prev_focus;
+    const Window next_focus;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
@@ -134,7 +134,7 @@ static std::ostream &operator<<(std::ostream &out, const ChangeFocus &change)
 /// Indicates a change in the desktop of a client
 struct ChangeClientDesktop : Change
 {
-    ChangeClientDesktop(Window win, const Desktop *old_desktop, const Desktop *new_desktop) :
+    ChangeClientDesktop(Window win, Desktop *old_desktop, Desktop *new_desktop) :
         window(win), prev_desktop(old_desktop), next_desktop(new_desktop)
     {};
 
@@ -173,9 +173,9 @@ struct ChangeClientDesktop : Change
                  *cast_other.next_desktop == *next_desktop));
     }
 
-    Window window;
-    const Desktop *prev_desktop;
-    const Desktop *next_desktop;
+    const Window window;
+    Desktop * const prev_desktop;
+    Desktop * const next_desktop;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &change)
@@ -188,7 +188,7 @@ static std::ostream &operator<<(std::ostream &out, const ChangeClientDesktop &ch
 /// Indicates a change in the currently visible desktop
 struct ChangeCurrentDesktop : Change
 {
-    ChangeCurrentDesktop(const Desktop *old_desktop, const Desktop *new_desktop) :
+    ChangeCurrentDesktop(Desktop * const old_desktop, Desktop * const new_desktop) :
         prev_desktop(old_desktop), next_desktop(new_desktop)
     {};
 
@@ -217,8 +217,8 @@ struct ChangeCurrentDesktop : Change
                  *cast_other.next_desktop == *next_desktop));
     }
 
-    const Desktop *prev_desktop;
-    const Desktop *next_desktop;
+    Desktop * const prev_desktop;
+    Desktop * const next_desktop;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &change)
@@ -231,7 +231,7 @@ static std::ostream &operator<<(std::ostream &out, const ChangeCurrentDesktop &c
 /// Indicates a change in the client's monitor
 struct ChangeScreen : Change
 {
-    ChangeScreen(Window win, Box &_bounds) :
+    ChangeScreen(Window win, const Box &_bounds) :
         window(win), bounds(_bounds)
     {};
 
@@ -250,8 +250,8 @@ struct ChangeScreen : Change
         return cast_other.window == window && cast_other.bounds == bounds;
     }
 
-    Window window;
-    Box &bounds;
+    const Window window;
+    const Box &bounds;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeScreen &change)
@@ -281,8 +281,8 @@ struct ChangeCPSMode : Change
         return cast_other.window == window && cast_other.mode == mode;
     }
 
-    Window window;
-    ClientPosScale mode;
+    const Window window;
+    const ClientPosScale mode;
 };
 
 /// Indicates a change in the location of a window
@@ -306,9 +306,9 @@ struct ChangeLocation : Change
                 cast_other.y == y);
     }
 
-    Window window;
-    Dimension x;
-    Dimension y;
+    const Window window;
+    const Dimension x;
+    const Dimension y;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeLocation &change)
@@ -339,9 +339,9 @@ struct ChangeSize : Change
                 cast_other.h == h);
     }
 
-    Window window;
-    Dimension w;
-    Dimension h;
+    const Window window;
+    const Dimension w;
+    const Dimension h;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChangeSize &change)
@@ -354,7 +354,7 @@ static std::ostream &operator<<(std::ostream &out, const ChangeSize &change)
 /// Indicates that a client has been removed from the model
 struct DestroyChange : Change
 {
-    DestroyChange(Window win, const Desktop *old_desktop, Layer old_layer) :
+    DestroyChange(Window win, Desktop *old_desktop, Layer old_layer) :
         window(win), desktop(old_desktop), layer(old_layer)
     {};
 
@@ -374,9 +374,9 @@ struct DestroyChange : Change
                 cast_other.layer == layer);
     }
 
-    Window window;
-    const Desktop *desktop;
-    Layer layer;
+    const Window window;
+    Desktop * const desktop;
+    const Layer layer;
 };
 
 static std::ostream &operator<<(std::ostream &out, const DestroyChange &change)
@@ -408,7 +408,7 @@ struct UnmapChange : Change
         return cast_other.window == window;
     }
 
-    Window window;
+    const Window window;
 };
 
 static std::ostream &operator<<(std::ostream &out, const UnmapChange &change)
@@ -438,7 +438,8 @@ ChildAddChange(Window client_, Window child_) :
                 cast_other.child == child);
     }
 
-    Window client, child;
+    const Window client;
+    const Window child;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChildAddChange &change)
@@ -469,7 +470,8 @@ ChildRemoveChange(Window client_, Window child_) :
                 cast_other.child == child);
     }
 
-    Window client, child;
+    const Window client;
+    const Window child;
 };
 
 static std::ostream &operator<<(std::ostream &out, const ChildRemoveChange &change)
@@ -486,7 +488,7 @@ static std::ostream &operator<<(std::ostream &out, const ChildRemoveChange &chan
 class ChangeStream
 {
 public:
-    typedef Change const * change_ptr;
+    typedef const Change* change_ptr;
     typedef std::vector<change_ptr>::iterator change_iter;
 
     bool has_more();

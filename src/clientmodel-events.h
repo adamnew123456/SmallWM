@@ -54,27 +54,22 @@ private:
     void handle_destroy_change();
     void handle_unmap_change();
 
-    void handle_new_client_desktop_change(const Desktop*, Window);
-    void handle_client_change_from_user_desktop(const Desktop*, const Desktop*,
-                                                Window);
-    void handle_client_change_from_all_desktop(const Desktop*, const Desktop*,
-                                                Window);
-    void handle_client_change_from_icon_desktop(const Desktop*, const Desktop*,
-                                                Window);
-    void handle_client_change_from_moving_desktop(const Desktop*, const Desktop*,
-                                                Window);
-    void handle_client_change_from_resizing_desktop(const Desktop*, const Desktop*,
-                                                Window);
+    void handle_new_client_desktop_change(Desktop* const, Window);
+    void handle_client_change_from_user_desktop(Desktop* const, Desktop* const, Window);
+    void handle_client_change_from_all_desktop(Desktop* const, Desktop* const, Window);
+    void handle_client_change_from_icon_desktop(Desktop* const, Desktop* const, Window);
+    void handle_client_change_from_moving_desktop(Desktop* const, Desktop* const, Window);
+    void handle_client_change_from_resizing_desktop(Desktop* const, Desktop* const, Window);
 
-    void map_all(std::vector<Window>&);
-    void unmap_unfocus_all(std::vector<Window>&);
+    void map_all(const std::vector<Window>&);
+    void unmap_unfocus_all(const std::vector<Window>&);
     void raise_family(Window);
 
     /// The stream of changes to read from
     ChangeStream &m_changes;
 
     /// The change that is currently being processed
-    Change const *m_change;
+    const Change *m_change;
 
     /// The configuration options that were given in the configuration file
     WMConfig &m_config;

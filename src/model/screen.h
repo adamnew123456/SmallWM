@@ -71,11 +71,11 @@ public:
     ~CrtManager()
     { delete m_root; }
 
-    Crt *root()
+    Crt *root() const
     { return m_root; }
 
-    Crt *screen_of_coord(Dimension, Dimension);
-    Box &box_of_screen(Crt*);
+    Crt *screen_of_coord(Dimension, Dimension) const;
+    const Box &box_of_screen(Crt*) const;
     Crt *screen_of_box(const Box &box);
 
     void rebuild_graph(std::vector<Box>&);

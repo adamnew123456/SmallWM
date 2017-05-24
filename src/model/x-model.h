@@ -68,8 +68,8 @@ public:
     void register_icon(Icon*);
     void unregister_icon(Icon*);
 
-    Icon *find_icon_from_client(Window);
-    Icon *find_icon_from_icon_window(Window);
+    Icon *find_icon_from_client(Window) const;
+    Icon *find_icon_from_icon_window(Window) const;
     void get_icons(std::vector<Icon*>&);
 
     void enter_move(Window, Window, Dimension2D);
@@ -77,9 +77,9 @@ public:
 
     Dimension2D update_pointer(Dimension, Dimension);
 
-    Window get_move_resize_placeholder();
-    Window get_move_resize_client();
-    MoveResizeState get_move_resize_state();
+    Window get_move_resize_placeholder() const;
+    Window get_move_resize_client() const;
+    MoveResizeState get_move_resize_state() const;
 
     void exit_move_resize();
 

@@ -29,9 +29,9 @@ public:
     void set_subcycle(FocusCycle&);
     void clear_subcycle();
 
-    bool empty();
-    bool valid();
-    Window get();
+    bool empty() const;
+    bool valid() const;
+    Window get() const;
     bool set(Window);
     void unset();
 

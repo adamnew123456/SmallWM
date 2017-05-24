@@ -14,7 +14,7 @@ bool ClientModel::is_client(Window client)
  */
 bool ClientModel::is_visible(Window client)
 {
-    desktop_ptr desktop_of = m_desktops.get_category_of(client);
+    Desktop* desktop_of = m_desktops.get_category_of(client);
     if (desktop_of->is_all_desktop())
         return true;
 
@@ -27,7 +27,7 @@ bool ClientModel::is_visible(Window client)
 /**
  * Returns whether a particular desktop as a whole is visible.
  */
-bool ClientModel::is_visible_desktop(desktop_ptr desktop)
+bool ClientModel::is_visible_desktop(Desktop* desktop)
 {
     if (desktop->is_all_desktop())
         return true;
@@ -49,8 +49,7 @@ bool ClientModel::is_child(Window child)
 /**
  * Gets a list of all of the clients on a desktop.
  */
-void ClientModel::get_clients_of(desktop_ptr desktop,
-    std::vector<Window> &return_clients)
+void ClientModel::get_clients_of(Desktop *desktop, std::vector<Window> &return_clients)
 {
     for (client_iter iter = m_desktops.get_members_of_begin(desktop);
             iter != m_desktops.get_members_of_end(desktop);
@@ -63,14 +62,12 @@ void ClientModel::get_clients_of(desktop_ptr desktop,
  */
 void ClientModel::get_visible_clients(std::vector<Window> &return_clients)
 {
-    for (client_iter iter =
-                m_desktops.get_members_of_begin(m_current_desktop);
+    for (client_iter iter = m_desktops.get_members_of_begin(m_current_desktop);
             iter != m_desktops.get_members_of_end(m_current_desktop);
             iter++)
         return_clients.push_back(*iter);
 
-    for (client_iter iter =
-                m_desktops.get_members_of_begin(ALL_DESKTOPS);
+    for (client_iter iter = m_desktops.get_members_of_begin(ALL_DESKTOPS);
             iter != m_desktops.get_members_of_end(ALL_DESKTOPS);
             iter++)
         return_clients.push_back(*iter);
@@ -152,12 +149,15 @@ void ClientModel::add_client(Window client, InitialState state,
 
     Crt *current_screen = m_crt_manager.screen_of_coord(DIM2D_X(location), DIM2D_Y(location));
     if (!current_screen)
-        // An invalid screen - no monitor ever contains a negative screen
-        m_screen[client] = Box(-1, -1, 0, 0);
+    {
+        // No monitor ever contains a negative screen
+        const Box invalid_box(-1, -1, 0, 0);
+        m_screen.insert(std::pair<Window, const Box>(client, invalid_box));
+    }
     else
     {
-        Box &screen_box = m_crt_manager.box_of_screen(current_screen);
-        m_screen[client] = screen_box;
+        const Box &screen_box = m_crt_manager.box_of_screen(current_screen);
+        m_screen.insert(std::pair<Window, const Box>(client, screen_box));
     }
 
     if (autofocus)
@@ -190,7 +190,7 @@ void ClientModel::remove_client(Window client)
     // keep a copy of each of the categories so we can pass it on to notify
     // that the window was destroyed (don't copy the size/location though,
     // since they will most likely be invalid, and of no use anyway)
-    const Desktop *desktop = find_desktop(client);
+    Desktop *desktop = find_desktop(client);
     Layer layer = find_layer(client);
 
     if (desktop->is_user_desktop())
@@ -222,7 +222,6 @@ void ClientModel::remove_client(Window client)
     {
         remove_child(*child, false);
     }
-
 
     delete m_children[client];
     m_children.erase(client);
@@ -353,7 +352,7 @@ void ClientModel::repack_corner(PackCorner corner)
     // the window from the current coordinate
     bool subtract_width_first, subtract_height_first;
 
-    Box &screen = get_root_screen();
+    const Box &screen = get_root_screen();
 
     switch (corner)
     {
@@ -480,9 +479,9 @@ void ClientModel::change_location(Window client, Dimension x, Dimension y)
 {
     // See whether the client should end up on a new desktop with its new
     // location
-    Box &old_desktop = m_screen[client];
+    const Box &old_desktop = m_screen[client];
     Crt *new_screen = m_crt_manager.screen_of_coord(x, y);
-    Box &new_desktop = m_crt_manager.box_of_screen(new_screen);
+    const Box &new_desktop = m_crt_manager.box_of_screen(new_screen);
 
     m_location[client] = Dimension2D(x, y);
     m_changes.push(new ChangeLocation(client, x, y));
@@ -636,12 +635,12 @@ void ClientModel::sync_focus_to_cycle()
  *
  * You should _NEVER_ free the value returned by this function.
  */
-ClientModel::desktop_ptr ClientModel::find_desktop(Window client)
+Desktop* ClientModel::find_desktop(Window client)
 {
     if (m_desktops.is_member(client))
         return m_desktops.get_category_of(client);
     else
-        return static_cast<ClientModel::desktop_ptr>(0);
+        return static_cast<Desktop*>(0);
 }
 
 /**
@@ -705,7 +704,7 @@ void ClientModel::toggle_stick(Window client)
     if (!is_visible(client))
         return;
 
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (old_desktop->is_user_desktop())
         move_to_desktop(client, ALL_DESKTOPS, false);
     else
@@ -722,7 +721,7 @@ void ClientModel::toggle_stick(Window client)
  */
 void ClientModel::client_reset_desktop(Window client)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (!old_desktop->is_user_desktop())
         return;
 
@@ -734,12 +733,11 @@ void ClientModel::client_reset_desktop(Window client)
  */
 void ClientModel::client_next_desktop(Window client)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (!old_desktop->is_user_desktop())
         return;
 
-    user_desktop_ptr user_desktop =
-        dynamic_cast<user_desktop_ptr>(old_desktop);
+    UserDesktop* user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
     unsigned long long desktop_index = user_desktop->desktop;
     desktop_index  = (desktop_index + 1) % m_max_desktops;
     move_to_desktop(client, USER_DESKTOPS[desktop_index], true);
@@ -750,12 +748,11 @@ void ClientModel::client_next_desktop(Window client)
  */
 void ClientModel::client_prev_desktop(Window client)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (!old_desktop->is_user_desktop())
         return;
 
-    user_desktop_ptr user_desktop =
-        dynamic_cast<user_desktop_ptr>(old_desktop);
+    UserDesktop* user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
     unsigned long long desktop_index = user_desktop->desktop;
     desktop_index = (desktop_index - 1 + m_max_desktops)
         % m_max_desktops;
@@ -775,7 +772,7 @@ void ClientModel::next_desktop()
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
-    user_desktop_ptr old_desktop = m_current_desktop;
+    UserDesktop* old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
     if (m_focused != None)
@@ -808,7 +805,7 @@ void ClientModel::prev_desktop()
             m_desktops.count_members_of(RESIZING_DESKTOP) > 0)
         return;
 
-    user_desktop_ptr old_desktop = m_current_desktop;
+    UserDesktop* old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
     if (m_focused != None)
@@ -830,7 +827,7 @@ void ClientModel::prev_desktop()
  */
 void ClientModel::iconify(Window client)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
 
     if (old_desktop->is_icon_desktop())
         return;
@@ -847,7 +844,7 @@ void ClientModel::iconify(Window client)
  */
 void ClientModel::deiconify(Window client)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (!old_desktop->is_icon_desktop())
         return;
 
@@ -869,7 +866,7 @@ void ClientModel::start_moving(Window client)
     if (!is_visible(client))
         return;
 
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
 
     // Only one window, at max, can be either moved or resized
     if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
@@ -886,7 +883,7 @@ void ClientModel::start_moving(Window client)
  */
 void ClientModel::stop_moving(Window client, Dimension2D location)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (!old_desktop->is_moving_desktop())
         return;
 
@@ -908,7 +905,7 @@ void ClientModel::start_resizing(Window client)
     if (!is_visible(client))
         return;
 
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
 
     // Only one window, at max, can be either moved or resized
     if (m_desktops.count_members_of(MOVING_DESKTOP) > 0 ||
@@ -925,7 +922,7 @@ void ClientModel::start_resizing(Window client)
  */
 void ClientModel::stop_resizing(Window client, Dimension2D size)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (!old_desktop->is_resizing_desktop())
         return;
 
@@ -942,7 +939,7 @@ void ClientModel::stop_resizing(Window client, Dimension2D size)
 /**
  * Gets the root screen.
  */
-Box &ClientModel::get_root_screen()
+const Box &ClientModel::get_root_screen() const
 {
     return m_crt_manager.box_of_screen(m_crt_manager.root());
 }
@@ -950,9 +947,9 @@ Box &ClientModel::get_root_screen()
 /**
  * Gets the bounding box of the screen that the client currently inhabits.
  */
-Box &ClientModel::get_screen(Window client)
+const Box &ClientModel::get_screen(Window client) const
 {
-    return m_screen[client];
+    return m_screen.find(client)->second;
 }
 
 /**
@@ -1011,12 +1008,13 @@ void ClientModel::to_screen_box(Window client, Box box)
  */
 void ClientModel::to_screen_crt(Window client, Crt* screen)
 {
-    Box &current_box = m_screen[client];
-    Box &target_box = m_crt_manager.box_of_screen(screen);
+    const Box &current_box = m_screen[client];
+    const Box &target_box = m_crt_manager.box_of_screen(screen);
 
     if (current_box != target_box)
     {
-        m_screen[client] = target_box;
+        m_screen.erase(client);
+        m_screen.insert(std::pair<Window, const Box>(client, target_box));
         m_changes.push(new ChangeScreen(client, target_box));
     }
 }
@@ -1044,8 +1042,8 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
 
         // Keep the old screen - if the new screen is the same, we don't want
         // to send out a change notification
-        Box &old_box = m_screen[client];
-        Box new_box(-1, -1, 0, 0);
+        const Box &old_box = m_screen[client];
+        Box new_box;
 
         Crt *new_screen = m_crt_manager.screen_of_coord(
             DIM2D_X(location), DIM2D_Y(location));
@@ -1055,7 +1053,8 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
 
         if (new_box != old_box)
         {
-            m_screen[client] = new_box;
+            m_screen.erase(client);
+            m_screen.insert(std::pair<Window, const Box>(client, new_box));
 
             // Why do the ref like this? Well, if it is done as a reference
             // to new_box directly, then new_box will go out of scope and
@@ -1076,10 +1075,9 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
 /**
  * Moves a client between two desktops and fires the resulting event.
  */
-void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
-        bool should_unfocus)
+void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool should_unfocus)
 {
-    desktop_ptr old_desktop = m_desktops.get_category_of(client);
+    Desktop* old_desktop = m_desktops.get_category_of(client);
     if (*old_desktop == *new_desktop)
         return;
 
