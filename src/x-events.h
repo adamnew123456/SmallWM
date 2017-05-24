@@ -5,7 +5,6 @@
 #include <algorithm>
 
 #include "model/client-model.h"
-#include "model/focus-cycle.h"
 #include "model/x-model.h"
 #include "configparse.h"
 #include "common.h"
@@ -22,9 +21,9 @@ class XEvents
 {
 public:
     XEvents(WMConfig &config, XData &xdata, ClientModel &clients,
-            XModel &xmodel, FocusCycle &focus_cycle) :
+            XModel &xmodel) :
         m_config(config), m_xdata(xdata), m_clients(clients),
-        m_xmodel(xmodel), m_focus_cycle(focus_cycle), m_done(false)
+        m_xmodel(xmodel), m_done(false)
     {
         xdata.add_hotkey_mouse(MOVE_BUTTON);
         xdata.add_hotkey_mouse(RESIZE_BUTTON);
@@ -88,9 +87,6 @@ private:
     /** The data model which stores information related to clients, but not
      * about them. */
     XModel &m_xmodel;
-
-    /// The focus cycler
-    FocusCycle &m_focus_cycle;
 
     /// The offset for all RandR generated events
     int m_randroffset;

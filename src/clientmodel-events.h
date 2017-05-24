@@ -25,10 +25,9 @@ class ClientModelEvents
 {
 public:
     ClientModelEvents(WMConfig &config, Log &logger, ChangeStream &changes,
-        XData &xdata, ClientModel &clients, XModel &xmodel,
-        FocusCycle &focus_cycle) :
+        XData &xdata, ClientModel &clients, XModel &xmodel) :
         m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-        m_changes(changes), m_logger(logger), m_focus_cycle(focus_cycle),
+        m_changes(changes), m_logger(logger), 
         m_change(0), m_should_relayer(false), m_should_reposition_icons(false)
     {};
 
@@ -92,9 +91,6 @@ private:
 
     /// The event handler's logger
     Log &m_logger;
-
-    /// The focus cycler
-    FocusCycle &m_focus_cycle;
 
     /** Whether or not to relayer the visible windows - this allows this class
      * to avoid restacking windows on every `ChangeLayer`, and instead only do

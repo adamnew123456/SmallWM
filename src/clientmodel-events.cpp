@@ -124,14 +124,7 @@ void ClientModelEvents::handle_focus_change()
         // If we can, try to salvage whatever the previously focused window was.
         // Useful for dialogs, so that way the user can avoid clicking on things
         // repeatedly after closing dialogs.
-        Window alt_focus = m_clients.get_next_in_focus_history();
-        if (alt_focus != None)
-        {
-            m_clients.focus(alt_focus);
-            return;
-        }
-        else
-            m_xdata.set_input_focus(None);
+        m_clients.cycle_focus_backward();
     }
     else
     {
@@ -139,8 +132,6 @@ void ClientModelEvents::handle_focus_change()
         // ungrabbing the mouse and setting the keyboard focus
         if (m_xdata.set_input_focus(focused_client))
         {
-            m_focus_cycle.set_focus(focused_client);
-
             m_xdata.set_border_color(focused_client, X_BLACK);
             m_xdata.ungrab_mouse(focused_client);
         }
@@ -149,7 +140,6 @@ void ClientModelEvents::handle_focus_change()
             // If we failed to actually do the focus, then we have to
             // update the client model to keep it in sync with what our idea
             // of the focus is
-            m_clients.remove_from_focus_history(focused_client);
             m_clients.unfocus();
 
             // Also, make sure to apply the grab to the window
@@ -217,8 +207,6 @@ void ClientModelEvents::handle_client_desktop_change()
         m_logger.log(LOG_WARNING) <<
             "Unanticipated switch by " << client << " from " <<
             old_desktop  << " to " << new_desktop << Log::endl;
-
-    update_focus_cycle();
 }
 
 /**
@@ -578,23 +566,10 @@ void ClientModelEvents::handle_current_desktop_change()
         map_all(children);
     }
 
-    update_focus_cycle();
-
     // Since we've made some windows visible and some others invisible, we've
     // invalidated the previous stacking order, so restack everything according
     // to what is now visible
     m_should_relayer = true;
-
-    // Also, refocus the last window focused on this desktop, if there isn't
-    // a window focused now
-    if (m_clients.get_focused() == None)
-    {
-        Window new_focus = m_clients.get_next_in_focus_history();
-        if (new_focus != None)
-        {
-            m_clients.focus(new_focus);
-        }
-    }
 }
 
 /**
@@ -732,13 +707,6 @@ void ClientModelEvents::handle_destroy_change()
             m_xmodel.exit_move_resize();
         }
     }
-
-    // Update the focus cycle to ensure it does not include this new window
-    // (Also ensure that the currently visible window stays, since most of the
-    // internal state of the focus cycle is changed when we do this)
-    update_focus_cycle();
-    m_focus_cycle.set_focus(m_clients.get_focused());
-
 }
 
 /**
@@ -954,62 +922,6 @@ void ClientModelEvents::reposition_icons()
 }
 
 /**
- * Updates the list of windows for the focus cycle.
- */
-void ClientModelEvents::update_focus_cycle()
-{
-    std::vector<Window> visible_windows;
-    std::vector<Window> focus_windows;
-
-    m_clients.get_visible_clients(visible_windows);
-
-    // Filter out any windows which are not currently mapped
-    for (std::vector<Window>::iterator client_iter = visible_windows.begin();
-         client_iter != visible_windows.end();
-         client_iter++)
-    {
-        bool should_erase = false;
-
-        if (!m_xdata.is_mapped(*client_iter))
-        {
-            should_erase = true;
-        }
-        else
-        {
-            XWindowAttributes props;
-            m_xdata.get_attributes(*client_iter, props);
-
-            // Some windows are completely off-screen, and should be ignored when
-            // figuring out which windows can be cycled
-            if (props.x + props.width < 0 || props.y + props.height < 0)
-                should_erase = true;
-
-            // Avoid putting any windows in the focus cycle which cannot be
-            // focused
-            if (!m_clients.is_autofocusable(*client_iter))
-                should_erase = true;
-        }
-
-        if (!should_erase)
-        {
-            focus_windows.push_back(*client_iter);
-
-            std::vector<Window> children;
-            m_clients.get_children_of(*client_iter, children);
-
-            for (std::vector<Window>::iterator child = children.begin();
-                 child != children.end();
-                 child++)
-            {
-                focus_windows.push_back(*child);
-            }
-        }
-    }
-
-    m_focus_cycle.update_window_list(focus_windows);
-}
-
-/**
  * Updates the location and size of a window based upon its current CPS mode.
  */
 void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosScale mode)
@@ -1076,13 +988,4 @@ void ClientModelEvents::handle_unmap_change()
     std::vector<Window> children;
     m_clients.get_children_of(change_event->window, children);
     unmap_unfocus_all(children);
-
-    // Ensure that the window doesn't steal the focus away from SmallWM
-    m_clients.unfocus_if_focused(change_event->window);
-
-    m_clients.remove_from_focus_history(change_event->window);
-
-    // Updating the focus cycle should remove the unmapped window, since the
-    // code in update_focus_cycle checks for the map state
-    update_focus_cycle();
 }

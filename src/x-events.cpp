@@ -177,18 +177,12 @@ void XEvents::handle_keypress()
 
 #undef LAYER_SET
     case CYCLE_FOCUS:
-    {
-        Window next_focused = m_focus_cycle.get_next();
-        if (next_focused != None)
-            m_clients.focus(next_focused);
-    }; break;
+        m_clients.cycle_focus_forward();
+        break;
 
     case CYCLE_FOCUS_BACK:
-    {
-        Window prev_focused = m_focus_cycle.get_prev();
-        if (prev_focused != None)
-            m_clients.focus(prev_focused);
-    }; break;
+        m_clients.cycle_focus_backward();
+        break;
 
     case EXIT_WM:
         m_done = true;
