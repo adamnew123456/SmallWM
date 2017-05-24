@@ -162,6 +162,8 @@ void ClientModel::add_client(Window client, InitialState state,
 
     if (autofocus)
     {
+        m_current_desktop->focus_cycle.add(client);
+
         set_autofocus(client, true);
         focus(client);
     }
@@ -184,16 +186,24 @@ void ClientModel::remove_client(Window client)
     if (!is_client(client))
         return;
 
-
-    // A destroyed window cannot be focused.
-    unfocus_if_focused(client);
-
     // Unregister the client from any categories it may be a member of, but
     // keep a copy of each of the categories so we can pass it on to notify
     // that the window was destroyed (don't copy the size/location though,
     // since they will most likely be invalid, and of no use anyway)
     const Desktop *desktop = find_desktop(client);
     Layer layer = find_layer(client);
+
+    if (desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(desktop);
+        user_desktop->focus_cycle.remove(client, true);
+        sync_focus_to_cycle();
+    }
+    else if (desktop->is_all_desktop())
+    {
+        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(client, true);
+        sync_focus_to_cycle();
+    }
 
     m_desktops.remove_member(client);
     m_layers.remove_member(client);
@@ -229,6 +239,19 @@ void ClientModel::unmap_client(Window client)
     if (!is_client(client))
         return;
 
+    Desktop *desktop = find_desktop(client);
+    if (desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(desktop);
+        user_desktop->focus_cycle.remove(client, true);
+        sync_focus_to_cycle();
+    }
+    else if (desktop->is_all_desktop())
+    {
+        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(client, true);
+        sync_focus_to_cycle();
+    }
+
     m_changes.push(new UnmapChange(client));
 }
 
@@ -249,7 +272,10 @@ void ClientModel::add_child(Window client, Window child)
     m_changes.push(new ChildAddChange(client, child));
 
     if (is_autofocusable(client))
+    {
+        m_current_desktop->focus_cycle.add_after(child, client);
         focus(child);
+    }
 }
 
 /**
@@ -271,6 +297,15 @@ void ClientModel::remove_child(Window child, bool focus_parent)
         else
             unfocus();
     }
+
+    Desktop *desktop = find_desktop(parent);
+    if (desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(desktop);
+        user_desktop->focus_cycle.remove(child, false);
+    }
+    else if (desktop->is_all_desktop())
+        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(child, false);
 
     m_changes.push(new ChildRemoveChange(parent, child));
 }
@@ -392,6 +427,24 @@ void ClientModel::repack_corner(PackCorner corner)
 }
 
 /**
+ * Moves the focus forward, and focuses whatever window becomes current.
+ */
+void ClientModel::cycle_focus_forward()
+{
+    m_current_desktop->focus_cycle.forward();
+    sync_focus_to_cycle();
+}
+
+/**
+ * Moves the focus backward, and focuses whatever window becomes current.
+ */
+void ClientModel::cycle_focus_backward()
+{
+    m_current_desktop->focus_cycle.forward();
+    sync_focus_to_cycle();
+}
+
+/**
  * Gets  the position/scale mode of a client.
  */
 ClientPosScale ClientModel::get_mode(Window client)
@@ -463,38 +516,6 @@ void ClientModel::update_size(Window client, Dimension width, Dimension height)
 }
 
 /**
- * Gets the next window in the current desktop's focus history, that is a visible.
- */
-Window ClientModel::get_next_in_focus_history()
-{
-    UniqueStack<Window> &focus_history = m_current_desktop->focus_history;
-    while (!focus_history.empty())
-    {
-        Window candidate = focus_history.top();
-        Window parent = candidate;
-        focus_history.pop();
-
-        if (is_child(candidate))
-            parent = get_parent_of(candidate);
-
-        if (m_desktops.is_member(parent) && is_visible(parent))
-            return candidate;
-    }
-
-    return None;
-}
-
-/**
- * Removes an element from the current desktop's focus history.
- *
- * This should be used when, for example, focusing a window fails.
- */
-bool ClientModel::remove_from_focus_history(Window client)
-{
-    return m_current_desktop->focus_history.remove(client);
-}
-
-/**
  * Gets the currently focused window.
  */
 Window ClientModel::get_focused()
@@ -550,7 +571,7 @@ void ClientModel::focus(Window client)
     Window old_focus = m_focused;
     m_focused = client;
 
-    m_current_desktop->focus_history.push(client);
+    m_current_desktop->focus_cycle.set(client);
     m_changes.push(new ChangeFocus(old_focus, client));
 }
 
@@ -569,11 +590,7 @@ void ClientModel::force_focus(Window client)
     Window old_focus = m_focused;
     m_focused = client;
 
-    // Since the focus history is used for automatic focusing, avoid
-    // polluting it with windows that cannot be focused
-    if (m_autofocus[parent])
-        m_current_desktop->focus_history.push(client);
-
+    m_current_desktop->focus_cycle.set(client);
     m_changes.push(new ChangeFocus(old_focus, client));
 }
 
@@ -586,6 +603,7 @@ void ClientModel::unfocus()
     {
         Window old_focus = m_focused;
         m_focused = None;
+        m_current_desktop->focus_cycle.unset();
         m_changes.push(new ChangeFocus(old_focus, None));
     }
 }
@@ -598,6 +616,19 @@ void ClientModel::unfocus_if_focused(Window client)
 {
     if (m_focused == client)
         unfocus();
+}
+
+/**
+ * Synchronizes the currently focused window to what the focus cycle
+ * says should be focused.
+ */
+void ClientModel::sync_focus_to_cycle()
+{
+    FocusCycle &cycle = m_current_desktop->focus_cycle;
+    if (!cycle.valid())
+        unfocus();
+    else if (cycle.get() != m_focused)
+        focus(cycle.get());
 }
 
 /**
@@ -757,6 +788,8 @@ void ClientModel::next_desktop()
     }
 
     m_changes.push(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
+
+    sync_focus_to_cycle();
 }
 
 /**
@@ -788,6 +821,8 @@ void ClientModel::prev_desktop()
     }
 
     m_changes.push(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
+
+    sync_focus_to_cycle();
 }
 
 /**
@@ -1050,6 +1085,46 @@ void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
 
     m_desktops.move_member(client, new_desktop);
 
+    if (old_desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
+        user_desktop->focus_cycle.remove(client, false);
+
+        for (std::set<Window>::iterator child = m_children[client]->begin();
+                child != m_children[client]->end();
+                child++)
+            user_desktop->focus_cycle.remove(*child, false);
+    }
+    else if (old_desktop->is_all_desktop())
+    {
+        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(client, false);
+
+        for (std::set<Window>::iterator child = m_children[client]->begin();
+                child != m_children[client]->end();
+                child++)
+            dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(*child, false);
+    }
+
+    if (new_desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
+        user_desktop->focus_cycle.add(client);
+
+        for (std::set<Window>::iterator child = m_children[client]->begin();
+                child != m_children[client]->end();
+                child++)
+            user_desktop->focus_cycle.add_after(*child, client);
+    }
+    else if (new_desktop->is_all_desktop())
+    {
+        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.add(client);
+
+        for (std::set<Window>::iterator child = m_children[client]->begin();
+                child != m_children[client]->end();
+                child++)
+            dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.add_after(*child, client);
+    }
+
     if (should_unfocus)
     {
         if (m_focused == client)
@@ -1061,6 +1136,14 @@ void ClientModel::move_to_desktop(Window client, desktop_ptr new_desktop,
             unfocus();
         }
     }
+    // Make sure that the focus is transferred properly into the new cycle
+    else if (new_desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
+        user_desktop->focus_cycle.set(client);
+    }
+    else if (new_desktop->is_all_desktop())
+        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.set(client);
 
     m_changes.push(new ChangeClientDesktop(client, old_desktop, new_desktop));
 }

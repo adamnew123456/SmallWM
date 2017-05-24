@@ -64,10 +64,12 @@ public:
         m_desktops.add_category(MOVING_DESKTOP);
         m_desktops.add_category(RESIZING_DESKTOP);
 
+        FocusCycle &all_cycle = dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle;
         for (unsigned long long desktop = 0; desktop < max_desktops;
                 desktop++)
         {
             USER_DESKTOPS.push_back(new UserDesktop(desktop));
+            USER_DESKTOPS[desktop]->focus_cycle.set_subcycle(all_cycle);
             m_desktops.add_category(USER_DESKTOPS[desktop]);
         }
 
@@ -105,15 +107,15 @@ public:
     PackCorner get_pack_corner(Window);
     void repack_corner(PackCorner);
 
+    void cycle_focus_forward();
+    void cycle_focus_backward();
+
     ClientPosScale get_mode(Window);
     void change_mode(Window, ClientPosScale);
 
     void change_location(Window, Dimension, Dimension);
     void change_size(Window, Dimension, Dimension);
     void update_size(Window, Dimension, Dimension);
-
-    Window get_next_in_focus_history();
-    bool remove_from_focus_history(Window);
 
     Window get_focused();
     bool is_autofocusable(Window);
@@ -157,6 +159,8 @@ protected:
     void move_to_desktop(Window, desktop_ptr, bool);
 
     void to_screen_crt(Window, Crt*);
+
+    void sync_focus_to_cycle();
 
 private:
     // The screen manager, used to map positions to screens

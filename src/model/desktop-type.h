@@ -4,6 +4,7 @@
 
 #include <ostream>
 
+#include "model/focus-cycle.h"
 #include "utils.h"
 
 /*
@@ -79,7 +80,7 @@ struct UserDesktop : public Desktop
     { return true; }
 
     unsigned long long desktop;
-    UniqueStack<Window> focus_history;
+    FocusCycle focus_cycle;
 };
 
 static std::ostream &operator<<(std::ostream &out, const UserDesktop &desktop)
@@ -99,6 +100,8 @@ struct AllDesktops : public Desktop
 
     bool is_all_desktop() const
     { return true; }
+
+    FocusCycle focus_cycle;
 };
 
 static std::ostream &operator<<(std::ostream &out, const AllDesktops &desktop)
