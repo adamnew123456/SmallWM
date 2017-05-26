@@ -786,11 +786,31 @@ SUITE(ClientModelMemberSuite)
         }
         delete change;
 
+        // We should focus back onto a, since it was the last foucsed window
+        // in the previous desktop
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+        }
+        delete change;
+
         CHECK(!changes.has_more());
 
         // Move the desktop back one more time and make sure that it wraps to
         // the last
         model.prev_desktop();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+        }
+        delete change;
 
         change = changes.get_next();
         CHECK(change != 0);
@@ -816,6 +836,15 @@ SUITE(ClientModelMemberSuite)
                 dynamic_cast<const ChangeCurrentDesktop*>(change);
             CHECK_EQUAL(ChangeCurrentDesktop(model.USER_DESKTOPS[max_desktops - 1],
                 model.USER_DESKTOPS[0]), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change = dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
         }
         delete change;
 
@@ -1838,6 +1867,16 @@ SUITE(ClientModelMemberSuite)
         model.unmap_client(a);
 
         const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, None), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
         CHECK(change != 0);
         CHECK(change->is_unmap_change());
         {
