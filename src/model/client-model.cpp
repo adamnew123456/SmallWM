@@ -439,7 +439,7 @@ void ClientModel::cycle_focus_forward()
  */
 void ClientModel::cycle_focus_backward()
 {
-    m_current_desktop->focus_cycle.forward();
+    m_current_desktop->focus_cycle.backward();
     sync_focus_to_cycle();
 }
 
