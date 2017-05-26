@@ -336,7 +336,12 @@ void XData::map_win(Window window)
  */
 void XData::unmap_win(Window window)
 {
+    // The unmap handler in x-events assumes that the unmap event was 
+    // triggered by the client itself, and not us. To keep that assumption
+    // intact, we can't raise any UnmapNotify events
+    disable_substructure_events();
     XUnmapWindow(m_display, window);
+    enable_substructure_events();
 }
 
 /**
