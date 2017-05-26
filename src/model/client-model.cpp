@@ -598,11 +598,27 @@ void ClientModel::force_focus(Window client)
  */
 void ClientModel::unfocus()
 {
+    unfocus(true);
+}
+
+/**
+ * Unfocuses a window if it is currently focused, possibly invalidating the
+ * focus cycle or not.
+ * 
+ * This should only be used when changing desktops, since it allows the state
+ * of the focus cycle to be kept when shifting desktops. Everything else 
+ * should use the 0-arg overload since it always invalidates the focus cycle.
+ */
+void ClientModel::unfocus(bool invalidate_cycle)
+{
     if (m_focused != None)
     {
         Window old_focus = m_focused;
         m_focused = None;
-        m_current_desktop->focus_cycle.unset();
+
+        if (invalidate_cycle)
+            m_current_desktop->focus_cycle.unset();
+
         m_changes.push(new ChangeFocus(old_focus, None));
     }
 }
@@ -775,18 +791,24 @@ void ClientModel::next_desktop()
     UserDesktop* old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
+    Window old_focus = m_focused;
     if (m_focused != None)
     {
         if (is_child(m_focused) && !is_visible(get_parent_of(m_focused)))
-            unfocus();
+            unfocus(false);
 
         if (is_client(m_focused) && !is_visible(m_focused))
-            unfocus();
+            unfocus(false);
     }
 
     m_changes.push(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
 
-    sync_focus_to_cycle();
+    // If we can still focus the window we were focused on before, then do so
+    // Otherwise, figure out the next logical window in the focus cycle
+    if (m_focused != None && m_focused == old_focus)
+        m_current_desktop->focus_cycle.set(m_focused);
+    else
+        sync_focus_to_cycle();
 }
 
 /**
@@ -808,18 +830,24 @@ void ClientModel::prev_desktop()
     UserDesktop* old_desktop = m_current_desktop;
     m_current_desktop = USER_DESKTOPS[desktop_index];
 
+    Window old_focus = m_focused;
     if (m_focused != None)
     {
         if (is_child(m_focused) && !is_visible(get_parent_of(m_focused)))
-            unfocus();
+            unfocus(false);
 
         if (is_client(m_focused) && !is_visible(m_focused))
-            unfocus();
+            unfocus(false);
     }
 
     m_changes.push(new ChangeCurrentDesktop(old_desktop, m_current_desktop));
 
-    sync_focus_to_cycle();
+    // If we can still focus the window we were focused on before, then do so
+    // Otherwise, figure out the next logical window in the focus cycle
+    if (m_focused != None && m_focused == old_focus)
+        m_current_desktop->focus_cycle.set(m_focused);
+    else if (m_current_desktop->focus_cycle.valid())
+        sync_focus_to_cycle();
 }
 
 /**

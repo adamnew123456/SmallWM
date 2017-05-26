@@ -151,6 +151,8 @@ public:
     void update_screens(std::vector<Box>&);
 
 protected:
+    void unfocus(bool);
+
     void move_to_desktop(Window, Desktop*, bool);
 
     void to_screen_crt(Window, Crt*);
