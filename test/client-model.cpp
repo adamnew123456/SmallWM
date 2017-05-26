@@ -99,7 +99,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(change);
-            const Desktop *desktop(new UserDesktop(0));
+            Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(ChangeClientDesktop(a, 0, desktop), *the_change);
         }
         delete change;
@@ -149,7 +149,7 @@ SUITE(ClientModelMemberSuite)
         CHECK(change->is_destroy_change());
         {
             const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
-            const Desktop *desktop(new UserDesktop(0));
+            Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
         }
 
@@ -182,7 +182,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeClientDesktop *the_change =
                 dynamic_cast<const ChangeClientDesktop*>(change);
-            const Desktop *desktop(new UserDesktop(0));
+            Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(ChangeClientDesktop(a, 0, desktop), *the_change);
         }
         delete change;
@@ -206,7 +206,7 @@ SUITE(ClientModelMemberSuite)
         CHECK(change->is_destroy_change());
         {
             const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
-            const Desktop *desktop(new UserDesktop(0));
+            Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
         }
 
@@ -1800,7 +1800,7 @@ SUITE(ClientModelMemberSuite)
             }
             delete change;
 
-        CHECK(!changes.has_more());
+            CHECK(!changes.has_more());
 
             CHECK_EQUAL(model.get_screen(a), Box(0, 0, 1000, 1000));
 
@@ -1825,80 +1825,6 @@ SUITE(ClientModelMemberSuite)
 
         model.remove_client(a);
         changes.flush();
-    }
-
-    /**
-     * This ensures that the focus history works properly.
-     */
-    TEST_FIXTURE(ClientModelFixture, test_focus_history)
-    {
-        model.add_client(a, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
-        model.add_client(b, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), true);
-        model.add_client(c, IS_VISIBLE, Dimension2D(1, 1), Dimension2D(1, 1), false);
-        changes.flush();
-
-        // Since creating a new window alters the focus, the two windows should
-        // be in the focus history. b comes first since it was most recently
-        // focused.
-        //
-        // c is not in the history since it is not set to autofocus.
-        CHECK_EQUAL(model.get_next_in_focus_history(), b);
-        CHECK_EQUAL(model.get_next_in_focus_history(), a);
-
-        // Exhausting the windows should give us None
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Ensure that b doesn't show up if we don't focus it
-        model.focus(a);
-        CHECK_EQUAL(model.get_next_in_focus_history(), a);
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Finally, ensure that windows focused more than once are ordered
-        // according to the most recent focused window
-        model.focus(a);
-        model.focus(b);
-        model.focus(a);
-
-        CHECK_EQUAL(model.get_next_in_focus_history(), a);
-        CHECK_EQUAL(model.get_next_in_focus_history(), b);
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Ensure that a window, if removed from the focus history, doesn't get
-        // returned in the focus history.
-        model.focus(a);
-        model.focus(b);
-        CHECK_EQUAL(model.remove_from_focus_history(b), true);
-
-        CHECK_EQUAL(model.get_next_in_focus_history(), a);
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Duplicate removals don't do anything
-        model.focus(b);
-        CHECK_EQUAL(model.remove_from_focus_history(b), true);
-        CHECK_EQUAL(model.remove_from_focus_history(b), false);
-
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Removing a non-existent window doesn't do anything
-        CHECK_EQUAL(model.remove_from_focus_history(42), false);
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Force-focusing a nofocus window doesn't do anything
-        model.force_focus(c);
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        // Finally, ensure that focus histories for different desktops are
-        // independent
-        model.focus(b);
-        model.focus(a);
-
-        model.next_desktop();
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
-
-        model.prev_desktop();
-        CHECK_EQUAL(model.get_next_in_focus_history(), a);
-        CHECK_EQUAL(model.get_next_in_focus_history(), b);
-        CHECK_EQUAL(model.get_next_in_focus_history(), None);
     }
 
     /**
@@ -2339,7 +2265,7 @@ SUITE(ClientModelMemberSuite)
         CHECK(change->is_destroy_change());
         {
             const DestroyChange *the_change = dynamic_cast<const DestroyChange*>(change);
-            const Desktop *desktop(new UserDesktop(0));
+            Desktop *desktop(new UserDesktop(0));
             CHECK_EQUAL(DestroyChange(a, desktop, DEF_LAYER), *the_change);
         }
         delete change;
