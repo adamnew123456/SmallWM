@@ -31,7 +31,10 @@ void XModel::unregister_icon(Icon *icon)
  */
 Icon* XModel::find_icon_from_client(Window client) const
 {
-    return m_clients_to_icons.find(client)->second;
+    if (m_clients_to_icons.count(client) == 0)
+        return NULL;
+    else
+        return m_clients_to_icons.find(client)->second;
 }
 
 /**
@@ -39,7 +42,10 @@ Icon* XModel::find_icon_from_client(Window client) const
  */
 Icon* XModel::find_icon_from_icon_window(Window icon_win) const
 {
-    return m_icon_windows_to_icons.find(icon_win)->second;
+    if (m_icon_windows_to_icons.count(icon_win) == 0)
+        return NULL;
+    else
+        return m_icon_windows_to_icons.find(icon_win)->second;
 }
 
 /**
