@@ -205,6 +205,16 @@ void ClientModel::remove_client(Window client)
         sync_focus_to_cycle();
     }
 
+    // Make sure to remove the child before removing any other parent state - the
+    // child removal procedure depends upon knowing the parent's desktop
+    std::set<Window> children(*m_children[client]);
+    for (std::set<Window>::iterator child = children.begin();
+         child != children.end();
+         child++)
+    {
+        remove_child(*child, false);
+    }
+
     m_desktops.remove_member(client);
     m_layers.remove_member(client);
     m_location.erase(client);
@@ -214,14 +224,6 @@ void ClientModel::remove_client(Window client)
     m_autofocus.erase(client);
     m_pack_corners.erase(client);
     m_pack_priority.erase(client);
-
-    std::set<Window> children(*m_children[client]);
-    for (std::set<Window>::iterator child = children.begin();
-         child != children.end();
-         child++)
-    {
-        remove_child(*child, false);
-    }
 
     delete m_children[client];
     m_children.erase(client);
