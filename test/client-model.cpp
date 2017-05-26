@@ -743,7 +743,6 @@ SUITE(ClientModelMemberSuite)
             Dimension2D(1, 1), Dimension2D(1, 1), true);
         changes.flush();
 
-        // Move to the next desktop
         model.next_desktop();
 
         // The current should lose the focus, since it will not be visible soon
@@ -1838,13 +1837,14 @@ SUITE(ClientModelMemberSuite)
             changes.flush();
         }
 
+        // Now test a client that is not on any screen
         model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1), true);
         changes.flush();
 
         CHECK_EQUAL(model.get_screen(a), Box(-1, -1, 0, 0));
 
-        // Each client should start out on different screens, but they should all end up
-        // in the same large box when we update the screen configuration
+        // A client which wasn't on  a screen to start shouldn't end up on a
+        // screen later
         std::vector<Box> screens;
         screens.push_back(Box(0, 0, 1000, 1000));
 
@@ -2314,6 +2314,274 @@ SUITE(ClientModelMemberSuite)
         // The both the child and the parent should be gone now
         CHECK(!model.is_child(b));
         CHECK(!model.is_client(a));
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_single_client_focus_cycle)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        changes.flush();
+
+        // Trying to cycle the focus with only one client should do nothing
+        model.cycle_focus_forward();
+        CHECK(!changes.has_more());
+
+        model.cycle_focus_backward();
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_two_client_focus_cycle)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        changes.flush();
+
+        // b should be focused since it was set to autofocus on creation
+        CHECK_EQUAL(model.get_focused(), b);
+
+        // Going forward should focus a
+        model.cycle_focus_forward();
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Doing so again should wrap back to b
+        model.cycle_focus_forward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Going back should wrap back to a
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // We should get back to b after going back again
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_two_client_with_child_focus_cycle)
+    {
+        Window c = 3;
+
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        // c should be after a, even though we only knew about c after b
+        model.add_child(a, c);
+        changes.flush();
+
+        // c should be focused since a was set to autofocus
+        CHECK_EQUAL(model.get_focused(), c);
+
+        // Going forward should focus b
+        model.cycle_focus_forward();
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(c, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Doing so again should wrap back to a
+        model.cycle_focus_forward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Going back should wrap back to b
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // We should get back to c after going back again
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, c), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+    TEST_FIXTURE(ClientModelFixture, test_all_desktop_clients)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        // The remainder should be the same as in the original case, since the
+        // all desktop is slaved to each user desktop, and gets used when the
+        // user desktop's focus is exhausted
+        changes.flush();
+
+        // b should be focused since it was set to autofocus on creation
+        CHECK_EQUAL(model.get_focused(), b);
+
+        // Going forward should focus a
+        model.cycle_focus_forward();
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Doing so again should wrap back to b
+        model.cycle_focus_forward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // Going back should wrap back to a
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // We should get back to b after going back again
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_removed_not_in_cycle)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        changes.flush();
+
+        model.remove_client(a);
+        changes.flush();
+
+        // With a gone, the focus should have nowhere to go
+        model.cycle_focus_forward();
+        CHECK(!changes.has_more());
+
+        model.cycle_focus_backward();
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_removed_children_not_in_cycle)
+    {
+        Window c = 3;
+
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_child(a, c);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        changes.flush();
+
+        model.remove_client(a);
+        changes.flush();
+
+        // With a and c gone, the focus should have nowhere to go
+        model.cycle_focus_forward();
+        CHECK(!changes.has_more());
+
+        model.cycle_focus_backward();
+        CHECK(!changes.has_more());
     }
 }
 

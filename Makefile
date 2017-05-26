@@ -108,8 +108,8 @@ bin/test-configparse: bin/libUnitTest++.a obj/test-configparse.o obj/ini.o obj/c
 obj/test-configparse.o: obj test/configparse.cpp
 	${CXX} ${CXXFLAGS} -c test/configparse.cpp -o obj/test-configparse.o
 
-bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o obj/model/client-model.o obj/model/changes.o obj/model/screen.o
-	${CXX} ${CXXFLAGS} obj/test-client-model.o bin/libUnitTest++.a obj/model/client-model.o obj/model/changes.o obj/model/screen.o ${LINKER_FLAGS} -o bin/test-client-model
+bin/test-client-model: bin/libUnitTest++.a obj/test-client-model.o obj/model/client-model.o obj/model/changes.o obj/model/screen.o obj/model/focus-cycle.o
+	${CXX} ${CXXFLAGS} obj/test-client-model.o bin/libUnitTest++.a obj/model/client-model.o obj/model/changes.o obj/model/screen.o obj/model/focus-cycle.o ${LINKER_FLAGS} -o bin/test-client-model
 
 obj/test-client-model.o: obj test/client-model.cpp src/model/changes.h src/model/client-model.h src/model/desktop-type.h src/model/screen.h src/model/unique-multimap.h
 	${CXX} ${CXXFLAGS} -c test/client-model.cpp -o obj/test-client-model.o
