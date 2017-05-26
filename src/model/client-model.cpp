@@ -1071,7 +1071,7 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
         // Keep the old screen - if the new screen is the same, we don't want
         // to send out a change notification
         const Box &old_box = m_screen[client];
-        Box new_box;
+        Box new_box(-1, -1, 0, 0);
 
         Crt *new_screen = m_crt_manager.screen_of_coord(
             DIM2D_X(location), DIM2D_Y(location));
