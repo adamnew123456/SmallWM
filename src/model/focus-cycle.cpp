@@ -38,7 +38,7 @@ void FocusCycle::add_after(Window window, Window after)
  */
 bool FocusCycle::remove(Window window, bool move_back)
 {
-    if (*m_current_focus == window)
+    if (m_currently_focused && *m_current_focus == window)
     {
         bool subcycle_has_windows = m_has_subcycle && !m_subcycle->empty();
 
