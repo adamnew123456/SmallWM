@@ -1109,9 +1109,10 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
     if (*old_desktop == *new_desktop)
         return;
 
+    bool can_focus = m_autofocus[client];
     m_desktops.move_member(client, new_desktop);
 
-    if (old_desktop->is_user_desktop())
+    if (can_focus && old_desktop->is_user_desktop())
     {
         UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
         user_desktop->focus_cycle.remove(client, false);
@@ -1121,7 +1122,7 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
                 child++)
             user_desktop->focus_cycle.remove(*child, false);
     }
-    else if (old_desktop->is_all_desktop())
+    else if (can_focus && old_desktop->is_all_desktop())
     {
         dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(client, false);
 
@@ -1131,9 +1132,9 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
             dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(*child, false);
     }
 
-    if (new_desktop->is_user_desktop())
+    if (can_focus && new_desktop->is_user_desktop())
     {
-        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(new_desktop);
         user_desktop->focus_cycle.add(client);
 
         for (std::set<Window>::iterator child = m_children[client]->begin();
@@ -1141,7 +1142,7 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
                 child++)
             user_desktop->focus_cycle.add_after(*child, client);
     }
-    else if (new_desktop->is_all_desktop())
+    else if (can_focus && new_desktop->is_all_desktop())
     {
         dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.add(client);
 
@@ -1163,12 +1164,12 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
         }
     }
     // Make sure that the focus is transferred properly into the new cycle
-    else if (new_desktop->is_user_desktop())
+    else if (can_focus && new_desktop->is_user_desktop())
     {
-        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(old_desktop);
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(new_desktop);
         user_desktop->focus_cycle.set(client);
     }
-    else if (new_desktop->is_all_desktop())
+    else if (can_focus && new_desktop->is_all_desktop())
         dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.set(client);
 
     m_changes.push(new ChangeClientDesktop(client, old_desktop, new_desktop));
