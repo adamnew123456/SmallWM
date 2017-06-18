@@ -1158,6 +1158,16 @@ void ClientModel::dump(std::ostream &output)
 
         USER_DESKTOPS[desktop]->focus_cycle.dump(output, 0);
     }
+
+    output << "All Desktop\n";
+    get_clients_of(ALL_DESKTOPS, windows);
+    for (std::vector<Window>::iterator winiter = windows.begin();
+         winiter != windows.end();
+         winiter++)
+    {
+        dump_client_info(*winiter, output);
+    }
+    windows.clear();
 }
 
 /**
@@ -1242,7 +1252,7 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
 void ClientModel::dump_client_info(Window client, std::ostream &output)
 {
     output << "  Window: " << std::hex << client << "\n";
-    output << "    Screen: " << std::dec << m_screen << "\n";
+    output << "    Screen: " << std::dec << m_screen[client] << "\n";
     output << "    Layer: " << std::dec <<
         static_cast<int>(m_layers.get_category_of(client)) << "\n";
 
@@ -1252,7 +1262,7 @@ void ClientModel::dump_client_info(Window client, std::ostream &output)
 
     Dimension2D &size = m_size[client];
     output << "    Size: W=" << DIM2D_WIDTH(size) <<
-        " H=" << DIM2D_HEIGHT(size);
+        " H=" << DIM2D_HEIGHT(size) << "\n";
 
     ClientPosScale mode = m_cps_mode[client];
     output << "    Mode: ";

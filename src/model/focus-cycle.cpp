@@ -318,10 +318,10 @@ void FocusCycle::dump(std::ostream &output, int depth)
          winiter != m_windows.end();
          winiter++)
     {
-        output << indent << std::hex << *winiter;
+        output << indent << "  " << std::hex << *winiter;
 
         if (m_currently_focused && m_current_focus == winiter)
-            output << " *Focused*\n";
+            output << "*";
 
         output << "\n";
     }
