@@ -2242,7 +2242,6 @@ SUITE(ClientModelMemberSuite)
 
     TEST_FIXTURE(ClientModelFixture, test_cannot_adopt)
     {
-        Window c = 42;
         model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
         model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
 
@@ -2401,8 +2400,6 @@ SUITE(ClientModelMemberSuite)
 
     TEST_FIXTURE(ClientModelFixture, test_two_client_with_child_focus_cycle)
     {
-        Window c = 3;
-
         model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
         model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
 
@@ -2566,8 +2563,6 @@ SUITE(ClientModelMemberSuite)
 
     TEST_FIXTURE(ClientModelFixture, test_removed_children_not_in_cycle)
     {
-        Window c = 3;
-
         model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
         model.add_child(a, c);
         model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
@@ -2581,6 +2576,51 @@ SUITE(ClientModelMemberSuite)
         CHECK(!changes.has_more());
 
         model.cycle_focus_backward();
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_set_focus_updates_cycle)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(c, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        CHECK_EQUAL(model.get_focused(), c);
+
+        // We should be able to set the focus on b and go forward to c
+        model.focus(b);
+        changes.flush();
+
+        model.cycle_focus_forward();
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, c), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        // We should be able to set the focus on b and go backward to a
+        model.focus(b);
+        changes.flush();
+
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
         CHECK(!changes.has_more());
     }
 }

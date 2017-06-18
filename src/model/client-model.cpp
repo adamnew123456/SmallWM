@@ -848,7 +848,7 @@ void ClientModel::prev_desktop()
     // Otherwise, figure out the next logical window in the focus cycle
     if (m_focused != None && m_focused == old_focus)
         m_current_desktop->focus_cycle.set(m_focused);
-    else if (m_current_desktop->focus_cycle.valid())
+    else
         sync_focus_to_cycle();
 }
 
