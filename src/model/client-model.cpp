@@ -1156,7 +1156,7 @@ void ClientModel::dump(std::ostream &output)
         }
         windows.clear();
 
-        USER_DESKTOPS[desktop].focus_cycle.dump(output, 0);
+        USER_DESKTOPS[desktop]->focus_cycle.dump(output, 0);
     }
 }
 
@@ -1244,7 +1244,7 @@ void ClientModel::dump_client_info(Window client, std::ostream &output)
     output << "  Window: " << std::hex << client << "\n";
     output << "    Screen: " << std::dec << m_screen << "\n";
     output << "    Layer: " << std::dec <<
-        (int)m_layers.get_category_of(client) << "\n";
+        static_cast<int>(m_layers.get_category_of(client)) << "\n";
 
     Dimension2D &location = m_location[client];
     output << "    Location: X=" << DIM2D_X(location) <<

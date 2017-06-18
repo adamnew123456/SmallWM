@@ -128,7 +128,7 @@ int main()
                 "'" << Log::endl;
 
             std::fstream dump_file(config.dump_file.c_str(),
-                                   std::fstream::out | std::fstream:app);
+                                   std::fstream::out | std::fstream::app);
 
             if (dump_file)
             {

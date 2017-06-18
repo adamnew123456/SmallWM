@@ -146,7 +146,7 @@ int CrtManager::build_node(Crt *screen, std::map<Dimension2D, Box> &boxes, int n
  * Builds up a map that relates each Crt to its ID. Used only for dumping
  * purposes.
  */
-void CrtManager::build_id_map(Crt *base, std::map<int, Crt*> id_map)
+void CrtManager::build_id_map(Crt *base, std::map<int, Crt*> &id_map)
 {
     id_map[base->id] = base;
 
