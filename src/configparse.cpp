@@ -29,6 +29,7 @@ void WMConfig::reset()
     show_icons = true;
     log_mask = LOG_UPTO(LOG_WARNING);
     hotkey = HK_MOUSE;
+    dump_file = "/dev/null";
 
     key_commands.reset();
     classactions.clear();
@@ -120,6 +121,11 @@ int WMConfig::config_parser(void *user, const char *c_section,
             self->show_icons =
                 try_parse_ulong(value.c_str(),
                      static_cast<unsigned long>(old_value)) != 0;
+        }
+        else if (name == std::string("dump-file"))
+        {
+            if (value.size() > 0)
+                self->dump_file = value;
         }
     }
 

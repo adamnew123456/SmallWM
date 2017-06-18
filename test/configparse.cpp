@@ -329,6 +329,35 @@ SUITE(WMConfigSuitePlainOptions)
 
         CHECK_EQUAL(LOG_UPTO(LOG_WARNING), config.log_mask);
     }
+
+    TEST(test_default_dump_file)
+    {
+        // Ensure that an empty config file dumps to /dev/null by default
+        write_config_file(*config_path, "\n");
+        config.load();
+
+        CHECK_EQUAL(std::string("/dev/null"), config.dump_file);
+    }
+
+    TEST(test_dump_file)
+    {
+        // Make sure that any non-empty filename is acceptable
+        write_config_file(*config_path,
+                          "[smallwm]\ndump-file=/var/log/smallwm/dump.log\n");
+        config.load();
+
+        CHECK_EQUAL(std::string("/var/log/smallwm/dump.log"), config.dump_file);
+    }
+
+    TEST(test_dump_file_empty)
+    {
+        // Make sure that an empty dump filename is not accepted
+        write_config_file(*config_path,
+                          "[smallwm]\ndump-file=\n");
+        config.load();
+
+        CHECK_EQUAL(std::string("/dev/null"), config.dump_file);
+    }
 };
 
 SUITE(WMConfigSuiteActions)

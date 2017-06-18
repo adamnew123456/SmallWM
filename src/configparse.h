@@ -188,6 +188,9 @@ public:
     /// Whether or not to show images inside icons for hidden windows
     bool show_icons;
 
+    /// The filename to dump the current state to when SIGUSR1 is received
+    std::string dump_file;
+
 protected:
     virtual std::string get_config_path() const;
 
