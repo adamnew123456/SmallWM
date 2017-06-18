@@ -1103,6 +1103,64 @@ void ClientModel::update_screens(std::vector<Box> &bounds)
 }
 
 /**
+ * Converts the client model to a textual representation, which is written to
+ * an output stream.
+ */
+void ClientModel::dump(std::ostream &output)
+{
+    output << "Current Desktop: " << std::dec
+           << m_current_desktop->desktop << "\n";
+
+    output << "Current Focus: " << std::hex << m_focused << "\n";
+
+    std::vector<Window> windows;
+    output << "Icon Desktop\n";
+    get_clients_of(ICON_DESKTOP, windows);
+    for (std::vector<Window>::iterator winiter = windows.begin();
+         winiter != windows.end();
+         winiter++)
+    {
+        dump_client_info(*winiter, output);
+    }
+    windows.clear();
+
+    output << "Moving Desktop\n";
+    get_clients_of(MOVING_DESKTOP, windows);
+    for (std::vector<Window>::iterator winiter = windows.begin();
+         winiter != windows.end();
+         winiter++)
+    {
+        dump_client_info(*winiter, output);
+    }
+    windows.clear();
+
+    output << "Resizing Desktop\n";
+    get_clients_of(RESIZING_DESKTOP, windows);
+    for (std::vector<Window>::iterator winiter = windows.begin();
+         winiter != windows.end();
+         winiter++)
+    {
+        dump_client_info(*winiter, output);
+    }
+    windows.clear();
+
+    for (int desktop = 0; desktop < USER_DESKTOPS.size(); desktop++)
+    {
+        output << "User Desktop " << desktop << "\n";
+        get_clients_of(USER_DESKTOPS[desktop], windows);
+        for (std::vector<Window>::iterator winiter = windows.begin();
+            winiter != windows.end();
+            winiter++)
+        {
+            dump_client_info(*winiter, output);
+        }
+        windows.clear();
+
+        USER_DESKTOPS[desktop].focus_cycle.dump(output, 0);
+    }
+}
+
+/**
  * Moves a client between two desktops and fires the resulting event.
  */
 void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool should_unfocus)
@@ -1175,4 +1233,90 @@ void ClientModel::move_to_desktop(Window client, Desktop* new_desktop, bool shou
         dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.set(client);
 
     m_changes.push(new ChangeClientDesktop(client, old_desktop, new_desktop));
+}
+
+/**
+ * Converts all the information about a client window to a textual
+ * representation, which is written to the output stream.
+ */
+void ClientModel::dump_client_info(Window client, std::ostream &output)
+{
+    output << "  Window: " << std::hex << client << "\n";
+    output << "    Screen: " << std::dec << m_screen << "\n";
+    output << "    Layer: " << std::dec <<
+        (int)m_layers.get_category_of(client) << "\n";
+
+    Dimension2D &location = m_location[client];
+    output << "    Location: X=" << DIM2D_X(location) <<
+        " Y=" << DIM2D_Y(location) << "\n";
+
+    Dimension2D &size = m_size[client];
+    output << "    Size: W=" << DIM2D_WIDTH(size) <<
+        " H=" << DIM2D_HEIGHT(size);
+
+    ClientPosScale mode = m_cps_mode[client];
+    output << "    Mode: ";
+    switch (mode)
+    {
+    case CPS_FLOATING:
+        output << "floating";
+        break;
+    case CPS_SPLIT_LEFT:
+        output << "left-split";
+        break;
+    case CPS_SPLIT_RIGHT:
+        output << "right-split";
+        break;
+    case CPS_SPLIT_TOP:
+        output << "top-split";
+        break;
+    case CPS_SPLIT_BOTTOM:
+        output << "bottom-split";
+        break;
+    case CPS_MAX:
+        output << "maximized";
+        break;
+    }
+    output << "\n";
+
+    output << "    Can autofocus? " <<
+        (m_autofocus[client] ? "yes" : "no") << "\n";
+
+    output << "    Packing info: ";
+    if (m_pack_corners.count(client) == 0)
+    {
+        output << "not packed";
+    }
+    else
+    {
+        output << "Dir=";
+        switch (m_pack_corners[client])
+        {
+        case PACK_NORTHEAST:
+            output << "NE";
+            break;
+        case PACK_NORTHWEST:
+            output << "NW";
+            break;
+        case PACK_SOUTHEAST:
+            output << "SE";
+            break;
+        case PACK_SOUTHWEST:
+            output << "SW";
+            break;
+        }
+
+        output << " Priority=" << m_pack_priority[client];
+    }
+    output << "\n";
+
+    std::vector<Window> children;
+    output << "    Children\n";
+    get_children_of(client, children);
+    for (std::vector<Window>::iterator childiter = children.begin();
+         childiter != children.end();
+         childiter++)
+    {
+        output << "      " << std::hex << *childiter << "\n";
+    }
 }

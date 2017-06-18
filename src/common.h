@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <ostream>
 #include <utility>
 #include <unistd.h>
 

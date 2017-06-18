@@ -293,3 +293,42 @@ bool FocusCycle::backward()
 
     return we_wrapped;
 }
+
+/**
+ * Converts the focus cycle to a textual representation, which is written to
+ * an output stream.
+ */
+void FocusCycle::dump(std::ostream &output, int depth)
+{
+
+    // Starting at 2 to offset from the desktop name (see ClientModel::dump)
+    // .. Focus cycle         0 => 2
+    // .... data
+    // ...... Focus cycle     1 => 6
+    // ........ data
+    // .......... Focus cycle 2 => 10
+    // ............ data
+    std::string indent = std::string(2 + 4*depth, ' ');
+
+    output << indent << "Focus cycle\n";
+    output << indent << "  Has a focused window? " <<
+        (m_currently_focused ? "yes" : "no") << "\n";
+
+    for (std::list<Window>::iterator winiter = m_windows.begin();
+         winiter != m_windows.end();
+         winiter++)
+    {
+        output << indent << std::hex << *winiter;
+
+        if (m_currently_focused && m_current_focus == winiter)
+            output << " *Focused*\n";
+
+        output << "\n";
+    }
+
+    output << indent << "  Subcycle? " <<
+        (m_has_subcycle ? "yes" : "no") << "\n";
+
+    if (m_has_subcycle)
+        m_subcycle->dump(output, depth + 1);
+}

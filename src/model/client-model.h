@@ -9,6 +9,7 @@
 #include "unique-multimap.h"
 
 #include <algorithm>
+#include <ios>
 #include <map>
 #include <set>
 #include <utility>
@@ -150,6 +151,8 @@ public:
 
     void update_screens(std::vector<Box>&);
 
+    void dump(std::ostream&);
+
 protected:
     void unfocus(bool);
 
@@ -158,6 +161,8 @@ protected:
     void to_screen_crt(Window, Crt*);
 
     void sync_focus_to_cycle();
+
+    void dump_client_info(Window, std::ostream&);
 
 private:
     // The screen manager, used to map positions to screens

@@ -3,6 +3,7 @@
 #define __SMALLWM_FOCUS_CYCLE__
 
 #include <algorithm>
+#include <ios>
 #include <list>
 
 #include "common.h"
@@ -37,6 +38,8 @@ public:
 
     bool forward();
     bool backward();
+
+    void dump(std::ostream&, int depth);
 
 private:
     /// Whether or not the current focus is actually on any window
