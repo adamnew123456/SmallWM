@@ -119,6 +119,7 @@ For example:
     icon-icons=0
     log-level=NOTICE
     hotkey-mode=focus
+    dump-file=/home/user/logs/smallwm-dump
     [actions]
     stalonetray=stick,layer:9,xpos:90,ypos:0
     xclock=pack:NE1
@@ -143,6 +144,12 @@ The options in the `[smallwm]` section are (in order):
   either `focus` (which means that the currently focused window is acted upon) or
   `mouse` (which means that the window under the cursor is acted upon).  The
   default is `mouse`.
+- `dump-file` This is where SmallWM writes internal information dumps when you
+  send it SIGUSR1. This is intended for development purposes only; although it
+  will generally contain information about SmallWM's desktops, clients and 
+  screens, this information is for human consumption and its format is not 
+  guaranteed to stay the same. By default, this value is `/def/null`, so that
+  any dumps SmallWM generates are not stored anywhere.
 
 Actions
 =======
