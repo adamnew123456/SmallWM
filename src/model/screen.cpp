@@ -65,11 +65,32 @@ void CrtManager::rebuild_graph(std::vector<Box> &screens)
         origin_to_box[Dimension2D(iter->x, iter->y)] = *iter;
 
     // Start building the screen hierarchy at (0, 0) - the root screen
-    m_root = new Crt();
+    m_root = new Crt(0);
     m_boxes[m_root] = origin_to_box[Dimension2D(0, 0)];
 
-    build_node(m_root, origin_to_box);
+    build_node(m_root, origin_to_box, 1);
 }
+
+/**
+ * Converts all the information about the screen geometry to a textual
+ * representation, which is written to the output stream.
+ */
+void CrtManager::dump(std::ostream &output)
+{
+    output << "Screens\n";
+
+    std::map<int, Crt*> crts_by_id;
+    build_id_map(m_root, crts_by_id);
+    for (int id = 0; id < crts_by_id.size(); id++)
+    {
+        Crt *crt = crts_by_id[id];
+        Box &bounds = m_boxes[crt];
+
+        output << "  Screen " << std::dec << id << "\n";
+        output << "    " << bounds << "\n";
+    }
+}
+
 
 /**
  * Builds up the screen graph starting from a particular screen.
@@ -77,7 +98,7 @@ void CrtManager::rebuild_graph(std::vector<Box> &screens)
  * Note that this goes only down and to the right - this is because the starting
  * point is intended to be the root screen at (0, 0).
  */
-void CrtManager::build_node(Crt *screen, std::map<Dimension2D, Box> &boxes)
+int CrtManager::build_node(Crt *screen, std::map<Dimension2D, Box> &boxes, int next_id)
 {
     Box &my_box = m_boxes[screen];
 
@@ -91,14 +112,14 @@ void CrtManager::build_node(Crt *screen, std::map<Dimension2D, Box> &boxes)
         Crt *below = screen_of_box(complete_below_box);
         if (!below)
         {
-            below = new Crt();
+            below = new Crt(next_id++);
             m_boxes[below] = complete_below_box;
         }
 
         screen->bottom = below;
         below->top = screen;
 
-        build_node(below, boxes);
+        next_id = build_node(below, boxes, next_id);
     }
 
     if (boxes.count(right_box))
@@ -108,13 +129,30 @@ void CrtManager::build_node(Crt *screen, std::map<Dimension2D, Box> &boxes)
         Crt *right = screen_of_box(Box(complete_right_box));
         if (!right)
         {
-            right = new Crt();
+            right = new Crt(next_id++);
             m_boxes[right] = complete_right_box;
         }
 
         screen->right = right;
         right->left = screen;
 
-        build_node(right, boxes);
+        next_id = build_node(right, boxes, next_id);
     }
+
+    return next_id;
+}
+
+/**
+ * Builds up a map that relates each Crt to its ID. Used only for dumping
+ * purposes.
+ */
+void CrtManager::build_id_map(Crt *base, std::map<int, Crt*> id_map)
+{
+    id_map[base->id] = base;
+
+    if (base->right)
+        build_id_map(base->right, id_map);
+
+    if (base->bottom)
+        build_id_map(base->bottom, id_map);
 }

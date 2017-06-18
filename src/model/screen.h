@@ -4,6 +4,7 @@
 
 #include "common.h"
 
+#include <ios>
 #include <map>
 #include <stack>
 #include <vector>
@@ -23,7 +24,18 @@
 struct Crt {
     Crt *left, *right, *top, *bottom;
 
-    Crt() : left(NULL), right(NULL), top(NULL), bottom(NULL), m_deleting(false)
+    /**
+     * An identifier assigned to the screen, used only for dumped output
+     *
+     * The only rule is that this must be least on the root screen, and
+     * greater on values away from the root - this ensures a readable ordering
+     * when dumping.
+     */
+    int id;
+
+    Crt(int _id) :
+        left(NULL), right(NULL), top(NULL), bottom(NULL), id(_id),
+        m_deleting(false)
     {}
 
     ~Crt()
@@ -80,8 +92,11 @@ public:
 
     void rebuild_graph(std::vector<Box>&);
 
+    void dump(std::ostream&);
+
 private:
-    void build_node(Crt*, std::map<Dimension2D, Box>&);
+    int build_node(Crt*, std::map<Dimension2D, Box>&, int);
+    void build_id_map(Crt*, std::map<int, Crt*>&);
 
     /// The root screen is located at (0, 0). Guaranteed not to be NULL
     Crt *m_root;
