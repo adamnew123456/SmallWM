@@ -1,4 +1,5 @@
 #include <csignal>
+#include <fstream>
 #include <iostream>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -26,6 +27,16 @@ void reap_child(int signal)
     wait(&_unused);
 }
 
+bool should_execute_dump = false;
+
+/**
+ * Triggers a model state dump after the current batch of events has been processed.
+ */
+void enable_dump(int signal)
+{
+    should_execute_dump = true;
+}
+
 /**
  * Prints out X errors to enable diagnosis, but doesn't kill us.
  * @param display The display the error occurred on
@@ -50,6 +61,7 @@ int main()
 {
     XSetErrorHandler(x_error_handler);
     signal(SIGCHLD, reap_child);
+    signal(SIGUSR1, enable_dump);
 
     WMConfig config;
     config.load();
@@ -106,7 +118,36 @@ int main()
     client_events.handle_queued_changes();
 
     while (x_events.step())
+    {
+        if (should_execute_dump)
+        {
+            should_execute_dump = false;
+
+            logger.log(LOG_NOTICE) <<
+                "Executing dump to target file '" << config.dump_file << 
+                "'" << Log::endl;
+
+            std::fstream dump_file(config.dump_file.c_str(),
+                                   std::fstream::out | std::fstream:app);
+
+            if (dump_file)
+            {
+                dump_file << "#BEGIN DUMP\n";
+                crt_manager.dump(dump_file);
+                clients.dump(dump_file);
+                dump_file << "#END DUMP\n";
+                dump_file.close();
+            }
+            else
+            {
+                logger.log(LOG_ERR) <<
+                    "Could not open dump file '" << config.dump_file << 
+                    "' for writing" << Log::endl;
+            }
+        }
+
         client_events.handle_queued_changes();
+    }
 
     return 0;
 }
