@@ -232,6 +232,51 @@ void ClientModel::remove_client(Window client)
 }
 
 /**
+ * Handles an existing client that was unmapped, and is now being re-mapped.
+ */
+void ClientModel::remap_client(Window client)
+{
+    if (!is_client(client))
+        return;
+
+    std::vector<Window> children;
+    get_children_of(client, children);
+
+    Desktop *desktop = find_desktop(client);
+    if (desktop->is_user_desktop())
+    {
+        UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(desktop);
+        user_desktop->focus_cycle.add(client);
+        for (std::vector<Window>::iterator child = children.begin();
+             child != children.end();
+             child++)
+        {
+            user_desktop->focus_cycle.add(*child);
+        }
+
+        focus(client);
+    }
+    else if (desktop->is_all_desktop())
+    {
+        AllDesktops *all_desktop = dynamic_cast<AllDesktops*>(ALL_DESKTOPS);
+        all_desktop->focus_cycle.add(client);
+        for (std::vector<Window>::iterator child = children.begin();
+             child != children.end();
+             child++)
+        {
+            all_desktop->focus_cycle.add(*child);
+        }
+
+        focus(client);
+    }
+
+    // The event processor also needs to know that it should update the current 
+    // layering, since the window could have been raised since it was remapped
+    Layer current_layer = m_layers.get_category_of(client);
+    m_changes.push(new ChangeLayer(client, current_layer));
+}
+
+/**
  * This is just a way of directly sending an event to the ClientModel - we
  * don't do anything with it.
  */

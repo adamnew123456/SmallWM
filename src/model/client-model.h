@@ -93,6 +93,7 @@ public:
 
     void add_client(Window, InitialState, Dimension2D, Dimension2D, bool);
     void remove_client(Window);
+    void remap_client(Window);
     void unmap_client(Window);
 
     void add_child(Window, Window);

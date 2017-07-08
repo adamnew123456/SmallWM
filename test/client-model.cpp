@@ -1890,6 +1890,41 @@ SUITE(ClientModelMemberSuite)
     }
 
     /**
+     * This ensures that windows which are remapped should emit a LayerChange update
+     */
+    TEST_FIXTURE(ClientModelFixture, test_remap)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(-1, -1), Dimension2D(1, 1), true);
+
+        model.unmap_client(a);
+        changes.flush();
+
+        model.remap_client(a);
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(None, a), *the_change);
+        }
+        delete change;
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_layer_change());
+        {
+            const ChangeLayer *the_change =
+                dynamic_cast<const ChangeLayer*>(change);
+            CHECK_EQUAL(ChangeLayer(a, DEF_LAYER), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    /**
      * This ensures that windows have their information assigned properly,
      * without doing any packing.
      */
@@ -2657,6 +2692,85 @@ SUITE(ClientModelMemberSuite)
         CHECK(!changes.has_more());
     }
 
+    TEST_FIXTURE(ClientModelFixture, test_remapped_in_cycle)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.unmap_client(a);
+        model.remap_client(a);
+        changes.flush();
+
+        // Remapping sets focus, so we should be able to cycle through both a 
+        // and b
+        model.cycle_focus_forward();
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, b), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(b, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
+
+    TEST_FIXTURE(ClientModelFixture, test_remapped_children_in_cycle)
+    {
+        model.add_client(a, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+        model.add_child(a, c);
+        model.add_client(b, IS_VISIBLE, Dimension2D(20, 20), Dimension2D(10, 10), true);
+
+        model.unmap_client(a);
+        model.remap_client(a);
+        changes.flush();
+
+        // We should have focused a, which puts its child after
+        model.cycle_focus_forward();
+
+        const Change * change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(a, c), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+
+        model.cycle_focus_backward();
+
+        change = changes.get_next();
+        CHECK(change != 0);
+        CHECK(change->is_focus_change());
+        {
+            const ChangeFocus *the_change =
+                dynamic_cast<const ChangeFocus*>(change);
+            CHECK_EQUAL(ChangeFocus(c, a), *the_change);
+        }
+        delete change;
+
+        CHECK(!changes.has_more());
+    }
 }
 
 int main()

@@ -556,6 +556,9 @@ void XEvents::add_window(Window window)
         if (!mapped_desktop->is_all_desktop())
             m_clients.client_reset_desktop(window);
 
+        // Make sure that it can be accessed by the focus cycle again
+        m_clients.remap_client(window);
+
         return;
     }
 
