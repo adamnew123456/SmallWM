@@ -240,16 +240,34 @@ void ClientModel::unmap_client(Window client)
     if (!is_client(client))
         return;
 
+    std::vector<Window> children;
+    get_children_of(client, children);
+
     Desktop *desktop = find_desktop(client);
     if (desktop->is_user_desktop())
     {
         UserDesktop *user_desktop = dynamic_cast<UserDesktop*>(desktop);
-        user_desktop->focus_cycle.remove(client, true);
+        for (std::vector<Window>::iterator child = children.begin();
+             child != children.end();
+             child++)
+        {
+            user_desktop->focus_cycle.remove(*child, false);
+        }
+
+        user_desktop->focus_cycle.remove(client, false);
         sync_focus_to_cycle();
     }
     else if (desktop->is_all_desktop())
     {
-        dynamic_cast<AllDesktops*>(ALL_DESKTOPS)->focus_cycle.remove(client, true);
+        AllDesktops *all_desktop = dynamic_cast<AllDesktops*>(ALL_DESKTOPS);
+        for (std::vector<Window>::iterator child = children.begin();
+             child != children.end();
+             child++)
+        {
+            all_desktop->focus_cycle.remove(*child, false);
+        }
+
+        all_desktop->focus_cycle.remove(client, false);
         sync_focus_to_cycle();
     }
 
