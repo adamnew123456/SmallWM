@@ -214,7 +214,7 @@ With the priorities:
 - *B* 2
 - *C* 3
 
-And you want to pack them into the northwest corner, the result will look like
+And you want to pack them into the northeast  corner, the result will look like
 the following; A, the lowest priority,  is first placed directly into the corner,
 with B horizontally placed on the side of A opposite the corner, and then C placed
 on the edge of B.
