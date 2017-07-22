@@ -60,7 +60,9 @@ Building
 ========
 As a dependency, you'll need to have access to the headers for Xlib and XRandR.
 You should be able to easily obtain these via your package manager. You'll also
-need a C++ compiler - GNU G++ and clang++ work well.
+need a C++ compiler - GNU G++ and clang++ work well. You'll also need a C compiler
+to build the inih library included with SmallWM - GNU C and clang work well for
+this purpose also.
 
 Other than the dependencies, the Makefile contains everything you need to build and test SmallWM.
 
