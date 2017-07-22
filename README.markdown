@@ -148,7 +148,7 @@ The options in the `[smallwm]` section are (in order):
   send it SIGUSR1. This is intended for development purposes only; although it
   will generally contain information about SmallWM's desktops, clients and 
   screens, this information is for human consumption and its format is not 
-  guaranteed to stay the same. By default, this value is `/def/null`, so that
+  guaranteed to stay the same. By default, this value is `/dev/null`, so that
   any dumps SmallWM generates are not stored anywhere.
 
 Actions
