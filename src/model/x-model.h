@@ -56,6 +56,16 @@ struct MoveResize
 };
 
 /**
+ * A ClientEffect communicates to the X event handler that certain types of 
+ * events are expected, and that their usual processing can be ignored.
+ */
+enum ClientEffect {
+    EXPECT_MAP = 1 << 0,
+    EXPECT_UNMAP = 1 << 1
+};
+
+
+/**
  * A data store for information about the UI of the window manager (rather than
  * information about the windows which are being managed).
  */
@@ -83,12 +93,20 @@ public:
 
     void exit_move_resize();
 
+    bool has_effect(Window, ClientEffect);
+    void set_effect(Window, ClientEffect);
+    void clear_effect(Window, ClientEffect);
+    void remove_all_effects(Window);
+
 private:
     /// A mapping between clients and their icons
     std::map<Window, Icon*> m_clients_to_icons;
 
     /// A mapping between icon windows and the icon structures
     std::map<Window, Icon*> m_icon_windows_to_icons;
+
+    /// The effects present on each window
+    std::map<Window, ClientEffect> m_effects;
 
     /// The current data about moving or resizing
     MoveResize *m_moveresize;

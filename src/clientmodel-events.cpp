@@ -9,6 +9,7 @@ void ClientModelEvents::map_all(const std::vector<Window> &windows)
          win != windows.cend();
          win++)
     {
+        m_xmodel.set_effect(*win, EXPECT_MAP);
         m_xdata.map_win(*win);
     }
 }
@@ -23,6 +24,7 @@ void ClientModelEvents::unmap_unfocus_all(const std::vector<Window> &windows)
          win != windows.cend();
          win++)
     {
+        m_xmodel.set_effect(*win, EXPECT_UNMAP);
         m_clients.unfocus_if_focused(*win);
         m_xdata.unmap_win(*win);
     }
@@ -255,14 +257,18 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
 
         if (is_currently_visible && !will_be_visible)
         {
+            m_xmodel.set_effect(client, EXPECT_UNMAP);
             m_clients.unfocus_if_focused(client);
             m_xdata.unmap_win(client);
+
             unmap_unfocus_all(children);
         }
         else if (!is_currently_visible && will_be_visible)
         {
+            m_xmodel.set_effect(client, EXPECT_MAP);
             m_xdata.map_win(client);
             m_clients.focus(client);
+
             map_all(children);
             m_should_relayer = true;
         }
@@ -288,8 +294,10 @@ void ClientModelEvents::handle_client_change_from_user_desktop(
 
         if (!is_visible)
         {
+            m_xmodel.set_effect(client, EXPECT_MAP);
             m_xdata.map_win(client);
             m_clients.focus(client);
+
             map_all(children);
             m_should_relayer = true;
         }
@@ -336,8 +344,10 @@ void ClientModelEvents::handle_client_change_from_all_desktop(
 
         if (!will_be_visible)
         {
+            m_xmodel.set_effect(client, EXPECT_UNMAP);
             m_clients.unfocus_if_focused(client);
             m_xdata.unmap_win(client);
+
             unmap_unfocus_all(children);
             m_should_relayer = true;
         }
@@ -393,8 +403,10 @@ void ClientModelEvents::handle_client_change_from_icon_desktop(
 
             if (will_be_visible)
             {
+                m_xmodel.set_effect(client, EXPECT_MAP);
                 m_xdata.map_win(client);
                 m_clients.focus(client);
+
                 map_all(children);
             }
             m_should_reposition_icons = true;
@@ -435,8 +447,10 @@ void ClientModelEvents::handle_client_change_from_moving_desktop(
             bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
             if (will_be_visible)
             {
+                m_xmodel.set_effect(client, EXPECT_MAP);
                 m_xdata.map_win(client);
                 m_clients.focus(client);
+
                 map_all(children);
                 m_should_relayer = true;
             }
@@ -478,8 +492,10 @@ void ClientModelEvents::handle_client_change_from_resizing_desktop(
             bool will_be_visible = m_clients.is_visible_desktop(new_desktop);
             if (will_be_visible)
             {
+                m_xmodel.set_effect(client, EXPECT_MAP);
                 m_xdata.map_win(client);
                 m_clients.focus(client);
+
                 map_all(children);
                 m_should_relayer = true;
             }
@@ -532,6 +548,7 @@ void ClientModelEvents::handle_current_desktop_change()
             to_hide != to_make_invisible.end() && *to_hide != None;
             to_hide++)
     {
+        m_xmodel.set_effect(*to_hide, EXPECT_UNMAP);
         m_xdata.unmap_win(*to_hide);
 
         std::vector<Window> children;
@@ -551,6 +568,7 @@ void ClientModelEvents::handle_current_desktop_change()
             to_show != to_make_visible.end() && *to_show != None;
             to_show++)
     {
+        m_xmodel.set_effect(*to_show, EXPECT_MAP);
         m_xdata.map_win(*to_show);
 
         std::vector<Window> children;
@@ -718,8 +736,12 @@ void ClientModelEvents::register_new_icon(Window client, bool do_unmap)
     Icon *the_icon = new Icon(client, icon_window, gc);
 
     m_clients.unfocus_if_focused(client);
+
     if (do_unmap)
+    {
+        m_xmodel.set_effect(client, EXPECT_UNMAP);
         m_xdata.unmap_win(client);
+    }
 
     m_xmodel.register_icon(the_icon);
 
@@ -769,6 +791,7 @@ void ClientModelEvents::start_moving(Window client)
 
     // The placeholder needed the client's position and size - now that the
     // placeholder is open, we can hide the client
+    m_xmodel.set_effect(client, EXPECT_UNMAP);
     m_clients.unfocus_if_focused(client);
     m_xdata.unmap_win(client);
 
@@ -790,6 +813,7 @@ void ClientModelEvents::start_resizing(Window client)
 
     // The placeholder needed the client's position and size - now that the
     // placeholder is open, we can hide the client
+    m_xmodel.set_effect(client, EXPECT_UNMAP);
     m_clients.unfocus_if_focused(client);
     m_xdata.unmap_win(client);
 

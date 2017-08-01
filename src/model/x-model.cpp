@@ -164,3 +164,37 @@ void XModel::exit_move_resize()
     delete m_moveresize;
     m_moveresize = 0;
 }
+
+/**
+ * Checks to see if a window has the given effect flag, without changing it.
+ */
+bool XModel::has_effect(Window client, ClientEffect effect)
+{
+    // Avoid creating an extra entry in the map for 
+    if (m_effects.count(client) == 0) return false;
+    return m_effects[client] & effect != 0;
+}
+
+/**
+ * Sets an effect flag on the given window.
+ */
+void XModel::set_effect(Window client, ClientEffect effect)
+{
+    m_effects[client] = static_cast<ClientEffect>(m_effects[client] | effect);
+}
+
+/**
+ * Unsets an effect flag on the given window.
+ */
+void XModel::clear_effect(Window client, ClientEffect effect)
+{
+    m_effects[client] = static_cast<ClientEffect>(m_effects[client] | effect);
+}
+
+/**
+ * Removes all effects from the given window.
+ */
+void XModel::remove_all_effects(Window client)
+{
+    m_effects.erase(client);
+}
