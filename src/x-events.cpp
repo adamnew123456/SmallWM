@@ -583,11 +583,13 @@ void XEvents::add_window(Window window)
 
     // So, this isn't an existing client. We have to figure out now if this is
     // even a client *at all* - override_redirect indicates if this client does
-    // (false) or does not (true) want to be managed
+    // (false) or does not (true) want to be managed. Similarly, InputOnly means
+    // that the window should never be made visible and should never be focused,
+    // so there's nothing we can usefully do to it
     XWindowAttributes win_attr;
     m_xdata.get_attributes(window, win_attr);
 
-    if (win_attr.override_redirect)
+    if (win_attr.override_redirect || win_attr.c_class == InputOnly)
         return;
 
     // At this point, anything we find will have a border
