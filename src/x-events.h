@@ -21,7 +21,7 @@ class XEvents
 {
 public:
     XEvents(WMConfig &config, XData &xdata, ClientModel &clients,
-            XModel &xmodel) :
+        XModel &xmodel) :
         m_config(config), m_xdata(xdata), m_clients(clients),
         m_xmodel(xmodel), m_done(false)
     {

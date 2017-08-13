@@ -27,7 +27,7 @@ public:
     ClientModelEvents(WMConfig &config, Log &logger, ChangeStream &changes,
         XData &xdata, ClientModel &clients, XModel &xmodel) :
         m_config(config), m_xdata(xdata), m_clients(clients), m_xmodel(xmodel),
-        m_changes(changes), m_logger(logger), 
+        m_changes(changes), m_logger(logger),
         m_change(0), m_should_relayer(false), m_should_reposition_icons(false)
     {};
 

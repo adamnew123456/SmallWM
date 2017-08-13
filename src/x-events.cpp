@@ -366,12 +366,22 @@ void XEvents::handle_mapnotify()
 {
     Window being_mapped = m_event.xmap.window;
 
-    add_window(being_mapped);
+    // This has to bypass the expect check, since this needs to happen to every
+    // mapped window, and we don't have another way to do this for windows that
+    // are (for example) deiconified
     if (m_clients.is_packed_client(being_mapped))
     {
         PackCorner corner = m_clients.get_pack_corner(being_mapped);
         m_clients.repack_corner(corner);
     }
+
+    if (m_xmodel.has_effect(being_mapped, EXPECT_MAP))
+    {
+        m_xmodel.clear_effect(being_mapped, EXPECT_MAP);
+        return;
+    }
+
+    add_window(being_mapped);
 }
 
 /**
@@ -383,6 +393,13 @@ void XEvents::handle_mapnotify()
 void XEvents::handle_unmapnotify()
 {
     Window being_unmapped = m_event.xmap.window;
+
+    if (m_xmodel.has_effect(being_unmapped, EXPECT_UNMAP))
+    {
+        m_xmodel.clear_effect(being_unmapped, EXPECT_UNMAP);
+        return;
+    }
+
     m_clients.unmap_client(being_unmapped);
 }
 
@@ -492,6 +509,8 @@ void XEvents::handle_expose()
 void XEvents::handle_destroynotify()
 {
     Window destroyed_window = m_event.xdestroywindow.window;
+
+    m_xmodel.remove_all_effects(destroyed_window);
 
     if (m_clients.is_client(destroyed_window))
     {
