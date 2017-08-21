@@ -236,7 +236,7 @@ void XEvents::handle_buttonpress()
 
     if (!(is_client || is_child || icon)
             && m_event.xbutton.button == LAUNCH_BUTTON
-            && m_event.xbutton.state == ACTION_MASK)
+            && m_event.xbutton.state & ACTION_MASK)
     {
         if (!fork())
         {
@@ -272,7 +272,7 @@ void XEvents::handle_buttonpress()
         // enabled or not, should deiconify a client
         m_clients.deiconify(icon->client);
     }
-    else if (is_client && m_event.xbutton.state == ACTION_MASK)
+    else if (is_client && m_event.xbutton.state & ACTION_MASK)
     {
         if (m_event.xbutton.button != MOVE_BUTTON &&
                 m_event.xbutton.button != RESIZE_BUTTON)

@@ -178,11 +178,9 @@ void XData::add_hotkey(KeySym key, bool use_secondary_action)
     XGrabKey(m_display, keycode, mask, m_root, true,
         GrabModeAsync, GrabModeAsync);
 
-    // Grab all the variations involving both CapsLock and NumLock (Mod2)
-    int ignored_masks[3] = {LockMask, Mod2Mask, LockMask | Mod2Mask};
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; IGNORED_MASKS[i] != 0; i++)
     {
-        XGrabKey(m_display, keycode, mask | ignored_masks[i],
+        XGrabKey(m_display, keycode, mask | IGNORED_MASKS[i],
                  m_root, true, GrabModeAsync, GrabModeAsync);
     }
 }
@@ -196,6 +194,14 @@ void XData::add_hotkey_mouse(unsigned int button)
     XGrabButton(m_display, button, ACTION_MASK, m_root, true,
             ButtonPressMask | ButtonReleaseMask,
             GrabModeAsync, GrabModeAsync, None, None);
+
+    for (int i = 0; IGNORED_MASKS[i] != 0; i++)
+    {
+        XGrabButton(m_display, button, ACTION_MASK | IGNORED_MASKS[i], 
+                m_root, true,
+                ButtonPressMask | ButtonReleaseMask,
+                GrabModeAsync, GrabModeAsync, None, None);
+    }
 }
 
 /**
