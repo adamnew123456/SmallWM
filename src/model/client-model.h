@@ -44,10 +44,14 @@ public:
     /**
      * Initializes all of the categories in the maps
      */
-    ClientModel(ChangeStream &changes, CrtManager &crt_manager, unsigned long long max_desktops) :
+    ClientModel(ChangeStream &changes, 
+                CrtManager &crt_manager, 
+                unsigned long long max_desktops,
+                Dimension border_width) :
         m_crt_manager(crt_manager),
         m_changes(changes),
         m_max_desktops(max_desktops),
+        m_border_width(border_width),
         m_focused(None),
         // Initialize all the desktops
         ALL_DESKTOPS(new AllDesktops()),
@@ -174,6 +178,9 @@ private:
 
     /// The maximum number of user-visible desktops
     unsigned long long m_max_desktops;
+
+    /// The size of window borders
+    Dimension m_border_width;
 
     /// A mapping between clients and their desktops
     UniqueMultimap<Desktop*, Window,

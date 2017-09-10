@@ -468,6 +468,7 @@ void ClientModel::repack_corner(PackCorner corner)
               windows_on_this_corner.end(),
               sorter);
 
+    Dimension border = m_border_width * 2;
     for (std::vector<Window>::iterator iter = windows_on_this_corner.begin();
          iter != windows_on_this_corner.end();
          iter++)
@@ -476,17 +477,17 @@ void ClientModel::repack_corner(PackCorner corner)
 
         int real_x, real_y;
         if (subtract_width_first)
-            real_x = x_coord - DIM2D_WIDTH(size);
+            real_x = x_coord - (DIM2D_WIDTH(size) + border);
         else
             real_x = x_coord;
 
         if (subtract_height_first)
-            real_y = y_coord - DIM2D_HEIGHT(size);
+            real_y = y_coord - (DIM2D_HEIGHT(size) + border);
         else
             real_y = y_coord;
 
         change_location(*iter, real_x, real_y);
-        x_coord += x_incr_sign * DIM2D_WIDTH(size);
+        x_coord += x_incr_sign * (DIM2D_WIDTH(size) + border);
     }
 }
 

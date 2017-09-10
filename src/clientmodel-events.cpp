@@ -962,27 +962,28 @@ void ClientModelEvents::update_location_size_for_cps(Window client, ClientPosSca
         middle_y = top_y + screen.height / 2;
     }
 
+    Dimension border = m_config.border_width * 2;
     switch (mode)
     {
         case CPS_SPLIT_LEFT:
             m_clients.change_location(client, left_x, top_y);
-            m_clients.change_size(client, middle_x - left_x, bottom_y - top_y);
+            m_clients.change_size(client, middle_x - left_x - border, bottom_y - top_y - border);
             break;
         case CPS_SPLIT_RIGHT:
             m_clients.change_location(client, middle_x, top_y);
-            m_clients.change_size(client, right_x - middle_x, bottom_y - top_y);
+            m_clients.change_size(client, right_x - middle_x - border, bottom_y - top_y - border);
             break;
         case CPS_SPLIT_TOP:
             m_clients.change_location(client, left_x, top_y);
-            m_clients.change_size(client, right_x - left_x, middle_y - top_y);
+            m_clients.change_size(client, right_x - left_x - border, middle_y - top_y - border);
             break;
         case CPS_SPLIT_BOTTOM:
             m_clients.change_location(client, left_x, middle_y);
-            m_clients.change_size(client, right_x - left_x, bottom_y - middle_y);
+            m_clients.change_size(client, right_x - left_x - border, bottom_y - middle_y - border);
             break;
         case CPS_MAX:
             m_clients.change_location(client, left_x, top_y);
-            m_clients.change_size(client, right_x - left_x, bottom_y - top_y);
+            m_clients.change_size(client, right_x - left_x - border, bottom_y - top_y - border);
             break;
     }
 }

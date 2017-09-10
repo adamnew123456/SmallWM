@@ -12,6 +12,7 @@ const Window a = 1,
       c = 3;
 
 const unsigned long long max_desktops = 5;
+const int border_width = 2;
 
 /*
  * Note that the implied screen configuration used is:
@@ -34,7 +35,7 @@ const unsigned long long max_desktops = 5;
 struct ClientModelFixture
 {
     ClientModelFixture() :
-        model(changes, manager, max_desktops)
+        model(changes, manager, max_desktops, border_width)
     {
         reset_screen_graph();
     };
@@ -1970,7 +1971,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(b, 10, 0), *the_change);
+            CHECK_EQUAL(ChangeLocation(b, 10 + 2*border_width, 0), *the_change);
         }
         delete change;
 
@@ -1996,7 +1997,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(a, 100 - 10, 0), *the_change);
+            CHECK_EQUAL(ChangeLocation(a, 100 - 10 - 2*border_width, 0), *the_change);
         }
         delete change;
 
@@ -2006,7 +2007,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(b, 100 - (10 + 30), 0), *the_change);
+            CHECK_EQUAL(ChangeLocation(b, 100 - (30 + 2*border_width) - 10 - 2*border_width, 0), *the_change);
         }
         delete change;
 
@@ -2032,7 +2033,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(a, 0, 100 - 10), *the_change);
+            CHECK_EQUAL(ChangeLocation(a, 0, 100 - 10 - 2*border_width), *the_change);
         }
         delete change;
 
@@ -2042,7 +2043,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(b, 10, 100 - 10), *the_change);
+            CHECK_EQUAL(ChangeLocation(b, 10 + 2*border_width, 100 - 10 - 2*border_width), *the_change);
         }
         delete change;
 
@@ -2068,7 +2069,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(a, 100 - 10, 100 - 10), *the_change);
+            CHECK_EQUAL(ChangeLocation(a, 100 - 10 - 2*border_width, 100 - 10 - 2*border_width), *the_change);
         }
         delete change;
 
@@ -2078,7 +2079,7 @@ SUITE(ClientModelMemberSuite)
         {
             const ChangeLocation *the_change =
                 dynamic_cast<const ChangeLocation*>(change);
-            CHECK_EQUAL(ChangeLocation(b, 100 - (10 + 30), 100 - 10), *the_change);
+            CHECK_EQUAL(ChangeLocation(b, 100 - (30 + 2*border_width) - 10 - 2*border_width, 100 - 10 - 2*border_width), *the_change);
         }
         delete change;
 
