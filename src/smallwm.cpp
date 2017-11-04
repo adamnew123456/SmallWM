@@ -17,16 +17,6 @@
 #include "xdata.h"
 #include "x-events.h"
 
-/**
- * Reap dead child processes to avoid zombies.
- * @param signal The UNIX signal being sent to this process.
- */
-void reap_child(int signal)
-{
-    int _unused;
-    wait(&_unused);
-}
-
 bool should_execute_dump = false;
 
 /**
@@ -59,8 +49,11 @@ int x_error_handler(Display *display, XErrorEvent *event)
 
 int main()
 {
+    // Make sure that child processes don't generate zombies. This is an
+    // alternative to the wait() reaping loop under POSIX 2001
+    signal(SIGCHLD, SIG_IGN);
+
     XSetErrorHandler(x_error_handler);
-    signal(SIGCHLD, reap_child);
     signal(SIGUSR1, enable_dump);
 
     WMConfig config;
