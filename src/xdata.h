@@ -125,6 +125,9 @@ public:
     KeySym get_keysym(int);
     void keysym_to_string(KeySym, std::string&);
 
+    void forward_configure_request(XEvent&, unsigned int);
+    void forward_circulate_request(XEvent&);
+
     /// The event code X adds to each XRandR event (used by XEvents)
     int randr_event_offset;
 

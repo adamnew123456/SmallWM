@@ -78,7 +78,10 @@ int main()
     Window default_root = DefaultRootWindow(display);
     XData xdata(logger, display, default_root, DefaultScreen(display));
     xdata.select_input(default_root,
-        PointerMotionMask | StructureNotifyMask | SubstructureNotifyMask);
+                       PointerMotionMask |
+                       StructureNotifyMask |
+                       SubstructureNotifyMask |
+                       SubstructureRedirectMask);
 
     CrtManager crt_manager;
     std::vector<Box> screens;

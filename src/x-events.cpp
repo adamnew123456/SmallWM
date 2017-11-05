@@ -41,6 +41,15 @@ bool XEvents::step()
     if (m_event.type == DestroyNotify)
         handle_destroynotify();
 
+    if (m_event.type == ConfigureRequest)
+        handle_configurerequest();
+
+    if (m_event.type == MapRequest)
+        handle_maprequest();
+
+    if (m_event.type == CirculateRequest)
+        handle_circulaterequest();
+
     return !m_done;
 }
 
@@ -532,6 +541,67 @@ void XEvents::handle_destroynotify()
 
     if (m_clients.is_child(destroyed_window))
         m_clients.remove_child(destroyed_window, true);
+}
+
+/**
+ * Handles requests from clients to configure themselves. These may or may not
+ * be allowed, depending upon the window's current mode and the nature of the
+ * request.
+ */
+void XEvents::handle_configurerequest()
+{
+    Window client = m_event.xconfigurerequest.window;
+
+    // If we're not dealing with a window we manage, then allow it to do what
+    // it wants. Note that we also give nearly free reign to children, since
+    // the user can't change their size/position (but we still care about 
+    // borders and stacking)
+    if (!m_clients.is_client(client))
+    {
+        int allowed_flags = 
+            m_clients.is_child(client) ?
+            CWX | CWY | CWWidth | CWHeight :
+            0;
+
+        m_xdata.forward_configure_request(m_event, allowed_flags);
+        return;
+    }
+
+    int modify_flags = m_event.xconfigurerequest.value_mask;
+    int allowed_flags = 0;
+
+    int change_pos = modify_flags & CWX || modify_flags & CWY;
+    int change_size = modify_flags & CWWidth || modify_flags & CWHeight;
+    ClientPosScale cps_mode = m_clients.get_mode(client);
+    bool is_packed = m_clients.is_packed_client(client);
+
+    if (change_pos && cps_mode == CPS_FLOATING && !is_packed)
+        allowed_flags |= CWX | CWY;
+
+    if (change_size && (cps_mode == CPS_FLOATING || is_packed))
+        allowed_flags |= CWWidth | CWHeight;
+
+    modify_flags &= allowed_flags;
+    if (modify_flags != 0)
+        m_xdata.forward_configure_request(m_event, modify_flags);
+}
+
+/**
+ * Allows clients to map themselves. This is only necessary because
+ * SubstructureRedirectMask includes it.
+ */
+void XEvents::handle_maprequest()
+{
+    m_xdata.map_win(m_event.xmaprequest.window);
+}
+
+/**
+ * Allow these, but only because they should be affecting subwindows instead of
+ * nested windows.
+ */
+void XEvents::handle_circulaterequest()
+{
+    m_xdata.forward_circulate_request(m_event);
 }
 
 /**

@@ -69,6 +69,10 @@ private:
     void handle_expose();
     void handle_destroynotify();
 
+    void handle_configurerequest();
+    void handle_maprequest();
+    void handle_circulaterequest();
+
     /// The currently active event
     XEvent m_event;
 

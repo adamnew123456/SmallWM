@@ -678,6 +678,41 @@ void XData::keysym_to_string(KeySym keysym, std::string &as_string)
 }
 
 /**
+ * Applies a configure request to a child, while (possibly) modifying so that
+ * only part of it applies.
+ */
+void XData::forward_configure_request(XEvent &event, unsigned int allowed_flags)
+{
+    XWindowChanges changes;
+    changes.x = event.xconfigurerequest.x;
+    changes.y = event.xconfigurerequest.y;
+    changes.width = event.xconfigurerequest.width;
+    changes.height = event.xconfigurerequest.height;
+    changes.border_width = event.xconfigurerequest.border_width;
+    changes.sibling = event.xconfigurerequest.above;
+    changes.stack_mode = event.xconfigurerequest.detail;
+
+    unsigned int changes_flag = event.xconfigurerequest.value_mask;
+    if (allowed_flags != 0)
+        changes_flag &= allowed_flags;
+
+    XConfigureWindow(m_display, event.xconfigurerequest.window, changes_flag, &changes);
+}
+
+/**
+ * Applies a configure request to a child, while (possibly) modifying so that
+ * only part of it applies.
+ */
+void XData::forward_circulate_request(XEvent &event)
+{
+    int direction = 
+        event.xcirculaterequest.place == PlaceOnTop ?
+        RaiseLowest : 
+        LowerHighest;
+    XCirculateSubwindows(m_display, event.xcirculaterequest.window, direction);
+}
+
+/**
  * Interns an string, converting it into an atom and caching it. On
  * subsequent calls, the cache is used instead of going through Xlib.
  * @param atom The name of the atom to convert.
