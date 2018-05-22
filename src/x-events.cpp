@@ -662,16 +662,28 @@ void XEvents::add_window(Window window)
     if (win_attr.override_redirect || win_attr.c_class == InputOnly)
         return;
 
-    // At this point, anything we find will have a border
-    m_xdata.set_border_width(window, m_config.border_width);
-
     // If this is a child window, then register it as such
     Window parent = m_xdata.get_transient_hint(window);
-    if (m_clients.is_client(parent))
+
+    if (parent != None)
     {
-        m_clients.add_child(parent, window);
-        return;
+        // Make sure that the parent is something that we would also consider 
+        // managing
+        XWindowAttributes parent_attr;
+        m_xdata.get_attributes(parent, parent_attr);
+
+        if (parent_attr.override_redirect || parent_attr.c_class == InputOnly)
+            return;
+
+        if (m_clients.is_client(parent))
+        {
+            m_clients.add_child(parent, window);
+            return;
+        }
     }
+
+    // At this point, anything we find will have a border
+    m_xdata.set_border_width(window, m_config.border_width);
 
     // This is a new, manageable client - register it with the client database.
     // This requires we know 3 things:
