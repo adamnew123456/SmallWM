@@ -82,6 +82,7 @@ void XEvents::handle_keypress()
         client = m_clients.get_focused();
 
     bool is_client = m_clients.is_client(client);
+    bool is_child = m_clients.is_child(client);
 
     KeyBinding binding(key, is_using_secondary_action);
     KeyboardAction action = m_config.key_commands.binding_to_action[binding];
@@ -114,11 +115,11 @@ void XEvents::handle_keypress()
             m_clients.change_mode(client, CPS_MAX);
         break;
     case REQUEST_CLOSE:
-        if (is_client)
+        if (is_client || is_child)
             m_xdata.request_close(client);
         break;
     case FORCE_CLOSE:
-        if (is_client)
+        if (is_client || is_child)
             m_xdata.destroy_win(client);
         break;
     case K_SNAP_TOP:
@@ -678,11 +679,11 @@ void XEvents::add_window(Window window)
         if (m_clients.is_client(parent))
         {
             m_clients.add_child(parent, window);
+            m_xdata.set_border_width(window, m_config.border_width);
             return;
         }
     }
 
-    // At this point, anything we find will have a border
     m_xdata.set_border_width(window, m_config.border_width);
 
     // This is a new, manageable client - register it with the client database.
