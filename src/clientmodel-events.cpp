@@ -132,10 +132,7 @@ void ClientModelEvents::handle_focus_change()
         }
         else
         {
-            // If we failed to actually do the focus, then we have to
-            // update the client model to keep it in sync with what our idea
-            // of the focus is
-            m_clients.unfocus();
+            m_clients.cycle_focus_forward();
 
             // Also, make sure to apply the grab to the window
             m_xdata.set_border_color(focused_client, X_WHITE);
