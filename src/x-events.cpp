@@ -69,7 +69,7 @@ void XEvents::handle_rrnotify()
 void XEvents::handle_keypress()
 {
     KeySym key = m_xdata.get_keysym(m_event.xkey.keycode);
-    bool is_using_secondary_action = (m_event.xkey.state & SECONDARY_MASK);
+    bool is_using_secondary_action = (m_event.xkey.state & m_xdata.secondary_mod_flag);
 
     Window client = None;
     if (m_config.hotkey == HK_MOUSE)
@@ -246,7 +246,7 @@ void XEvents::handle_buttonpress()
 
     if (!(is_client || is_child || icon)
             && m_event.xbutton.button == LAUNCH_BUTTON
-            && m_event.xbutton.state & ACTION_MASK)
+            && m_event.xbutton.state & m_xdata.primary_mod_flag)
     {
         if (!fork())
         {
@@ -282,7 +282,7 @@ void XEvents::handle_buttonpress()
         // enabled or not, should deiconify a client
         m_clients.deiconify(icon->client);
     }
-    else if (is_client && m_event.xbutton.state & ACTION_MASK)
+    else if (is_client && m_event.xbutton.state & m_xdata.primary_mod_flag)
     {
         if (m_event.xbutton.button != MOVE_BUTTON &&
                 m_event.xbutton.button != RESIZE_BUTTON)

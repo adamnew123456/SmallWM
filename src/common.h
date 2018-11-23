@@ -110,15 +110,7 @@ const int LAUNCH_BUTTON = 1,
       /// The button to click to move a client
       MOVE_BUTTON = 1,
       /// The button to click to resize a client
-      RESIZE_BUTTON = 3,
-      /// The key to hold to activate window manager functions
-      ACTION_MASK = Mod4Mask,
-      /// Used along with ACTION_MASK to access certain shortcuts
-      SECONDARY_MASK = ControlMask;
-
-
-/// The modifiers that should be ignored when doing hotkey bindings (capslock and numlock)
-static int IGNORED_MASKS[] = {LockMask, Mod2Mask, LockMask | Mod2Mask, 0};
+      RESIZE_BUTTON = 3;
 
 // This is useful for tests, since they insist on printing things that they
 // have no knowledge of.

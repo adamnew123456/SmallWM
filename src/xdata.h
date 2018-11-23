@@ -68,9 +68,11 @@ public:
         m_screen = DefaultScreen(dpy);
 
         init_xrandr();
+        load_modifier_flags();
     };
 
     void init_xrandr();
+    void load_modifier_flags();
 
     XGC *create_gc(Window);
     Window create_window(bool);
@@ -130,6 +132,13 @@ public:
 
     /// The event code X adds to each XRandR event (used by XEvents)
     int randr_event_offset;
+
+    unsigned int primary_mod_flag;
+    unsigned int secondary_mod_flag;
+
+    unsigned int num_mod_flag;
+    unsigned int caps_mod_flag;
+    unsigned int scroll_mod_flag;
 
 private:
     Atom intern_if_needed(const std::string&);

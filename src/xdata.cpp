@@ -70,7 +70,6 @@ void XData::init_xrandr()
     {
         m_logger.log(LOG_ERR) <<
             "Unable to initialize XRandR extension - terminating" << Log::endl;
-        m_logger.stop();
 
         std::exit(1);
     }
@@ -82,6 +81,108 @@ void XData::init_xrandr()
 
     // Ensure that we can handle changes to the screen configuration
     XRRSelectInput(m_display, m_root, RRCrtcChangeNotifyMask);
+}
+
+/**
+ * Discovers the flags associated with the primary and secondary modifier,
+ * as well as various modifiers that we ignore.
+ */
+void XData::load_modifier_flags()
+{
+    int min_keycode;
+    int max_keycode;
+    XDisplayKeycodes(m_display, &min_keycode, &max_keycode);
+
+    int keysyms_per_keycode;
+    KeySym *key_map = XGetKeyboardMapping(m_display,
+                                          min_keycode,
+                                          max_keycode - min_keycode,
+                                          &keysyms_per_keycode);
+
+    primary_mod_flag = 0;
+    secondary_mod_flag = 0;
+    num_mod_flag = 0;
+    caps_mod_flag = 0;
+    scroll_mod_flag = 0;
+
+    XModifierKeymap *mod_map = XGetModifierMapping(m_display);
+    for (int mod = 0; mod < 8; mod++)
+    {
+        for (int key = 0; key < mod_map->max_keypermod; key++)
+        {
+            KeyCode code = mod_map->modifiermap[mod * mod_map->max_keypermod + key];
+            int keycode_base = (code - min_keycode) * keysyms_per_keycode;
+            for (int sym_idx = 0; sym_idx < keysyms_per_keycode; sym_idx++)
+            {
+                KeySym sym = key_map[keycode_base + sym_idx];
+                unsigned int mod_flag = 1 << mod;
+                switch (sym)
+                {
+                case XK_Super_L:
+                case XK_Super_R:
+                    m_logger.log(LOG_INFO) 
+                        << "Binding super key to modifier " 
+                        << mod 
+                        << Log::endl;
+
+                    primary_mod_flag |= mod_flag;
+                    break;
+
+                case XK_Control_L:
+                case XK_Control_R:
+                    m_logger.log(LOG_INFO) 
+                        << "Binding control key to modifier " 
+                        << mod
+                        << Log::endl;
+
+                    secondary_mod_flag |= mod_flag;
+                    break;
+
+                case XK_Num_Lock:
+                    m_logger.log(LOG_INFO) 
+                        << "Binding numlock key to modifier " 
+                        << mod
+                        << Log::endl;
+
+                    num_mod_flag |= mod_flag;
+                    break;
+
+                case XK_Scroll_Lock:
+                    m_logger.log(LOG_INFO) 
+                        << "Binding scroll lock key to modifier " 
+                        << mod
+                        << Log::endl;
+
+                    scroll_mod_flag |= mod_flag;
+                    break;
+
+                case XK_Caps_Lock:
+                    m_logger.log(LOG_INFO) 
+                        << "Binding capslock key to modifier " 
+                        << mod
+                        << Log::endl;
+
+                    caps_mod_flag |= mod_flag;
+                    break;
+                }
+            }
+        }
+    }
+
+    m_logger.log(LOG_INFO)
+        << "primary="
+        << primary_mod_flag
+        << " secondary="
+        << secondary_mod_flag
+        << " num="
+        << num_mod_flag
+        << " caps="
+        << caps_mod_flag
+        << " scroll="
+        << scroll_mod_flag
+        << Log::endl;
+
+    XFreeModifiermap(mod_map);
 }
 
 /**
@@ -171,18 +272,44 @@ void XData::add_hotkey(KeySym key, bool use_secondary_action)
     // X grabs on keycodes, not on KeySyms, so we have to do the conversion
     int keycode = XKeysymToKeycode(m_display, key);
 
-    int mask = ACTION_MASK;
+    int base_mask = primary_mod_flag;
     if (use_secondary_action)
-        mask |= SECONDARY_MASK;
+        base_mask |= secondary_mod_flag;
 
-    XGrabKey(m_display, keycode, mask, m_root, true,
+    XGrabKey(m_display, keycode, base_mask, m_root, true,
         GrabModeAsync, GrabModeAsync);
 
-    for (int i = 0; IGNORED_MASKS[i] != 0; i++)
-    {
-        XGrabKey(m_display, keycode, mask | IGNORED_MASKS[i],
-                 m_root, true, GrabModeAsync, GrabModeAsync);
-    }
+    if (num_mod_flag)
+	    XGrabKey(m_display, keycode, base_mask | num_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
+
+    if (caps_mod_flag)
+	    XGrabKey(m_display, keycode, base_mask | caps_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
+
+    if (scroll_mod_flag)
+	    XGrabKey(m_display, keycode, base_mask | scroll_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
+
+    if (num_mod_flag && caps_mod_flag)
+	    XGrabKey(m_display, keycode,
+		     base_mask | num_mod_flag | caps_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
+
+    if (num_mod_flag && scroll_mod_flag)
+	    XGrabKey(m_display, keycode,
+		     base_mask | num_mod_flag | scroll_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
+
+    if (caps_mod_flag && scroll_mod_flag)
+	    XGrabKey(m_display, keycode,
+		     base_mask | caps_mod_flag | scroll_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
+
+    if (num_mod_flag && caps_mod_flag && scroll_mod_flag)
+	    XGrabKey(m_display, keycode,
+		     base_mask | num_mod_flag | caps_mod_flag | scroll_mod_flag, m_root, true,
+		     GrabModeAsync, GrabModeAsync);
 }
 
 /**
@@ -191,17 +318,44 @@ void XData::add_hotkey(KeySym key, bool use_secondary_action)
  */
 void XData::add_hotkey_mouse(unsigned int button)
 {
-    XGrabButton(m_display, button, ACTION_MASK, m_root, true,
-            ButtonPressMask | ButtonReleaseMask,
-            GrabModeAsync, GrabModeAsync, None, None);
-
-    for (int i = 0; IGNORED_MASKS[i] != 0; i++)
-    {
-        XGrabButton(m_display, button, ACTION_MASK | IGNORED_MASKS[i], 
-                m_root, true,
-                ButtonPressMask | ButtonReleaseMask,
+    XGrabButton(m_display, button, primary_mod_flag,
+                m_root, true, ButtonPressMask | ButtonReleaseMask,
                 GrabModeAsync, GrabModeAsync, None, None);
-    }
+
+    if (num_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | num_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
+
+    if (caps_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | caps_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
+
+    if (scroll_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | scroll_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
+
+    if (num_mod_flag && caps_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | num_mod_flag | caps_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
+
+    if (num_mod_flag && scroll_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | num_mod_flag | scroll_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
+
+    if (caps_mod_flag && scroll_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | caps_mod_flag | scroll_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
+
+    if (num_mod_flag && caps_mod_flag && scroll_mod_flag)
+	    XGrabButton(m_display, button, primary_mod_flag | num_mod_flag | caps_mod_flag | scroll_mod_flag,
+			m_root, true, ButtonPressMask | ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, None);
 }
 
 /**
