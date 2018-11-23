@@ -162,6 +162,9 @@ public:
     /// The minimum message level to send to syslog
     int log_mask;
 
+    /// The filename to dump logs in, or "syslog" to use syslog
+    std::string log_file;
+
     /// The shell to run.
     std::string shell;
 

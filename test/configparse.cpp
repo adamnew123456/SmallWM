@@ -330,6 +330,35 @@ SUITE(WMConfigSuitePlainOptions)
         CHECK_EQUAL(LOG_UPTO(LOG_WARNING), config.log_mask);
     }
 
+    TEST(test_default_log_file)
+    {
+        // Ensure that an empty config file dumps to syslog by default
+        write_config_file(*config_path, "\n");
+        config.load();
+
+        CHECK_EQUAL(std::string("syslog"), config.log_file);
+    }
+
+    TEST(test_log_file)
+    {
+        // Make sure that any non-empty filename is acceptable
+        write_config_file(*config_path,
+                          "[smallwm]\nlog-file=/var/log/smallwm.log\n");
+        config.load();
+
+        CHECK_EQUAL(std::string("/var/log/smallwm.log"), config.log_file);
+    }
+
+    TEST(test_log_file_empty)
+    {
+        // Make sure that an empty dump filename is not accepted
+        write_config_file(*config_path,
+                          "[smallwm]\nlog-file=\n");
+        config.load();
+
+        CHECK_EQUAL(std::string("syslog"), config.log_file);
+    }
+
     TEST(test_default_dump_file)
     {
         // Ensure that an empty config file dumps to /dev/null by default

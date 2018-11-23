@@ -29,6 +29,7 @@ void WMConfig::reset()
     show_icons = true;
     log_mask = LOG_UPTO(LOG_WARNING);
     hotkey = HK_MOUSE;
+    log_file = "syslog";
     dump_file = "/dev/null";
 
     key_commands.reset();
@@ -80,6 +81,11 @@ int WMConfig::config_parser(void *user, const char *c_section,
             SYSLOG_MACRO_CHECK(INFO);
             SYSLOG_MACRO_CHECK(DEBUG);
 #undef SYSLOG_MACRO_CHECK
+        }
+        else if (name == std::string("log-file")) 
+        {
+            if (value.size() > 0)
+                self->log_file = value;
         }
         else if (name == std::string("hotkey-mode"))
         {

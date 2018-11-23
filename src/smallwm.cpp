@@ -9,6 +9,7 @@
 #include "configparse.h"
 #include "common.h"
 #include "logging/logging.h"
+#include "logging/file.h"
 #include "logging/syslog.h"
 #include "model/changes.h"
 #include "model/client-model.h"
@@ -59,24 +60,34 @@ int main()
     WMConfig config;
     config.load();
 
-    SysLog logger;
-    logger.set_identity("SmallWM");
-    logger.set_facility(LOG_USER);
-    logger.set_log_mask(LOG_UPTO(config.log_mask));
-    logger.start();
+    Log* logger;
+    if (config.log_file == std::string("syslog"))
+    {
+        SysLog *sys_logger = new SysLog();
+        sys_logger->set_identity("SmallWM");
+        sys_logger->set_facility(LOG_USER);
+        sys_logger->set_log_mask(LOG_UPTO(config.log_mask));
+        sys_logger->start();
+        logger = sys_logger;
+    }
+    else
+    {
+        logger = new FileLog(config.log_file, config.log_mask);
+    }
 
     Display *display = XOpenDisplay(NULL);
     if (!display)
     {
-        logger.log(LOG_ERR) <<
+        logger->log(LOG_ERR) <<
             "Could not open X display - terminating" << Log::endl;
-        logger.stop();
+        logger->stop();
+        delete logger;
 
         std::exit(2);
     }
 
     Window default_root = DefaultRootWindow(display);
-    XData xdata(logger, display, default_root, DefaultScreen(display));
+    XData xdata(*logger, display, default_root, DefaultScreen(display));
     xdata.select_input(default_root,
                        PointerMotionMask |
                        StructureNotifyMask |
@@ -106,7 +117,7 @@ int main()
     }
 
 
-    ClientModelEvents client_events(config, logger, changes,
+    ClientModelEvents client_events(config, *logger, changes,
                                     xdata, clients, xmodel);
 
     // Make sure to process all the changes produced by the class actions for
@@ -119,7 +130,7 @@ int main()
         {
             should_execute_dump = false;
 
-            logger.log(LOG_NOTICE) <<
+            logger->log(LOG_NOTICE) <<
                 "Executing dump to target file '" << config.dump_file << 
                 "'" << Log::endl;
 
@@ -136,7 +147,7 @@ int main()
             }
             else
             {
-                logger.log(LOG_ERR) <<
+                logger->log(LOG_ERR) <<
                     "Could not open dump file '" << config.dump_file << 
                     "' for writing" << Log::endl;
             }
@@ -144,6 +155,9 @@ int main()
 
         client_events.handle_queued_changes();
     }
+
+    logger->stop();
+    delete logger;
 
     return 0;
 }
