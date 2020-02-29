@@ -272,7 +272,7 @@ keyboard bindings.
 - `cycle-focus`, `cycle-focus-back`
     - Changes the focused window to the window next (or previous)in the focus
     list.
-- `exit-wm` 
+- `exit` 
     - Terminates SmallWM
 
 Note the key binding given for `snap-right` in the example - the `!` that prefixes
